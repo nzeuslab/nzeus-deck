@@ -43,7 +43,7 @@ All run on a PC (WSL Ubuntu + Windows PowerShell 5.1) for this release.
 | Public Debian images | `sudo bash linux-port/rootfs/debian/test-public-image.sh …` | 9/9 |
 | Public kernel + AVP stand-in | `python3 linux-port/kernel-public/test-package.py …` | 7/7 |
 | Release zip check (self-test + real zip) | `python3 tools/check-release.py …` | RELEASE OK (6/6) |
-| Windows installer (fake card images + folders) | `installer/tests/test-installer.ps1` | 31/31 |
+| Windows installer (fake card images + folders) | `installer/tests/test-installer.ps1` | 34/34 |
 | Windows installer, full size (real 4.5 GB release files) | `installer/tests/test-installer-fullsize.ps1 ZIP` | 4/4 |
 | End-to-end: real release on a 6 GiB fake card, install → boot helper mounts it → uninstall → card back exactly | `python3 tools/tests/test_e2e.py ZIP` | 4/4 |
 | NZEUS Deck (PC build) | `bash build_nzeus_gui.sh pc` | all passed |
