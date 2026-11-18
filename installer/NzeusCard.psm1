@@ -434,5 +434,28 @@ function Invoke-NzeusUninstall([int]$Number = -1, [string]$DiskImage, [string]$R
     return $msg
 }
 
+# collect-logs.bat: copies NZEUS's own log files off the card into Dest (a new folder) for a bug
+# report, and ALWAYS closes the card again. Files are only read; the card is only opened and closed.
+function Invoke-NzeusCollectLogs([int]$Number = -1, [string]$DiskImage, [string]$Root, [string]$Dest) {
+    try {
+        $drive = Open-R36sCard -Number $Number -DiskImage $DiskImage
+        if (-not $Root) { $Root = $drive }
+        $names = @("boot-log.txt", "boot-log-previous.txt", "install-log.txt", "VERSION")
+        $found = @($names | Where-Object { Test-Path -LiteralPath (Join-Path $Root "nzeus\$_") })
+        if ($found.Count -eq 0) {
+            $msg = "No NZEUS logs on this card (nzeus\boot-log.txt is written each time NZEUS starts). Nothing was copied."
+        } else {
+            New-Item -ItemType Directory -Force -Path $Dest -ErrorAction Stop | Out-Null
+            foreach ($n in $found) { Copy-Item -LiteralPath (Join-Path $Root "nzeus\$n") -Destination (Join-Path $Dest $n) -ErrorAction Stop }
+            $msg = "Copied $($found.Count) log files to $Dest - attach them to your bug report."
+        }
+    } catch {
+        $msg = "Could not collect the logs: $($_.Exception.Message) Put the card back in the card reader (if it was taken out) and run collect-logs.bat again."
+    } finally {
+        $msg += Close-IfOpen $Number $DiskImage "collect-logs.bat"
+    }
+    return $msg
+}
+
 Export-ModuleMember -Function Switch-R36sScramble, Get-R36sCards, Open-R36sCard, Close-R36sCard, Install-NzeusFiles,
-    Test-NzeusFiles, Uninstall-NzeusFiles, Invoke-NzeusInstall, Invoke-NzeusUninstall, Remove-NzeusGames, Set-NzeusTestHook
+    Test-NzeusFiles, Uninstall-NzeusFiles, Invoke-NzeusInstall, Invoke-NzeusUninstall, Remove-NzeusGames, Set-NzeusTestHook, Invoke-NzeusCollectLogs

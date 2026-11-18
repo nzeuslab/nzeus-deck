@@ -7,6 +7,7 @@ Tested on real consoles.
 
 Install (Windows):  console's SD card in a card reader -> double-click install.bat
 Undo (Windows):     double-click uninstall.bat
+Bug report logs:    double-click collect-logs.bat
 Mac / Linux:        see INSTALL.md
 
 Your games stay on the card, unless it is too full: then install.bat asks

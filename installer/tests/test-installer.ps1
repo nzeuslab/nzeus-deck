@@ -310,9 +310,47 @@ $threw = ""; try { Install-NzeusFiles -Root $ln -Release $rel -FreeBytes $big | 
 Check "test_logo_never_backs_up_nzeus_picture" (-not $threw -and -not (Test-Path "$ln\nzeus\backup\xgame-logo.bmp") -and
     (Test-Path "$ln\nzeus\VERSION")) $threw
 
-# 12. the two scripts people double-click parse cleanly
+# ---- collect-logs.bat: NZEUS's logs off a closed card, for a bug report ----
+# C1. the logs are copied to a new folder, the card's files stay exactly as they were, the card is closed
+$cimg = New-FakeCardImage (Join-Path $tmp "logs.img")
+$croot = New-StockFolder (Join-Path $tmp "logsroot")
+New-Item -ItemType Directory "$croot\nzeus" -Force | Out-Null
+Set-Content "$croot\nzeus\boot-log.txt" -Value "== NZEUS boot log, part 1 ==" -NoNewline
+Set-Content "$croot\nzeus\boot-log-previous.txt" -Value "the start before" -NoNewline
+Set-Content "$croot\nzeus\install-log.txt" -Value "installed NZEUS Deck v1" -NoNewline
+Set-Content "$croot\nzeus\VERSION" -Value "v1" -NoNewline
+$beforeHashes = @(Get-ChildItem "$croot\nzeus" -File | ForEach-Object { Hash $_.FullName })
+$dest = Join-Path $tmp "collected"
+$msg = Invoke-NzeusCollectLogs -DiskImage $cimg -Root $croot -Dest $dest
+$got = @(Get-ChildItem $dest -File -ErrorAction SilentlyContinue | ForEach-Object Name | Sort-Object)
+$afterHashes = @(Get-ChildItem "$croot\nzeus" -File | ForEach-Object { Hash $_.FullName })
+$want = @("boot-log.txt", "boot-log-previous.txt", "install-log.txt", "VERSION" | Sort-Object)
+Check "test_collect_logs_copies_and_closes" (($got -join ",") -eq ($want -join ",") -and
+    ([IO.File]::ReadAllText("$dest\boot-log.txt") -eq "== NZEUS boot log, part 1 ==") -and
+    (($beforeHashes -join ",") -eq ($afterHashes -join ",")) -and
+    ((Get-R36sCards -DiskImages @($cimg))[0].State -eq "closed") -and $msg -like "*$dest*") "$msg | $($got -join ',')"
+
+# C2. a card without NZEUS logs: says so, copies nothing, card closed
+$nimg2 = New-FakeCardImage (Join-Path $tmp "nologs.img")
+$nroot2 = New-StockFolder (Join-Path $tmp "nologsroot")
+$dest2 = Join-Path $tmp "collected2"
+$msg = Invoke-NzeusCollectLogs -DiskImage $nimg2 -Root $nroot2 -Dest $dest2
+Check "test_collect_logs_none_found" (($msg -like "*No NZEUS logs*") -and -not (Test-Path $dest2) -and
+    ((Get-R36sCards -DiskImages @($nimg2))[0].State -eq "closed")) $msg
+
+# C3. something fails half-way (the destination can't be made): the card is still closed again
+$fimg2 = New-FakeCardImage (Join-Path $tmp "logsfail.img")
+$froot2 = New-StockFolder (Join-Path $tmp "logsfailroot")
+New-Item -ItemType Directory "$froot2\nzeus" -Force | Out-Null
+Set-Content "$froot2\nzeus\boot-log.txt" -Value "x" -NoNewline
+Set-Content (Join-Path $tmp "blocker") -Value "a file, not a folder" -NoNewline
+$msg = Invoke-NzeusCollectLogs -DiskImage $fimg2 -Root $froot2 -Dest (Join-Path $tmp "blocker\sub")
+Check "test_collect_logs_failure_closes_card" (((Get-R36sCards -DiskImages @($fimg2))[0].State -eq "closed") -and
+    $msg -like "*collect-logs.bat again*") $msg
+
+# 12. the scripts people double-click parse cleanly
 $errs = @()
-foreach ($f in @("install.ps1", "uninstall.ps1")) {
+foreach ($f in @("install.ps1", "uninstall.ps1", "collect-logs.ps1")) {
     $e = $null; [void][Management.Automation.Language.Parser]::ParseFile((Join-Path (Join-Path $here "..") $f), [ref]$null, [ref]$e); $errs += $e
 }
 Check "test_scripts_parse" ($errs.Count -eq 0) ($errs -join "; ")

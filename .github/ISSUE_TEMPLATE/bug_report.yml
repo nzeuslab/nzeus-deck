@@ -68,7 +68,8 @@ body:
     attributes:
       label: Boot log (if you can)
       description: |
-        NZEUS writes `nzeus/boot-log.txt` on the SD card each time it starts. On Mac or Linux:
+        NZEUS writes `nzeus/boot-log.txt` on the SD card each time it starts. On Windows: put the
+        card in the PC and double-click `collect-logs.bat` (in the release folder). On Mac or Linux:
         `sudo python3 r36s_card.py open /dev/YOUR-CARD`, copy the file, then `close`
         (see INSTALL.md). Paste it here or attach it.
       render: text

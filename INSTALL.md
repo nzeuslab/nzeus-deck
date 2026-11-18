@@ -27,6 +27,10 @@ If the screen shows a message starting "NZEUS could not start", do what it
 says. If the screen stays black for 2 minutes, run **uninstall.bat**: your
 console goes back to its own system.
 
+**Reporting a problem:** card in the PC, double-click **collect-logs.bat**. It copies
+NZEUS's logs off the card into a new `nzeus-logs-...` folder next to it (nothing on the
+card changes). Attach those files to your bug report.
+
 **Going back:** card in the PC, double-click **uninstall.bat**. Your NZEUS files
 (`nzeus/nzdata.img`) are kept unless you type DELETE.
 

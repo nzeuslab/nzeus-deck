@@ -51,6 +51,7 @@ files = {   # in the zip            <- from
     'install.bat': repo / 'install.bat', 'uninstall.bat': repo / 'uninstall.bat',
     'installer/NzeusCard.psm1': repo / 'installer/NzeusCard.psm1',
     'installer/install.ps1': repo / 'installer/install.ps1', 'installer/uninstall.ps1': repo / 'installer/uninstall.ps1',
+    'collect-logs.bat': repo / 'collect-logs.bat', 'installer/collect-logs.ps1': repo / 'installer/collect-logs.ps1',
     'r36s_card.py': repo / 'tools/r36s_card.py', 'INSTALL.md': repo / 'INSTALL.md',
     'README.txt': repo / 'release-files/README.txt', 'SOURCE.txt': repo / 'release-files/SOURCE.txt',
     'LICENSE': repo / 'LICENSE',
