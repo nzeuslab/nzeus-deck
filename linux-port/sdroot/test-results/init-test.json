@@ -1,0 +1,98 @@
+{
+  "status": "PASS_PC_QEMU_ONLY",
+  "passed": 22,
+  "total": 22,
+  "cases": [
+    {
+      "case": "syntax: sh -n with the new boot BusyBox",
+      "ok": true
+    },
+    {
+      "case": "syntax: sh -n with the old boot BusyBox",
+      "ok": true
+    },
+    {
+      "case": "no \"[\" command in /init",
+      "ok": true
+    },
+    {
+      "case": "success: ro ext4 mount, checks, moves, switch_root",
+      "ok": true
+    },
+    {
+      "case": "fallback: nz-sdboot refuses (exit 1)",
+      "ok": true
+    },
+    {
+      "case": "fallback: FN / nzeus.ramonly (exit 4)",
+      "ok": true
+    },
+    {
+      "case": "fallback: nz-sdboot no answer (exit 3)",
+      "ok": true
+    },
+    {
+      "case": "fallback: mount of p3 fails",
+      "ok": true
+    },
+    {
+      "case": "fallback: mount of p3 never returns",
+      "ok": true
+    },
+    {
+      "case": "fallback: p3 mounted but not ro ext4 in /proc/mounts",
+      "ok": true
+    },
+    {
+      "case": "  ...and /newroot was unmounted again",
+      "ok": true
+    },
+    {
+      "case": "fallback: SD root /sbin/init unusable",
+      "ok": true
+    },
+    {
+      "case": "  ...and /newroot was unmounted again",
+      "ok": true
+    },
+    {
+      "case": "fallback: p1 not read-only (blockdev --getro)",
+      "ok": true
+    },
+    {
+      "case": "fallback: p2 not read-only (blockdev --getro)",
+      "ok": true
+    },
+    {
+      "case": "fallback: p5 not read-only (blockdev --getro)",
+      "ok": true
+    },
+    {
+      "case": "fallback: SD root has no /run",
+      "ok": true
+    },
+    {
+      "case": "fallback: moving /sys fails half way",
+      "ok": true
+    },
+    {
+      "case": "  ...and /proc, /dev moved back, /tmp remounted, /newroot unmounted",
+      "ok": true
+    },
+    {
+      "case": "fallback: BusyBox without switch_root",
+      "ok": true
+    },
+    {
+      "case": "end to end: real nz-sdboot passes -> switch_root",
+      "ok": true
+    },
+    {
+      "case": "end to end: real nz-sdboot refuses wrong card -> RAM rescue",
+      "ok": true
+    }
+  ],
+  "limits": [
+    "stubs replace mount/umount/switch_root/setsid; no kernel, card or USB involved"
+  ]
+}

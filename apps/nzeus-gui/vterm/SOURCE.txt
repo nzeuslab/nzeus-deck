@@ -1,0 +1,23 @@
+libvterm - the terminal emulator library used by vim and neovim
+Author:   Paul Evans <leonerd@leonerd.org.uk>
+License:  MIT (see LICENSE in this folder)
+Version:  0.3.3
+Source:   https://www.leonerd.org.uk/code/libvterm/libvterm-0.3.3.tar.gz
+SHA-256:  09156f43dd2128bd347cbeebe50d9a571d32c64e0cf18d211197946aff7226e0  (80024 bytes)
+Fetched:  2026-10-04
+
+Copied from the tarball UNCHANGED (byte-identical):
+  LICENSE
+  include/vterm.h, include/vterm_keycodes.h
+  src/*.c, src/*.h, src/fullwidth.inc, src/encoding/DECdrawing.inc, src/encoding/uk.inc
+
+The .inc tables are the generated ones shipped in the release tarball, so no
+perl is needed: the sources compile with plain gcc and with the MIPS cross gcc.
+Not copied: bin/ (example programs), t/ (perl test harness), Makefile.
+
+Known libvterm 0.3.3 quirks, handled in ../vtwidget.c (no library change):
+  - a UTF-8 character split across two vterm_input_write() calls becomes
+    U+FFFD when the first call started with ASCII -> vtwidget keeps an
+    unfinished character back until the next chunk.
+  - its 256-colour cube is not xterm's -> vtwidget uses its own xterm palette.
+  - SGR 2 (dim/faint) is ignored by libvterm: dim text shows at normal brightness.

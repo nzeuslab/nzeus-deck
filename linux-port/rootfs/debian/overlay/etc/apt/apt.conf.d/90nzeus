@@ -1,0 +1,6 @@
+// NZEUS: small system on a small machine.
+// Only what a package really needs (no "recommended" extras).
+APT::Install-Recommends "false";
+APT::Install-Suggests "false";
+// No translated package descriptions (saves card space and RAM during "apt update").
+Acquire::Languages "none";

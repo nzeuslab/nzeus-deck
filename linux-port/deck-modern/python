@@ -1,0 +1,21 @@
+#!/bin/sh
+# python - NZEUS Deck's "python" command on the SD Debian (Python app, Terminal).
+# Stock: MicroPython + nzeus_py.py (apps/python), because the old kernel had
+# no pseudo-terminals. Here Debian's own python3 does the job; the Terminal
+# still talks to it through plain pipes, so:
+#   python              -> the >>> prompt (-i: interactive even without a terminal)
+#   python FILE.py ...  -> run a script (its arguments follow)
+#   python -c ... etc.  -> passed to python3 unchanged
+# -u = no output buffering, so prompts and input("Name? ") show at once.
+PY=${NZ_PYTHON3:-/usr/bin/python3}
+if ! test -x "$PY"; then
+    echo "python: python3 is not installed (apt install python3)"
+    exit 127
+fi
+if test $# -eq 0; then
+    exec "$PY" -u -q -i -c "import sys
+print('Python %s on the R36S (NZEUS Deck)' % sys.version.split()[0])
+print('A line ending in : starts a block, an empty line runs it.')
+print('exit() or Ctrl+D to quit.')"
+fi
+exec "$PY" -u "$@"

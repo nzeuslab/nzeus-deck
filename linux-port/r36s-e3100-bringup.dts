@@ -1,0 +1,54 @@
+// SPDX-License-Identifier: GPL-2.0
+// PC-validated draft for Siarhei's kernel, NOT the stock kernel/bootloader.
+// Hardware tests have not confirmed boot. See README.md before using this file.
+#include "sf3000.dts"
+
+/ {
+	model = "NZEUS R36S E3100 V2.7 (experimental bring-up)";
+	compatible = "nzeus,r36s-e3100", "hichip,hc16xx";
+
+	chosen {
+		// Requires a separately built initramfs. Never mounts the NZEUS card.
+		// Factory SD boot can leave AVP hardware running. Keep its clocks on
+		// until clock/device ownership is established (temporary bring-up only).
+		bootargs = "console=ttyS0,115200 earlycon rdinit=/init ro panic=0 clk_ignore_unused";
+		stdout-path = "serial0:115200n8";
+	};
+
+	memory {
+		// Match the measured STOCK Linux range for the first experimental boot.
+		// Expanding it needs proof that the other CPU/DMA no longer owns that RAM.
+		// In particular, never inherit SF3000's 256 MB map or mem=192M here.
+		reg = <0x00000000 0x02f91e50>;
+	};
+
+	// The serializer order and key polarity still need testing on this board.
+	gpio-keys {
+		status = "disabled";
+		key-l2 { gpios = <&gpio 11 GPIO_ACTIVE_LOW>; };
+		key-r2 { gpios = <&gpio 7 GPIO_ACTIVE_LOW>; };
+	};
+	serializer-keys { status = "disabled"; };
+	// Factory firmware initializes these shared timers. Use CPU-local time.
+	timer@4 { status = "disabled"; };
+};
+
+// A serial-only baseline; no unverified panel or power-control operations.
+&backlight { status = "disabled"; };
+&gpio { status = "disabled"; };
+&pwm { status = "disabled"; };
+
+&mmc {
+	// First modern boot is USB/initramfs only; avoid SD controller changes.
+	status = "disabled";
+	// Begin at the stock cap; the modern driver has not passed our 50 MHz test.
+	max-frequency = <20000000>;
+};
+
+// ADB on stock Linux identifies musb-hdrc.0.auto as the connected USB port.
+// Gadget enumeration on the NEW kernel still needs a real boot test.
+&usb0 {
+	dr_mode = "peripheral";
+	status = "okay";
+};
+&usb1 { status = "disabled"; };

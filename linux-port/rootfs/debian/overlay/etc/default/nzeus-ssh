@@ -1,0 +1,5 @@
+# Settings for /etc/init.d/nzeus-ssh (Dropbear). Restart: service nzeus-ssh restart
+# -s = no password logins at all (keys only; /root/.ssh/authorized_keys)
+# -j -k = no port forwarding (remove them if you want "ssh -L/-R" through the console)
+NZ_SSH_PORT=22
+NZ_SSH_ARGS="-s -j -k"

@@ -1,0 +1,21 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          nzeus-battlog
+# Required-Start:    $local_fs nzeus-data
+# Required-Stop:     $local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: NZEUS: battery logger (one line a minute) for the battery % calibration
+### END INIT INFO
+PIDFILE=/run/nzeus-battlog.pid
+case "$1" in
+    start)
+        start-stop-daemon --start --quiet --background --make-pidfile --pidfile "$PIDFILE" \
+            --startas /usr/local/sbin/nzeus-battlog ;;
+    stop)
+        start-stop-daemon --stop --quiet --pidfile "$PIDFILE" --retry TERM/5 && rm -f "$PIDFILE" ;;
+    restart|force-reload) "$0" stop; "$0" start ;;
+    status) tail -n 3 /data/nzeus/battlog.csv 2>/dev/null ;;
+    *) echo "Usage: $0 start|stop|status" >&2; exit 3 ;;
+esac
+exit 0

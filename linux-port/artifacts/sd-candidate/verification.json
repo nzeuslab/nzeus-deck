@@ -1,0 +1,37 @@
+{
+  "status": "PC_PACKAGED_HARDWARE_UNTESTED",
+  "image": {
+    "size": 4675647,
+    "load": "0x81000000",
+    "entry": "0x81000000",
+    "timestamp": 0,
+    "os": 5,
+    "arch": 5,
+    "type": 2,
+    "compression": 1,
+    "name": "NZEUS modern SD experiment",
+    "header_crc": "0x5dca47f2",
+    "data_crc": "0xd1d3d135"
+  },
+  "bytes": 4675727,
+  "sha256": "9fe6afd107656a91348045b8cc68d0c4af58053edd158f804888a1fe4a5e1253",
+  "raw_image_sha256": "0ac3e207fc613461a8f831f8ec40dc54fa124c4968d0d07d29e5bb79ba01f10b",
+  "decompressor_physical_end": "0x1978ab0",
+  "factory_bootmem_start": "0x01da0000",
+  "checks": [
+    "source artifact hashes",
+    "MIPS ELF load and entry",
+    "no decompressor overlap with factory bootmem",
+    "appended DTB preserved",
+    "clock preservation argument",
+    "RFC cipher vector",
+    "uImage CRCs",
+    "encrypted roundtrip",
+    "outer gzip expands to exact modern image plus DTB"
+  ],
+  "remaining_before_boot": [
+    "Verify fresh snapshot and exact candidate sector readback",
+    "Restore using the ready card reader after bounded USB-only observation"
+  ],
+  "controlled_test_review": "../../card-test/TEST-PLAN.md"
+}

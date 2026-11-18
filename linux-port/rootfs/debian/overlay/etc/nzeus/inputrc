@@ -1,0 +1,5 @@
+# Readline settings for the USB serial root shell (INPUTRC, set by nzeus-usb-shell).
+$include /etc/inputrc
+# No "bracketed paste" escape codes around each command: the PC tools
+# (rescue-command.py, rescue-upload.py) read the plain text.
+set enable-bracketed-paste off

@@ -1,0 +1,20 @@
+# Extra BusyBox applets on top of Buildroot's default config ("BusyBox full"
+# for a small console): block-device and recovery helpers, timeouts, and a few
+# network tools for later Wi-Fi / USB networking.
+CONFIG_TIMEOUT=y
+CONFIG_BLOCKDEV=y
+CONFIG_IONICE=y
+CONFIG_TASKSET=y
+CONFIG_FEATURE_TASKSET_FANCY=y
+CONFIG_NSENTER=y
+CONFIG_UNSHARE=y
+CONFIG_RFKILL=y
+CONFIG_NC=y
+CONFIG_NC_SERVER=y
+CONFIG_NC_EXTRA=y
+CONFIG_PSTREE=y
+CONFIG_FEATURE_VI_REGEX_SEARCH=y
+CONFIG_FEATURE_TOP_DECIMALS=y
+CONFIG_NTPD=y
+CONFIG_FEATURE_NTPD_SERVER=y
+CONFIG_FEATURE_NTPD_CONF=y

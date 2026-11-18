@@ -1,0 +1,68 @@
+#!/bin/sh
+# nzeus-deck start|stop|status - NZEUS Deck on the screen (nzeus-modern,
+# apps/frontend-modern) on the SD Linux.
+#   start   in the background; log /run/nzeus-modern.log
+#   stop    SIGTERM: NZEUS closes and hands the screen back (never a forced kill)
+#   status  running or not, last log lines
+# Not started at power-on unless the flag file exists:
+#   touch /data/nzeus/autostart-modern      (or /etc/nzeus/autostart-modern)
+# NZEUS's own files (settings, notes, screenshots) go to /data/nzeus/deck when
+# /data is mounted (kept after power-off), else to RAM (/tmp/nzeus-data).
+# Only ONE program may draw on /dev/fb0 at a time.
+BIN=${NZ_MODERN_BIN:-/usr/local/bin/nzeus-modern}
+PID=/run/nzeus-modern.pid
+LOG=/run/nzeus-modern.log
+
+running() {
+    pid=$(cat "$PID" 2>/dev/null)
+    case "$pid" in ''|0|*[!0-9]*) return 1 ;; esac
+    kill -0 "$pid" 2>/dev/null
+}
+
+case "$1" in
+start)
+    running && { echo "nzeus-deck: already running (pid $pid)"; exit 0; }
+    test -x "$BIN" || { echo "nzeus-deck: $BIN is missing"; exit 1; }
+    test "$(cat /sys/class/graphics/fb0/name 2>/dev/null)" = hc16xx-gma-argb ||
+        { echo "nzeus-deck: no hc16xx-gma-argb screen (fb0) in this kernel"; exit 1; }
+    if mountpoint -q /data; then
+        mkdir -p /data/nzeus/deck && NZ_DATA=/data/nzeus/deck && export NZ_DATA
+        # the Deck runs its helpers from NZ_DIR/bin (USB mode, Wi-Fi, Bluetooth):
+        # the Debian versions live in /usr/local/lib/nzeus/deck-bin (linux-port/deck-modern)
+        mkdir -p /data/nzeus/deck/nzeus
+        if test -d /usr/local/lib/nzeus/deck-bin && ! test -d /data/nzeus/deck/nzeus/bin; then
+            ln -s /usr/local/lib/nzeus/deck-bin /data/nzeus/deck/nzeus/bin
+        fi
+        # emoji pictures for text (NZ_DIR/emoji): the system's pack, unless the
+        # updater already put a pack of its own there
+        if test -d /usr/local/lib/nzeus/emoji && ! test -e /data/nzeus/deck/nzeus/emoji; then
+            ln -s /usr/local/lib/nzeus/emoji /data/nzeus/deck/nzeus/emoji
+        fi
+        # Settings > Storage > Compressed memory "off" (the Deck's flag file;
+        # nzeus-zram runs before /data is mounted, so it is applied here)
+        if test -e /data/nzeus/deck/nzeus/zram-off && grep -q '^/dev/zram0 ' /proc/swaps; then
+            swapoff /dev/zram0 2>/dev/null && echo 1 > /sys/block/zram0/reset 2>/dev/null
+        fi
+    fi
+    start-stop-daemon --start --quiet --background --make-pidfile --pidfile "$PID" \
+        --startas /bin/sh -- -c "exec '$BIN' >> '$LOG' 2>&1" || { echo "nzeus-deck: start failed"; exit 1; }
+    sleep 2
+    if running; then echo "nzeus-deck: started (pid $pid, log $LOG)"; else echo "nzeus-deck: it stopped at once:"; tail -n 20 "$LOG"; exit 1; fi
+    ;;
+stop)
+    running || { echo "nzeus-deck: not running"; exit 0; }
+    # TERM, wait up to 10 s, no KILL (it must hand the screen back itself)
+    start-stop-daemon --stop --quiet --pidfile "$PID" --retry TERM/10
+    rc=$?
+    if test $rc = 0; then rm -f "$PID"; echo "nzeus-deck: stopped"; else echo "nzeus-deck: still running after 10 s"; exit 1; fi
+    ;;
+status)
+    if running; then echo "nzeus-deck: running (pid $pid)"; else echo "nzeus-deck: not running"; fi
+    test -r "$LOG" && tail -n 5 "$LOG"
+    ;;
+*)
+    echo "usage: nzeus-deck start|stop|status" >&2
+    exit 2
+    ;;
+esac
+exit 0

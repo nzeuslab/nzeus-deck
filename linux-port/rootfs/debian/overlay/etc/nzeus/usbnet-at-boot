@@ -1,0 +1,3 @@
+rndis
+# USB network at power-on (nzeus-usbnet-boot). First line: rndis, ncm or auto.
+# Delete this file to switch it off (the plain rescue serial port COM9 stays).

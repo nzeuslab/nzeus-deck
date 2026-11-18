@@ -1,0 +1,16 @@
+#!/bin/sh
+# NZEUS: clock from clock.txt at start, saved every 5 min and at power-off.
+# Shared with Debian: /usr/local/sbin/nzeus-clock (needs /data: after S03nzdata).
+# The stock FAT32 is not mounted by the Buildroot root, so only
+# /data/nzeus/clock.txt is used here.
+PIDFILE=/run/nzeus-clock.pid
+case "$1" in
+    start)
+        /usr/local/sbin/nzeus-clock restore
+        start-stop-daemon -S -b -m -p "$PIDFILE" -x /usr/local/sbin/nzeus-clock -- keep ;;
+    stop)
+        start-stop-daemon -K -q -p "$PIDFILE"
+        rm -f "$PIDFILE"
+        /usr/local/sbin/nzeus-clock save ;;
+esac
+exit 0

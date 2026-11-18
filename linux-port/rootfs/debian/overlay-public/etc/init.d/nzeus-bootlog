@@ -1,0 +1,44 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          nzeus-bootlog
+# Required-Start:
+# Required-Stop:
+# Default-Start:     S
+# Default-Stop:
+# X-Start-Before:    hostname mountkernfs mountdevsubfs nzeus-ram nzeus-usb
+# Short-Description: NZEUS (copy-and-go): boot log on the SD card for the first 3 minutes
+### END INIT INFO
+# The start-up RAM disk began nzeus/boot-log.txt on the card (its own log + the kernel
+# messages up to the switch). This adds part 2, from the very first Debian step:
+#  - every kernel message (from the start again, then each new one as it comes)
+#  - once a second: which start-up steps are running right now
+# saved to the card every second for 3 minutes. If NZEUS freezes, the last lines
+# (read on a PC: nzeus\boot-log.txt) show where. Runs in the background; never
+# stops the start. Public image only.
+LOG=/sdcard/nzeus/boot-log.txt
+LIMIT=180
+case "$1" in
+start)
+    test -f "$LOG" || exit 0
+    (
+        echo "== NZEUS boot log, part 2: Debian start-up (kernel messages from the start again, then 1 line a second) =="
+        cat /dev/kmsg &
+        kmsg=$!
+        n=0
+        while test "$n" -lt "$LIMIT"; do
+            running=$(ps -eo args 2>/dev/null | grep -E '/etc/(init\.d|rcS\.d|rc[0-6]\.d)/|nzeus' \
+                | grep -vE 'nzeus-bootlog|grep' | tr '\n' ';')
+            echo "nzeus-bootlog: t=${n}s running: $running"
+            sync
+            sleep 1
+            n=$((n + 1))
+        done
+        kill "$kmsg" 2>/dev/null
+        echo "== NZEUS boot log ends ($LIMIT s after Debian started) =="
+        sync
+    ) >> "$LOG" 2>&1 < /dev/null &
+    ;;
+stop|restart|force-reload) ;;
+*) echo "Usage: $0 start" >&2; exit 3 ;;
+esac
+exit 0

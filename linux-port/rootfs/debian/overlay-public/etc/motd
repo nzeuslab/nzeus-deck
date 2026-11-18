@@ -1,0 +1,21 @@
+
+ NZEUS Deck - Debian 12 "bookworm" on the R36S console (modern kernel)
+
+ Where things are:
+   /            this system: the file nzeus/nzroot.img on the SD card.
+                It becomes writable only after a file system check at start-up.
+   /data        your NZEUS files: the file nzeus/nzdata.img. Kept when you
+                install a newer NZEUS - put everything you care about here.
+   /sdcard      the SD card itself (your games, cubegm/, nzeus/). Read-write.
+                Don't touch cubegm/ or nzeus/*.img: the console starts from them.
+   /tmp         RAM, only 8 MB. No big files there.
+
+ Useful commands:
+   nzeus-status            kernel, memory, battery, card, USB
+   poweroff                switch off cleanly (or hold the power button 3 s)
+   wifi-up / wifi-down     Wi-Fi with a USB dongle (settings: /data/nzeus/wifi.conf)
+   apt update; apt install NAME     more programs (needs Wi-Fi)
+
+ To go back to the console's own system: put the card in a Windows PC and run
+ uninstall.bat from the NZEUS download.
+

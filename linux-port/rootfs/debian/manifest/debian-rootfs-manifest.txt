@@ -1,0 +1,250 @@
+NZEUS SD Linux root file system - Debian manifest (written by build-debian.sh)
+built_utc=2026-10-13T23:37:06Z
+suite=bookworm arch=mipsel variant=minbase mirror=http://deb.debian.org/debian
+debian_release_Date: Sat, 11 Jul 2026 10:16:37 UTC
+repo_commit=06a58f877c08d518991857568fc5d87b5b9fbfa0
+repo_tracked_changes=yes
+repo_tracked_diff_sha256=de54754dd716be90bf52669133a426ecf87aa963316baa2e1f378de0e44d6d95
+deck_helpers_manifest_sha256=59a7b1b7dcf03a49b5de4f00690c04286d3479315c5f8a91a921a21ecaf06638
+tree_bytes=235829985
+tree_files=9845
+authorized_keys=no
+nzeus_modern_sha256=c3e16147768eff7ce57cc8ba2aa8f44c5e36fd2f29084e46f6d2c3388834d6e1
+image=rootfs.ext4
+sha256=9824ce927b78906d60b90663a14dea0ad32e79eef782379ca3ceb57a07050182
+bytes=4294967296
+allocated_bytes=363106304
+used_bytes=377921536
+label=nzroot
+uuid=f05e088e-62f3-4af5-a3d6-46d76adbdbec
+features=has_journal ext_attr resize_inode dir_index filetype extent 64bit flex_bg sparse_super large_file huge_file dir_nlink extra_isize metadata_csum
+inodes=262144 free_inodes=252291
+max_mount_count=-1 check_interval=0 (<none>)
+errors=Remount read-only
+mke2fs=mke2fs 1.47.0 (5-Feb-2023)
+
+rcS order: hostname.sh mountkernfs.sh mountdevsubfs.sh nzeus-ram nzeus-usb nzeus-zram checkroot.sh nzeus-rootfs checkfs.sh checkroot-bootclean.sh mount-configfs mountall.sh mountall-bootclean.sh nzeus-data nzeus-clock procps urandom mountnfs.sh mountnfs-bootclean.sh alsa-utils bootmisc.sh 
+
+installed packages (name version arch installed-size-KiB):
+  adduser 3.134 all 686
+  alsa-utils 1.2.8-1 mipsel 3098
+  apt 2.6.1 mipsel 4774
+  base-files 12.4+deb12u15 mipsel 341
+  base-passwd 3.6.1 mipsel 276
+  bash 5.2.15-2+b13 mipsel 7359
+  bsdutils 1:2.38.1-5+deb12u3 mipsel 551
+  busybox 1:1.35.0-4+deb12u1+b1 mipsel 1158
+  ca-certificates 20230311+deb12u1 all 387
+  coreutils 9.1-1 mipsel 21338
+  curl 7.88.1-10+deb12u15 mipsel 480
+  dash 0.5.12-2 mipsel 272
+  debconf 1.5.82 all 491
+  debian-archive-keyring 2023.3+deb12u2 all 293
+  debianutils 5.7-0.5~deb12u1 mipsel 385
+  diffutils 1:3.8-4 mipsel 1686
+  dpkg 1.21.23 mipsel 6834
+  dropbear-bin 2022.83-1+deb12u3 mipsel 759
+  e2fsprogs 1.47.0-2+b2 mipsel 2214
+  evtest 1:1.35-1 mipsel 50
+  fbset 2.1-33 mipsel 391
+  findutils 4.9.0-4 mipsel 1868
+  firmware-realtek 20230210-5 all 6881
+  fontconfig-config 2.14.1-4 mipsel 527
+  fonts-dejavu 2.37-6 all 34
+  fonts-dejavu-core 2.37-6 all 2960
+  fonts-dejavu-extra 2.37-6 all 7229
+  gcc-12-base 12.2.0-14+deb12u1 mipsel 100
+  gpgv 2.2.40-1.1+deb12u2 mipsel 1002
+  grep 3.8-5 mipsel 1315
+  gzip 1.12-1 mipsel 252
+  hostname 3.23+nmu1 mipsel 90
+  htop 3.2.2-2 mipsel 413
+  init-system-helpers 1.65.2+deb12u1 all 133
+  initscripts 3.06-4 all 177
+  insserv 1.24.0-1 mipsel 155
+  iproute2 6.1.0-3 mipsel 4301
+  iputils-ping 3:20221126-1+deb12u1 mipsel 178
+  iw 5.19-1 mipsel 359
+  kmod 30+20221128-1 mipsel 272
+  less 590-2.1~deb12u2 mipsel 496
+  libacl1 2.3.1-3 mipsel 103
+  libapt-pkg6.0 2.6.1 mipsel 3479
+  libasound2 1.2.8-1+b1 mipsel 1228
+  libasound2-data 1.2.8-1 all 200
+  libasyncns0 0.8-6+b3 mipsel 85
+  libatomic1 12.2.0-14+deb12u1 mipsel 83
+  libatopology2 1.2.8-1+b1 mipsel 154
+  libattr1 1:2.5.1-4 mipsel 100
+  libaudit-common 1:3.0.9-1 all 22
+  libaudit1 1:3.0.9-1 mipsel 157
+  libblkid1 2.38.1-5+deb12u3 mipsel 464
+  libbpf1 1:1.1.2-0+deb12u1 mipsel 440
+  libbrotli1 1.0.9-2+b6 mipsel 866
+  libbsd0 0.11.7-2 mipsel 255
+  libbz2-1.0 1.0.8-5+b1 mipsel 104
+  libc-bin 2.36-9+deb12u14 mipsel 2217
+  libc6 2.36-9+deb12u14 mipsel 23335
+  libcaca0 0.99.beta20-3+deb12u1 mipsel 1070
+  libcairo2 1.16.0-7 mipsel 1452
+  libcap-ng0 0.8.3-1+b3 mipsel 154
+  libcap2 1:2.66-4+deb12u3+b1 mipsel 161
+  libcap2-bin 1:2.66-4+deb12u3+b1 mipsel 300
+  libcom-err2 1.47.0-2+b2 mipsel 104
+  libcrypt1 1:4.4.33-2 mipsel 293
+  libcurl4 7.88.1-10+deb12u15 mipsel 899
+  libdb5.3 5.3.28+dfsg2-1 mipsel 1838
+  libdbus-1-3 1.14.10-1~deb12u1 mipsel 454
+  libdebconfclient0 0.270 mipsel 88
+  libdeflate0 1.14-1 mipsel 147
+  libelf1 0.188-2.1 mipsel 1066
+  libexpat1 2.5.0-1+deb12u2 mipsel 452
+  libext2fs2 1.47.0-2+b2 mipsel 612
+  libffi8 3.4.4-1 mipsel 93
+  libfftw3-single3 3.3.10-1 mipsel 1106
+  libflac12 1.4.2+ds-2 mipsel 461
+  libfontconfig1 2.14.1-4 mipsel 622
+  libfreetype6 2.12.1+dfsg-5+deb12u4 mipsel 899
+  libgcc-s1 12.2.0-14+deb12u1 mipsel 283
+  libgcrypt20 1.10.1-3+deb12u1 mipsel 1375
+  libgmp10 2:6.2.1+dfsg1-1.1 mipsel 874
+  libgnutls30 3.7.9-2+deb12u7 mipsel 3323
+  libgomp1 12.2.0-14+deb12u1 mipsel 373
+  libgpg-error0 1.46-1 mipsel 245
+  libgssapi-krb5-2 1.20.1-2+deb12u5 mipsel 435
+  libhogweed6 3.8.1-2 mipsel 510
+  libidn2-0 2.3.3-1+b1 mipsel 442
+  libjbig0 2.1-6.1 mipsel 97
+  libjpeg62-turbo 1:2.1.5-2 mipsel 556
+  libk5crypto3 1.20.1-2+deb12u5 mipsel 284
+  libkeyutils1 1.6.3-2 mipsel 86
+  libkmod2 30+20221128-1 mipsel 161
+  libkrb5-3 1.20.1-2+deb12u5 mipsel 1082
+  libkrb5support0 1.20.1-2+deb12u5 mipsel 154
+  liblcms2-2 2.14-2+deb12u1 mipsel 466
+  libldap-2.5-0 2.5.13+dfsg-5 mipsel 599
+  liblerc4 4.0.0+ds-2 mipsel 708
+  liblz4-1 1.9.4-1 mipsel 221
+  liblzma5 5.4.1-1+deb12u1 mipsel 352
+  liblzo2-2 2.10-2 mipsel 159
+  libmd0 1.0.4-2 mipsel 101
+  libmnl0 1.0.4-3 mipsel 40
+  libmount1 2.38.1-5+deb12u3 mipsel 538
+  libmp3lame0 3.100-6 mipsel 591
+  libmpg123-0 1.31.2-1+deb12u1 mipsel 360
+  libncursesw6 6.4-4 mipsel 597
+  libnettle8 3.8.1-2 mipsel 546
+  libnghttp2-14 1.52.0-1+deb12u3 mipsel 243
+  libnl-3-200 3.7.0-0.2+b1 mipsel 189
+  libnl-genl-3-200 3.7.0-0.2+b1 mipsel 99
+  libnl-route-3-200 3.7.0-0.2+b1 mipsel 661
+  libnsl2 1.3.0-2 mipsel 119
+  libnspr4 2:4.35-1 mipsel 456
+  libnss3 2:3.87.1-1+deb12u2 mipsel 4347
+  libogg0 1.3.5-3 mipsel 91
+  libopenjp2-7 2.5.0-2+deb12u3 mipsel 546
+  libopus0 1.3.1-3 mipsel 424
+  libp11-kit0 0.24.1-2 mipsel 1381
+  libpam-modules 1.5.2-6+deb12u2 mipsel 3156
+  libpam-modules-bin 1.5.2-6+deb12u2 mipsel 488
+  libpam-runtime 1.5.2-6+deb12u2 all 876
+  libpam0g 1.5.2-6+deb12u2 mipsel 318
+  libpcre2-8-0 10.42-1 mipsel 784
+  libpcsclite1 1.9.9-2 mipsel 115
+  libpixman-1-0 0.42.2-1 mipsel 930
+  libpng16-16 1.6.39-2+deb12u5 mipsel 476
+  libpoppler126 22.12.0-2+deb12u2 mipsel 4188
+  libproc2-0 2:4.0.2-3 mipsel 255
+  libpsl5 0.21.2-1 mipsel 153
+  libpulse0 16.1+dfsg1-2+b1 mipsel 1034
+  libpython3-stdlib 3.11.2-1+b1 mipsel 27
+  libpython3.11-minimal 3.11.2-6+deb12u8 mipsel 5233
+  libpython3.11-stdlib 3.11.2-6+deb12u8 mipsel 9742
+  libreadline8 8.2-1.3 mipsel 500
+  librtmp1 2.4+20151223.gitfa8646d.1-2+b2 mipsel 137
+  libsamplerate0 0.2.2-3 mipsel 1506
+  libsasl2-2 2.1.28+dfsg-10 mipsel 193
+  libsasl2-modules-db 2.1.28+dfsg-10 mipsel 114
+  libsdl1.2debian 1.2.15+dfsg2-8 mipsel 558
+  libseccomp2 2.5.4-1+deb12u1 mipsel 157
+  libselinux1 3.4-1+b6 mipsel 235
+  libsemanage-common 3.4-1 all 37
+  libsemanage2 3.4-1+b5 mipsel 316
+  libsepol2 3.4-2.1 mipsel 852
+  libslang2 2.3.3-3 mipsel 2660
+  libsmartcols1 2.38.1-5+deb12u3 mipsel 333
+  libsndfile1 1.2.0-1+deb12u1 mipsel 640
+  libsqlite3-0 3.40.1-2+deb12u2 mipsel 1785
+  libss2 1.47.0-2+b2 mipsel 104
+  libssh2-1 1.10.0-3+b1 mipsel 361
+  libssl3 3.0.20-1~deb12u2 mipsel 5678
+  libstdc++6 12.2.0-14+deb12u1 mipsel 2798
+  libsystemd0 252.39-1~deb12u2 mipsel 923
+  libtasn1-6 4.19.0-2+deb12u1 mipsel 168
+  libtiff6 4.5.0-6+deb12u4 mipsel 759
+  libtinfo6 6.4-4 mipsel 541
+  libtirpc-common 1.3.3+ds-1 all 35
+  libtirpc3 1.3.3+ds-1 mipsel 252
+  libtomcrypt1 1.18.2-6 mipsel 1005
+  libtommath1 1.2.0-6+deb12u1 mipsel 171
+  libudev1 252.39-1~deb12u2 mipsel 256
+  libunistring2 1.0-2 mipsel 1806
+  libusb-1.0-0 2:1.0.26-1 mipsel 152
+  libuuid1 2.38.1-5+deb12u3 mipsel 112
+  libvncserver1 0.9.14+dfsg-1+deb12u2 mipsel 490
+  libvorbis0a 1.3.7-1 mipsel 202
+  libvorbisenc2 1.3.7-1 mipsel 547
+  libwayland-client0 1.21.0-1 mipsel 92
+  libwebp7 1.2.4-0.2+deb12u1 mipsel 512
+  libx11-6 2:1.8.4-2+deb12u2 mipsel 1625
+  libx11-data 2:1.8.4-2+deb12u2 all 1577
+  libx11-xcb1 2:1.8.4-2+deb12u2 mipsel 304
+  libxau6 1:1.0.9-1 mipsel 37
+  libxcb-icccm4 0.4.1-1.1 mipsel 56
+  libxcb-image0 0.4.0-2 mipsel 43
+  libxcb-keysyms1 0.4.0-1+b2 mipsel 38
+  libxcb-render0 1.15-1 mipsel 194
+  libxcb-shm0 1.15-1 mipsel 178
+  libxcb-util1 0.4.0-1+b1 mipsel 49
+  libxcb1 1.15-1 mipsel 350
+  libxdmcp6 1:1.1.2-3 mipsel 53
+  libxext6 2:1.3.4-1+b1 mipsel 189
+  libxrender1 1:0.9.10-1.1 mipsel 75
+  libxtables12 1.8.9-2 mipsel 105
+  libxxhash0 0.8.1-1 mipsel 84
+  libzstd1 1.5.4+dfsg2-5 mipsel 835
+  login 1:4.13+dfsg1-1+deb12u2 mipsel 2720
+  logsave 1.47.0-2+b2 mipsel 101
+  makedev 2.3.1-97 all 99
+  mawk 1.3.4.20200120-3.1 mipsel 311
+  media-types 10.0.0 all 92
+  mount 2.38.1-5+deb12u3 mipsel 522
+  nano 7.2-1+deb12u1 mipsel 2864
+  ncurses-base 6.4-4 all 379
+  ncurses-bin 6.4-4 mipsel 903
+  netbase 6.4 all 36
+  netsurf-common 3.10-1 all 902
+  netsurf-fb 3.10-1+b3 mipsel 4502
+  openssl 3.0.20-1~deb12u2 mipsel 2240
+  passwd 1:4.13+dfsg1-1+deb12u2 mipsel 3436
+  perl-base 5.36.0-7+deb12u3 mipsel 8110
+  poppler-utils 22.12.0-2+deb12u2 mipsel 1139
+  procps 2:4.0.2-3 mipsel 2722
+  python3 3.11.2-1+b1 mipsel 81
+  python3-minimal 3.11.2-1+b1 mipsel 111
+  python3.11 3.11.2-6+deb12u8 mipsel 650
+  python3.11-minimal 3.11.2-6+deb12u8 mipsel 6673
+  readline-common 8.2-1.3 all 89
+  sed 4.9-1+deb12u1 mipsel 1001
+  startpar 0.65-1+b1 mipsel 92
+  sysv-rc 3.06-4 all 85
+  sysvinit-core 3.06-4 mipsel 490
+  sysvinit-utils 3.06-4 mipsel 191
+  tar 1.34+dfsg-1.2+deb12u1 mipsel 3250
+  tzdata 2026b-0+deb12u1 all 2573
+  usbutils 1:014-1+deb12u1 mipsel 376
+  usr-is-merged 37~deb12u1 all 13
+  util-linux 2.38.1-5+deb12u3 mipsel 7431
+  util-linux-extra 2.38.1-5+deb12u3 mipsel 502
+  wireless-regdb 2026.05.30-1~deb12u1 all 39
+  wpasupplicant 2:2.10-12+deb12u3 mipsel 4307
+  zlib1g 1:1.2.13.dfsg-1 mipsel 183

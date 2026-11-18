@@ -1,0 +1,28 @@
+NZEUS SD Linux root file system (Debian) - PLANNED, NOT BUILT
+Written 2026-10-09 on a build machine that could not reach deb.debian.org
+(proxy 403), so there is no real package list with versions, no image sha256
+and no measured size yet. build-debian.sh (WSL) writes the real
+debian-rootfs-manifest.txt next to this file: commit that one.
+
+Base:      debootstrap --variant=minbase, Debian 12 "bookworm", mipsel
+           (deb.debian.org; archive.debian.org if bookworm has moved there),
+           plus bookworm-updates and bookworm-security
+Added:     the packages in ../packages.txt (--no-install-recommends)
+Blocked:   systemd systemd-sysv udev dbus (apt pin -1, and checked by the builder)
+Image:     rootfs.ext4, 4 GiB sparse, ext4, 4 KiB blocks, label nzroot,
+           features from ../mke2fs.conf (metadata_csum, no metadata_csum_seed,
+           no orphan_file), mount-count/interval checks off, errors=remount-ro
+
+ESTIMATES (not measured - replace with the manifest after the first build):
+  used space in the image   ~300-400 MB (minbase ~200 MB + python3 ~30 MB +
+                            curl/openssl/wpa_supplicant/iproute2/htop/... ;
+                            docs/man/locales removed)
+  file on the WSL disk      ~0.4-0.6 GB (sparse; the ext4 inode tables and
+                            journal add ~130 MB)
+  RAM after start-up        ~6-10 MB for userspace (sysvinit, the USB bash,
+                            Dropbear, the clock keeper), leaving very roughly
+                            25-30 MB of the 38.7 MB the kernel gives Linux
+                            with the factory AVP running; zram adds ~19 MB of
+                            compressed swap
+  first build time          ~30-60 min (debootstrap second stage and apt
+                            under qemu-user)

@@ -1,0 +1,13 @@
+NZEUS emoji pictures
+====================
+
+These pictures are Twemoji, made by Twitter, Inc. and other contributors,
+from the maintained Twemoji project: https://github.com/jdecked/twemoji
+(release v17.0.3). Copyright 2019 Twitter, Inc and other contributors.
+
+The graphics are licensed under CC-BY 4.0:
+https://creativecommons.org/licenses/by/4.0/
+
+Changes made for NZEUS: each picture was shrunk to 16 x 16 pixels and
+converted to LVGL's binary image format (.bin); only emoji that are one
+Unicode code point are included.

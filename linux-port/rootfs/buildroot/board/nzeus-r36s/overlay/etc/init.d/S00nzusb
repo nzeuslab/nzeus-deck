@@ -1,0 +1,6 @@
+#!/bin/sh
+# NZEUS: the USB serial rescue port (same identity as the RAM rescue); normally
+# the RAM system already made it and this changes nothing. Shared with Debian:
+# /usr/local/sbin/nzeus-usb-gadget. (Runs after S00nzmount: "m" < "u".)
+case "$1" in start) /usr/local/sbin/nzeus-usb-gadget ;; esac
+exit 0

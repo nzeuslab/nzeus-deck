@@ -1,0 +1,28 @@
+
+ NZEUS SD Linux - Debian 12 "bookworm" on the R36S console (modern kernel)
+
+ Where things are:
+   /            this system, on the SD card (partition "nzroot", 4 GiB).
+                It becomes writable only after a file system check at start-up.
+   /data        your files (partition "nzdata", ~39 GiB). Kept when the
+                system is rebuilt from the PC - put everything you care about here.
+   /mnt/stock   the boot files (kernel, device tree), READ-ONLY on purpose.
+                Never change that: a wrong file there stops the console starting.
+   /tmp         RAM, only 8 MB. No big files there.
+
+ Useful commands:
+   nzeus-status            kernel, memory, battery, card, read-only/read-write, USB
+   poweroff                switch off cleanly (or hold the power button 3 s)
+   nzeus-deck start|stop   NZEUS Deck on the screen (auto-start: touch /data/nzeus/autostart-modern)
+   usbnet-up / usbnet-down network over the USB cable (linux-port/usbnet/README.md)
+   usb-host-trial          USB HOST mode for a while (UNPLUG THE PC FIRST), then back
+                           by itself; usb-host-confirm keeps it, usb-host-off leaves it
+   usb-host-status         what is plugged in;  wifi-up / wifi-down  Wi-Fi + SSH
+                           (settings: /data/nzeus/wifi.conf, chmod 600; linux-port/usbhost)
+   apt update; apt install NAME     more programs (needs a network; RAM is tight:
+                                    with ~39 MB, apt is slow - see the README)
+
+ If "/" says READ-ONLY: the start-up check found a problem and did NOT force a
+ repair. Switch off and on once; if it stays read-only, hold FN at power-on for
+ the RAM rescue and see linux-port/rootfs/PLAN.md ("Recovery").
+

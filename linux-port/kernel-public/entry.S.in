@@ -1,0 +1,86 @@
+.set mips32r2
+.set noreorder
+.set noat
+.section .text
+.global _start
+_start:
+    # Preserve firmware arguments, stack, gp, saved registers and return address.
+    move $k1, $ra
+    lui $t0, 0xb880
+    lw $t1, 0x60($t0)
+    # UART0 and its three supporting bus/baud gates: clear means enabled.
+    lui $t2, 0x8ffe
+    ori $t2, $t2, 0xffff
+    and $t1, $t1, $t2
+    sw $t1, 0x60($t0)
+    lw $t1, 0x80($t0)
+    lui $t2, 0xfffe
+    ori $t2, $t2, 0xffff
+    and $t1, $t1, $t2
+    sw $t1, 0x80($t0)
+    sync
+    lui $t0, 0xb881
+    ori $t0, $t0, 0x8300
+    li $t1, 3
+    sb $t1, 3($t0)
+    sb $zero, 1($t0)
+    li $t1, 0x83
+    sb $t1, 3($t0)
+    li $t1, 6
+    sb $t1, 0($t0)
+    sb $zero, 1($t0)
+    li $t1, 3
+    sb $t1, 3($t0)
+    lui $t2, 0xb880
+    li $t1, 1
+    sb $t1, 0x4ac($t2)
+    sync
+    la $t1, entry_message
+    jal puts_bounded
+    nop
+    # Retain the previous modern experiment's single Config0 change.
+    mfc0 $t2, $16, 0
+    ehb
+    lui $t3, 2
+    or $t2, $t2, $t3
+    mtc0 $t2, $16, 0
+    ehb
+    la $t1, kernel_message
+    jal puts_bounded
+    nop
+.global enter_kernel
+enter_kernel:
+    move $ra, $k1
+    lui $t9, @ENTRY_HI@
+    ori $t9, $t9, @ENTRY_LO@
+    jr $t9
+    nop
+
+# Inputs t0=UART0, t1=string. No stack use; only t1..t4 and ra are clobbered.
+# If UART never becomes ready, abandon the message and still enter Linux.
+puts_bounded:
+    lbu $t2, 0($t1)
+    beq $t2, $zero, puts_done
+    nop
+    lui $t3, 0x10
+wait_tx:
+    lbu $t4, 5($t0)
+    andi $t4, $t4, 0x40
+    bne $t4, $zero, send_char
+    nop
+    addiu $t3, $t3, -1
+    bne $t3, $zero, wait_tx
+    nop
+    b puts_done
+    nop
+send_char:
+    sb $t2, 0($t0)
+    sync
+    addiu $t1, $t1, 1
+    b puts_bounded
+    nop
+puts_done:
+    jr $ra
+    nop
+entry_message: .asciz "\r\nNZEUS UART ENTRY 19200\r\n"
+kernel_message: .asciz "NZEUS ENTER LINUX CONFIG0-BIT17\r\n"

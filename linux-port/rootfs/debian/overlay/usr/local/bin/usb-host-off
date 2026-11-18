@@ -1,0 +1,5 @@
+#!/bin/sh
+# usb-host-off - leave USB host mode: device mode + the USB rescue serial port again.
+# See linux-port/usbhost/README.md. Runs the unchanged linux-port/usbhost/usb-host-off.sh,
+# installed by the builder.
+exec /bin/sh /usr/local/lib/nzeus/usbhost/usb-host-off.sh "$@"

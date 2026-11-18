@@ -1,0 +1,43 @@
+NZEUS R36S rootfs - PLANNED package list (NOT BUILT)
+Source: make show-info for configs/nzeus_r36s_defconfig, Buildroot 393f0196 (2025.02.18), 2026-10-09.
+The cloud build could not download sources (egress policy blocked sources.buildroot.net, kernel.org,
+GNU mirrors, musl.libc.org, python.org, busybox.net, ...), so there are NO sizes here yet.
+Run build.sh in WSL; it writes the real nzeus-rootfs-manifest.txt (sizes + rootfs.tar sha256) next to this file.
+
+33 target packages (name, version, licence):
+  busybox                  1.37.0               GPL-2.0, bzip2-1.0.6
+  ca-certificates          20260223             GPL-2.0+ (script), MPL-2.0 (data)
+  dropbear                 2026.93              MIT, BSD-2-Clause, Public domain , Unlicense, WTFPL
+  e2fsprogs                1.47.2               GPL-2.0, MIT-like with advertising clause (libss and libet)
+  evtest                   1.35                 GPL-2.0+
+  fbset                    2.1                  GPL-2.0
+  gcc-final                13.4.0               GPL-3.0-with-GCC-exception
+  htop                     3.3.0                GPL-2.0+
+  i2c-tools                4.4                  GPL-2.0+, GPL-2.0 (py-smbus), LGPL-2.1+ (libi2c)
+  ifupdown-scripts                              GPL-2.0-or-later
+  initscripts                                   GPL-2.0-or-later
+  iw                       6.9                  ISC
+  libffi                   3.4.6                MIT
+  libnl                    3.11.0               LGPL-2.1+
+  libopenssl               3.5.9                Apache-2.0
+  libzlib                  1.3.2                Zlib
+  linux-headers            custom               GPL-2.0
+  musl                     1.2.6                MIT
+  musl-compat-headers                           BSD-3-Clause, Public Domain or CC0
+  nano                     8.2                  GPL-3.0+
+  ncurses                  6.4-20230603         MIT with advertising clause
+  openssl                                       
+  python3                  3.12.14              Python-2.0, others
+  readline                 8.2                  GPL-3.0+
+  skeleton                                      
+  skeleton-init-common                          GPL-2.0-or-later
+  skeleton-init-sysv                            GPL-2.0-or-later
+  toolchain                                     
+  toolchain-buildroot                           
+  urandom-scripts                               GPL-2.0-or-later
+  util-linux               2.40.4               GPL-2.0+, BSD-4-Clause, LGPL-2.1+ (libblkid, libfdisk, libmount), BSD-3-Clause (libuuid), BSD-2-Clause (xxhash), ISC (rfkill), MIT (hardlink, flock)
+  wpa_supplicant           2.12                 BSD-3-Clause
+  zlib                                          
+
+39 host (build-only) packages:
+  host-acl host-attr host-autoconf host-autoconf-archive host-automake host-binutils host-bison host-e2fsprogs host-expat host-fakeroot host-flex host-gcc-final host-gcc-initial host-gettext host-gettext-tiny host-gmp host-libffi host-libopenssl host-libtool host-libzlib host-m4 host-makedevs host-mpc host-mpfr host-ncurses host-openssl host-patchelf host-pkgconf host-python-flit-core host-python-installer host-python-packaging host-python-pypa-build host-python-pyproject-hooks host-python-setuptools host-python-wheel host-python3 host-skeleton host-util-linux host-zlib

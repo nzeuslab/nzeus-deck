@@ -1,0 +1,17 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          nzeus-data
+# Required-Start:    mountall nzeus-rootfs
+# Required-Stop:
+# Default-Start:     S
+# Default-Stop:
+# Short-Description: NZEUS: e2fsck and mount the data area at /data
+### END INIT INFO
+# At shutdown Debian's umountfs unmounts /data like every other file system.
+case "$1" in
+    start) /usr/local/sbin/nzeus-datamount ;;
+    stop|restart|force-reload) ;;
+    status) grep ' /data ' /proc/mounts || echo "/data is not mounted" ;;
+    *) echo "Usage: $0 start" >&2; exit 3 ;;
+esac
+exit 0

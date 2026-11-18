@@ -1,0 +1,5 @@
+index  bssid              ch  RSSI  SdBm  Noise    age                              flag                              ssid
+    1  aa:bb:cc:dd:ee:01    6    60   -52     0      120                  [WPA2][WPS][ESS]                         NZEUS LAB
+    2  aa:bb:cc:dd:ee:02   11    80   -61     0      120                       [WPA2][ESS]                     Cafe Kitchen
+    3  aa:bb:cc:dd:ee:03    1    30   -74     0      120                             [ESS]                    Cafe Free WiFi
+    4  aa:bb:cc:dd:ee:04   36    70   -83     0      120                       [WPA2][ESS]                         Neighbour

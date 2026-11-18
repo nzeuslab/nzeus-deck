@@ -1,0 +1,47 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          nzeus-ssh
+# Required-Start:    $local_fs nzeus-clock
+# Required-Stop:     $local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: NZEUS: Dropbear SSH server, public-key logins only
+### END INIT INFO
+# Started only if /root/.ssh/authorized_keys exists (no keys = no SSH).
+# Logins: keys only (-s = no passwords at all). Listens on port 22 of every
+# address; today the only network is the USB cable (usbnet-up, 192.168.77.1).
+# Host keys: made on the first start (-R) in /etc/dropbear/; nzeus-status
+# shows the fingerprint over the USB cable (the trusted path).
+# Settings: /etc/default/nzeus-ssh. Log: /run/nzeus-ssh.log (RAM).
+PIDFILE=/run/nzeus-ssh.pid
+NZ_SSH_PORT=22
+NZ_SSH_ARGS="-s -j -k"
+test -r /etc/default/nzeus-ssh && . /etc/default/nzeus-ssh
+case "$1" in
+    start)
+        test -s /root/.ssh/authorized_keys || { echo "nzeus-ssh: no /root/.ssh/authorized_keys: SSH not started"; exit 0; }
+        if test -x /usr/sbin/dropbear; then
+            DB=/usr/sbin/dropbear
+        else
+            DB="/usr/local/sbin/dropbearmulti-modern dropbear"
+        fi
+        mkdir -p /etc/dropbear
+        # -F foreground (start-stop-daemon puts it in the background), -E log to stderr
+        start-stop-daemon --start --quiet --background --make-pidfile --pidfile "$PIDFILE" \
+            --startas /bin/sh -- -c "exec $DB -F -E -R -p $NZ_SSH_PORT $NZ_SSH_ARGS >> /run/nzeus-ssh.log 2>&1" &&
+            echo "nzeus-ssh: started on port $NZ_SSH_PORT (keys only)"
+        ;;
+    stop)
+        start-stop-daemon --stop --quiet --oknodo --pidfile "$PIDFILE" --retry TERM/5
+        rm -f "$PIDFILE"
+        ;;
+    restart|force-reload)
+        "$0" stop
+        "$0" start
+        ;;
+    status)
+        if test -s "$PIDFILE" && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then echo running; else echo "not running"; exit 3; fi
+        ;;
+    *) echo "Usage: $0 start|stop|restart|status" >&2; exit 3 ;;
+esac
+exit 0

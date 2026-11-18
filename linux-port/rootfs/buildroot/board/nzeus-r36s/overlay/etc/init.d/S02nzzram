@@ -1,0 +1,5 @@
+#!/bin/sh
+# NZEUS: compressed swap in RAM (zram), half the RAM. Shared with Debian:
+# /usr/local/sbin/nzeus-zram.
+case "$1" in start) /usr/local/sbin/nzeus-zram ;; esac
+exit 0

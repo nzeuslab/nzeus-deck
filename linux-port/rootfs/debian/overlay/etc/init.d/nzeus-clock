@@ -1,0 +1,26 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          nzeus-clock
+# Required-Start:    nzeus-data $local_fs
+# Required-Stop:     $local_fs
+# Default-Start:     S
+# Default-Stop:      0 6
+# Short-Description: NZEUS: clock from clock.txt at start, saved every 5 min and at power-off
+### END INIT INFO
+PIDFILE=/run/nzeus-clock.pid
+case "$1" in
+    start)
+        /usr/local/sbin/nzeus-clock restore
+        start-stop-daemon --start --quiet --background --make-pidfile --pidfile "$PIDFILE" \
+            --startas /usr/local/sbin/nzeus-clock -- keep
+        ;;
+    stop)
+        start-stop-daemon --stop --quiet --oknodo --pidfile "$PIDFILE" --retry TERM/5
+        rm -f "$PIDFILE"
+        /usr/local/sbin/nzeus-clock save
+        ;;
+    restart|force-reload) ;;
+    status) sed -n 2p /data/nzeus/clock.txt 2>/dev/null || echo "never saved" ;;
+    *) echo "Usage: $0 start|stop" >&2; exit 3 ;;
+esac
+exit 0

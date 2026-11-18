@@ -1,0 +1,14 @@
+{
+  "pointer_bytes": 4,
+  "sdk_audio_config_bytes": 608,
+  "sdk_init_ioctl": "0x82600301",
+  "handoff_632_byte_init_ioctl": "0x82780301",
+  "packet_header_bytes": 16,
+  "extradata_pointer_offset": 544,
+  "buffering_start_offset": 576,
+  "status": "SDK_MIPS_ABI_VERIFIED_ON_PC; LIVE_632_BYTE_BEHAVIOR_FROM_HANDOFF",
+  "source_sha256": {
+    "include/uapi/hcuapi/auddec.h": "29a3a0580cf09fcc0a2619681239c16fee4dc89be1804a48f82476db9994abe1",
+    "drivers/hcdrivers/avp-proxy/avp-proxy.c": "f11d450c7151468c78c9bc538ed31950494abc963dbebee556e20c2893531fea"
+  }
+}

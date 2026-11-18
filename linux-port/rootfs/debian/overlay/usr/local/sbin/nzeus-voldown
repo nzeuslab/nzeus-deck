@@ -1,0 +1,99 @@
+#!/bin/sh
+# nzeus-voldown key|uart|status|boot - what pin L12 does (2026-10-10).
+# L12 is wired to the Vol- button AND is the debug serial line (uart0 TX, the
+# boot log the Arduino Uno logger reads, 19200 baud). One pin, one job:
+#   key     Vol- works (KEY_VOLUMEDOWN); the debug serial line is off
+#   uart    the debug serial line works; Vol- does nothing
+#   status  what L12 does now, and the saved choice
+#   boot    apply the saved choice (default: key) - run at the end of start-up,
+#           so the boot log still goes to the serial line until Debian is up
+# The choice is saved in /etc/nzeus/voldown-mode (kept after power-off).
+# How: uart0 (18818300.serial, driver of_serial) owns the pin while bound; it
+# is unbound, then the power driver takes L12 (sysfs "voldown"); back = the
+# reverse. If the kernel refuses, the UART is bound again: never neither.
+# Works with dash, bash and BusyBox ash. NZ_* variables: PC test only.
+SYS=${NZ_SYS:-/sys}
+CONF=${NZ_CONF:-/etc/nzeus/voldown-mode}
+DEV=18818300.serial
+DRV=$SYS/bus/platform/drivers/of_serial
+P=$(ls -d "$SYS"/bus/platform/devices/*.power 2>/dev/null | head -n 1)
+ATTR=$P/voldown
+
+now() { cat "$ATTR" 2>/dev/null || echo uart; }
+
+to_key() {
+    test -n "$P" && test -e "$ATTR" || { echo "voldown: this kernel cannot switch L12 (no voldown setting)"; return 1; }
+    test "$(now)" = key && { echo "voldown: L12 is already the Vol- button"; return 0; }
+    if test -e "$DRV/$DEV"; then
+        echo "$DEV" > "$DRV/unbind" || { echo "voldown: could not detach the serial line"; return 1; }
+    fi
+    if echo key > "$ATTR"; then
+        echo "voldown: L12 = Vol- button (debug serial line off)"
+        return 0
+    fi
+    echo "voldown: the kernel refused; L12 goes back to the debug serial line"
+    echo "$DEV" > "$DRV/bind" 2>/dev/null
+    return 1
+}
+
+to_uart() {
+    if test -e "$ATTR" && test "$(now)" = key; then
+        echo uart > "$ATTR" || { echo "voldown: the kernel would not let go of L12"; return 1; }
+    fi
+    if ! test -e "$DRV/$DEV"; then
+        echo "$DEV" > "$DRV/bind" || { echo "voldown: could not attach the serial line"; return 1; }
+    fi
+    echo "voldown: L12 = debug serial line (UART, 19200 baud); Vol- does nothing"
+}
+
+save() { mkdir -p "$(dirname "$CONF")" && echo "$1" > "$CONF" && sync; }
+
+# At start-up (hardware 2026-10-10): unbinding the serial line WHILE Debian's
+# start-up scripts were writing to it froze the kernel, twice. So "boot" now
+#  1. waits until the start-up scripts have finished, then 20 s more;
+#  2. quiets the kernel's console messages first (dmesg -n 1);
+#  3. guards against a freeze: a marker on the card is written before the
+#     switch and removed 30 s after it, if the system is still alive. If a
+#     start-up finds the marker, the last switch froze: it does NOT switch,
+#     and saves "uart" as the choice - at most one frozen start, never a loop.
+MARK=${NZ_MARK:-/data/nzeus/voldown-switching}
+RC=${NZ_RC_PATTERN:-/etc/init.d/rc }
+SETTLE=${NZ_SETTLE:-20}
+AFTER=${NZ_AFTER:-30}
+boot_switch() {
+    n=0
+    while pgrep -f "$RC" > /dev/null 2>&1 && test "$n" -lt 300; do
+        sleep 2
+        n=$((n + 2))
+    done
+    sleep "$SETTLE"
+    mkdir -p "$(dirname "$MARK")" && echo "switching at $(cut -d' ' -f1 /proc/uptime) s" > "$MARK" && sync
+    dmesg -n 1 2>/dev/null
+    to_key
+    sleep "$AFTER"
+    rm -f "$MARK"
+    sync
+}
+
+case "$1" in
+    key) to_key && save key ;;
+    uart) to_uart && save uart ;;
+    boot)
+        if test -e "$MARK"; then
+            echo "voldown: the last switch at start-up did not finish (the console froze?):"
+            echo "voldown: L12 stays the debug serial line, choice saved as uart (nzeus-voldown key to try again)"
+            save uart
+            rm -f "$MARK"
+            sync
+            exit 0
+        fi
+        case "$(head -n 1 "$CONF" 2>/dev/null)" in
+            uart) to_uart ;;
+            *) # own session, no ties to the start-up scripts' console
+               setsid sh "$0" --boot-switch > /dev/null 2>&1 < /dev/null &
+               echo "voldown: L12 becomes the Vol- button once start-up has finished" ;;
+        esac ;;
+    --boot-switch) boot_switch ;;
+    status) echo "L12 now: $(now)   saved choice: $(head -n 1 "$CONF" 2>/dev/null || echo 'key (default)')" ;;
+    *) echo "usage: nzeus-voldown key|uart|status   (key = Vol- works, uart = debug serial line)" >&2; exit 2 ;;
+esac

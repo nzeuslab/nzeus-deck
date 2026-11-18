@@ -1,0 +1,62 @@
+#!/bin/sh
+# Run ONLY inside the experimental initramfs. Do not run on stock NZEUS.
+# This creates a temporary USB ACM terminal, with a root shell on the USB cable.
+set -e
+case "$(uname -r)" in
+    *-nzeus-experimental*|*-nzeus-screenlog*|*-nzeus-gma-native*) ;;
+    *) echo 'Refusing USB setup outside the NZEUS experimental kernel.' >&2; exit 1 ;;
+esac
+mount -t configfs configfs /sys/kernel/config
+gadget=/sys/kernel/config/usb_gadget/nzeus_rescue
+mkdir -p "$gadget"
+# Linux USB gadget development IDs, for this local experimental build only.
+echo 0x1d6b > "$gadget/idVendor"
+echo 0x0104 > "$gadget/idProduct"
+echo 0x0200 > "$gadget/bcdUSB"
+echo 0x0100 > "$gadget/bcdDevice"
+echo 0x02 > "$gadget/bDeviceClass"
+mkdir -p "$gadget/strings/0x409"
+echo NZEUS-RAM-RESCUE-01 > "$gadget/strings/0x409/serialnumber"
+echo 'NZEUS LAB' > "$gadget/strings/0x409/manufacturer"
+echo 'NZEUS Experimental Linux Rescue' > "$gadget/strings/0x409/product"
+mkdir -p "$gadget/configs/c.1/strings/0x409"
+echo 'USB rescue terminal' > "$gadget/configs/c.1/strings/0x409/configuration"
+echo 250 > "$gadget/configs/c.1/MaxPower"
+mkdir -p "$gadget/functions/acm.usb0"
+ln -s "$gadget/functions/acm.usb0" "$gadget/configs/c.1/acm.usb0"
+
+# Wait for the board's enabled USB controller; never bind a second controller.
+controller=
+attempt=0
+while test "$attempt" -lt 30; do
+    for path in /sys/class/udc/*; do
+        if test -d "$path"; then
+            controller=${path##*/}
+            break
+        fi
+    done
+    test -z "$controller" || break
+    sleep 1
+    attempt=$((attempt + 1))
+done
+if test -z "$controller"; then
+    echo 'NZEUS USB rescue: no USB device controller appeared.' >&2
+    exit 1
+fi
+echo "$controller" > "$gadget/UDC"
+echo "NZEUS USB rescue bound to $controller"
+while test ! -c /dev/ttyGS0; do sleep 1; done
+
+# Opening ttyGS0 waits for the host. setsid -c attaches this exact terminal;
+# cttyhack would instead choose the UART listed as the kernel console.
+while true; do
+    setsid -c /bin/sh -c '
+        stty sane
+        echo
+        echo "NZEUS RAM rescue: the experimental kernel reached USB userspace."
+        uname -a
+        echo "No SD or flash filesystem is mounted. This is an experimental root shell."
+        exec /bin/sh -i
+    ' < /dev/ttyGS0 > /dev/ttyGS0 2>&1 || true
+    sleep 1
+done

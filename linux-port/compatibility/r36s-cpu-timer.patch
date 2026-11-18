@@ -1,0 +1,15 @@
+diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
+index e780b7f3a..ca1dd9d99 100644
+--- a/arch/mips/Kconfig
++++ b/arch/mips/Kconfig
+@@ -129,7 +129,9 @@ config MACH_HICHIP
+ 	select GENERIC_IRQ_CHIP
+ 	select BUILTIN_DTB if MIPS_NO_APPENDED_DTB
+ 	select USE_OF
+-	select MIPS_EXTERNAL_TIMER
++	# R36S factory AVP retains the shared south timers.
++	select CEVT_R4K
++	select CSRC_R4K
+ 	select SERIAL_8250
+ 	select SERIAL_OF_PLATFORM
+ 	select USE_GENERIC_EARLY_PRINTK_8250

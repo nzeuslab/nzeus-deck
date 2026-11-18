@@ -1,0 +1,36 @@
+#!/bin/sh
+# udhcpc.script - called by "busybox udhcpc" (wifi-up.sh) with $1 = deconfig,
+# bound, renew, leasefail or nak and the lease in $interface $ip $mask $router
+# $dns. Sets the address and default route with "ip", and the DNS servers in
+# /etc/resolv.conf (written to a new file, then renamed). Nothing else.
+# NZ_* variables: PC tests only.
+IP=${NZ_IP:-ip}
+RESOLV=${NZ_RESOLV:-/etc/resolv.conf}
+KMSG=${NZ_KMSG:-/dev/kmsg}
+case "$1" in
+    deconfig)
+        $IP -4 addr flush dev "$interface"
+        $IP link set "$interface" up
+        ;;
+    bound|renew)
+        $IP -4 addr flush dev "$interface"
+        $IP addr add "$ip/${mask:-24}" ${broadcast:+broadcast "$broadcast"} dev "$interface"
+        if test -n "$router"; then
+            $IP route del default dev "$interface" 2>/dev/null
+            for r in $router; do
+                $IP route add default via "$r" dev "$interface" && break
+            done
+        fi
+        if test -n "$dns"; then
+            {
+                echo "# written by udhcpc.script (Wi-Fi DHCP on $interface)"
+                for d in $dns; do echo "nameserver $d"; done
+            } > "$RESOLV.nzeus-new" && mv "$RESOLV.nzeus-new" "$RESOLV"
+        fi
+        echo "wifi: DHCP $1 $ip/${mask:-24} on $interface" >> "$KMSG" 2>/dev/null
+        ;;
+    leasefail|nak)
+        echo "wifi: DHCP $1 on $interface" >> "$KMSG" 2>/dev/null
+        ;;
+esac
+exit 0

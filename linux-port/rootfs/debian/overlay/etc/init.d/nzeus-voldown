@@ -1,0 +1,18 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          nzeus-voldown
+# Required-Start:    $local_fs
+# Required-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:
+# Short-Description: NZEUS: L12 = Vol- button after start-up (or the debug serial line)
+### END INIT INFO
+# At the end of start-up: the saved choice (/etc/nzeus/voldown-mode, default
+# key). The boot log reaches the serial line until this runs.
+case "$1" in
+    start) /usr/local/sbin/nzeus-voldown boot ;;
+    stop|restart|force-reload) ;;
+    status) /usr/local/sbin/nzeus-voldown status ;;
+    *) echo "Usage: $0 start|status" >&2; exit 3 ;;
+esac
+exit 0

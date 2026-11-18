@@ -1,0 +1,182 @@
+Factory instruction range 0x89dadb38..0x89dadbf0
+89dadb38 addiu        $sp, $sp, -0x20
+89dadb3c sw           $s1, 0x14($sp)
+89dadb40 andi         $s1, $a0, 0x80
+89dadb44 sw           $ra, 0x1c($sp)
+89dadb48 sw           $s2, 0x18($sp)
+89dadb4c bnez         $s1, 0x89dadbc8
+89dadb50 sw           $s0, 0x10($sp)
+89dadb54 andi         $v0, $a0, 0x140
+89dadb58 bnez         $v0, 0x89dadbd0
+89dadb5c lw           $ra, 0x1c($sp)
+89dadb60 andi         $a0, $a0, 0x600
+89dadb64 beqz         $a0, 0x89dadbe8
+89dadb68 lui          $a0, 0x89e4 ; '_qcancel'
+89dadb6c lw           $s2, 0x60($a3)
+89dadb70 move         $s0, $a3
+89dadb74 move         $a1, $s2
+89dadb78 jal          0x89daf204
+89dadb7c addiu        $a0, $a0, -0x244c ; '## Transferring control to Linux (at address %p) ...\n'
+89dadb80 lw           $v0, 0x70($s0)
+89dadb84 beqz         $v0, 0x89dadbd0
+89dadb88 lw           $ra, 0x1c($sp)
+89dadb8c lui          $v0, 0x89e8
+89dadb90 lw           $v0, -0x28c($v0)
+89dadb94 bnez         $v0, 0x89dadba4
+89dadb98 nop          
+89dadb9c jal          0x89dbd4f8
+89dadba0 nop          
+89dadba4 jal          0x89dc04a4
+89dadba8 nop          
+89dadbac jal          0x89dba100
+89dadbb0 nop          
+89dadbb4 lw           $a1, 0x6c($s0)
+89dadbb8 move         $a3, $zero
+89dadbbc move         $a2, $zero
+89dadbc0 jalr         $s2
+89dadbc4 addiu        $a0, $zero, -2
+89dadbc8 addiu        $s1, $zero, -1
+89dadbcc lw           $ra, 0x1c($sp)
+89dadbd0 move         $v0, $s1
+89dadbd4 lw           $s2, 0x18($sp)
+89dadbd8 lw           $s1, 0x14($sp)
+89dadbdc lw           $s0, 0x10($sp)
+89dadbe0 jr           $ra
+89dadbe4 addiu        $sp, $sp, 0x20
+89dadbe8 b            0x89dadbcc
+89dadbec addiu        $s1, $zero, 1
+Factory instruction range 0x89dc04a4..0x89dc0540
+89dc04a4 lui          $v0, 0xb880
+89dc04a8 addiu        $v0, $v0, 0
+89dc04ac lw           $a0, 0x38($v0)
+89dc04b0 lui          $t0, 0x89e8
+89dc04b4 lui          $v1, 0x89e8
+89dc04b8 sw           $a0, -0x479c($v1)
+89dc04bc lw           $a0, -0x444c($t0)
+89dc04c0 addiu        $v1, $v1, -0x479c
+89dc04c4 lui          $a3, 0xb880
+89dc04c8 sw           $a0, 4($v1)
+89dc04cc lw           $a0, 0x40($v0)
+89dc04d0 lui          $a2, 0xb880
+89dc04d4 lui          $a1, 0xb880
+89dc04d8 andi         $a0, $a0, 4
+89dc04dc sw           $a0, 8($v1)
+89dc04e0 lw           $a0, 0x44($a3)
+89dc04e4 lui          $v1, 0x89e8
+89dc04e8 sw           $zero, -0x444c($t0)
+89dc04ec sw           $a0, -0x47ac($v1)
+89dc04f0 lw           $a0, 0xc4($a2)
+89dc04f4 addiu        $v1, $v1, -0x47ac
+89dc04f8 addiu        $t0, $zero, -5
+89dc04fc sw           $a0, 4($v1)
+89dc0500 lw           $a0, 0xe4($a1)
+89dc0504 sw           $a0, 8($v1)
+89dc0508 lui          $a0, 0xb880
+89dc050c lw           $t1, 0x344($a0)
+89dc0510 sw           $zero, 0x38($v0)
+89dc0514 sw           $zero, 0x3c($v0)
+89dc0518 sw           $t1, 0xc($v1)
+89dc051c lw           $v1, 0x40($v0)
+89dc0520 and          $v1, $v1, $t0
+89dc0524 sw           $v1, 0x40($v0)
+89dc0528 sw           $zero, 0x44($a3)
+89dc052c sw           $zero, 0xc4($a2)
+89dc0530 sw           $zero, 0xe4($a1)
+89dc0534 sw           $zero, 0x344($a0)
+89dc0538 jr           $ra
+89dc053c nop          
+
+Factory cache range 0x89dad244..0x89dad278
+89dad244 subu         $a1, $s0, $fp
+89dad248 addiu        $v0, $zero, -0x20
+89dad24c sw           $a1, 0x54($s2)
+89dad250 addiu        $a1, $s0, 0x1f
+89dad254 and          $a0, $fp, $v0
+89dad258 and          $a1, $a1, $v0
+89dad25c jal          0x89da621c
+89dad260 subu         $a1, $a1, $a0
+89dad264 lw           $a2, 0x28($sp)
+89dad268 lui          $a0, 0x89e4 ; '_qcancel'
+89dad26c move         $a1, $fp
+89dad270 jal          0x89daf204
+89dad274 addiu        $a0, $a0, -0x2948 ; '   kernel loaded at 0x%08lx, end = 0x%08lx\n'
+
+Factory cache range 0x89da6164..0x89da629c
+89da6164 lui          $t0, 0x8000
+89da6168 lui          $t2, 0x8000
+89da616c ori          $t2, $t2, 0x8000
+89da6170 cache        1, ($t0)
+89da6174 cache        1, 0x20($t0)
+89da6178 cache        1, 0x40($t0)
+89da617c cache        1, 0x60($t0)
+89da6180 cache        1, 0x80($t0)
+89da6184 cache        1, 0xa0($t0)
+89da6188 cache        1, 0xc0($t0)
+89da618c cache        1, 0xe0($t0)
+89da6190 cache        1, 0x100($t0)
+89da6194 cache        1, 0x120($t0)
+89da6198 cache        1, 0x140($t0)
+89da619c cache        1, 0x160($t0)
+89da61a0 cache        1, 0x180($t0)
+89da61a4 cache        1, 0x1a0($t0)
+89da61a8 cache        1, 0x1c0($t0)
+89da61ac cache        1, 0x1e0($t0)
+89da61b0 cache        1, 0x200($t0)
+89da61b4 cache        1, 0x220($t0)
+89da61b8 cache        1, 0x240($t0)
+89da61bc cache        1, 0x260($t0)
+89da61c0 cache        1, 0x280($t0)
+89da61c4 cache        1, 0x2a0($t0)
+89da61c8 cache        1, 0x2c0($t0)
+89da61cc cache        1, 0x2e0($t0)
+89da61d0 cache        1, 0x300($t0)
+89da61d4 cache        1, 0x320($t0)
+89da61d8 cache        1, 0x340($t0)
+89da61dc cache        1, 0x360($t0)
+89da61e0 cache        1, 0x380($t0)
+89da61e4 cache        1, 0x3a0($t0)
+89da61e8 cache        1, 0x3c0($t0)
+89da61ec cache        1, 0x3e0($t0)
+89da61f0 addiu        $t0, $t0, 0x400
+89da61f4 slt          $at, $t0, $t2
+89da61f8 bnez         $at, 0x89da6170
+89da61fc nop          
+89da6200 sync         
+89da6204 lui          $t0, 0xa000
+89da6208 lw           $t1, ($t0)
+89da620c sync         
+89da6210 nop          
+89da6214 jr           $ra
+89da6218 nop          
+89da621c addiu        $sp, $sp, -0x18
+89da6220 sw           $ra, 0x14($sp)
+89da6224 nop          
+89da6228 blez         $a1, 0x89da628c
+89da622c ori          $t2, $zero, 0x8000
+89da6230 slt          $at, $a1, $t2
+89da6234 bnez         $at, 0x89da624c
+89da6238 nop          
+89da623c jal          0x89da6164
+89da6240 nop          
+89da6244 b            0x89da628c
+89da6248 nop          
+89da624c addiu        $t2, $zero, -0x20
+89da6250 and          $t0, $a0, $t2
+89da6254 add          $t1, $a0, $a1
+89da6258 addiu        $t1, $t1, -1
+89da625c and          $t1, $t1, $t2
+89da6260 cache        0x19, ($t0)
+89da6264 bne          $t0, $t1, 0x89da6260
+89da6268 addiu        $t0, $t0, 0x20
+89da626c nop          
+89da6270 sync         
+89da6274 nop          
+89da6278 lui          $t2, 0xa000
+89da627c lw           $t1, ($t2)
+89da6280 nop          
+89da6284 sync         
+89da6288 nop          
+89da628c lw           $ra, 0x14($sp)
+89da6290 addiu        $sp, $sp, 0x18
+89da6294 jr           $ra
+89da6298 nop          

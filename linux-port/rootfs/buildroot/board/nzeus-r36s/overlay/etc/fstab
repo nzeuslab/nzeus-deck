@@ -1,0 +1,13 @@
+# /etc/fstab - NZEUS R36S SD root.
+# The root file system (mmcblk0p3 "nzroot") and /data (mmcblk0p4 "nzdata") are
+# NOT listed here on purpose: S01nzroot and S03nzdata check them with e2fsck
+# first and only mount them writable when the check passed.
+# The stock FAT32 (mmcblk0p1) is never mounted writable by this system.
+# <file system> <mount pt>  <type>  <options>                              <dump> <pass>
+proc            /proc       proc    defaults                                  0 0
+sysfs           /sys        sysfs   defaults                                  0 0
+devpts          /dev/pts    devpts  defaults,gid=5,mode=620,ptmxmode=0666     0 0
+tmpfs           /dev/shm    tmpfs   mode=0777,size=4m                         0 0
+# /tmp is RAM: keep it small (lab rule: no big files in /tmp). Use /data.
+tmpfs           /tmp        tmpfs   mode=1777,size=8m                         0 0
+tmpfs           /run        tmpfs   mode=0755,nosuid,nodev,size=2m            0 0

@@ -1,0 +1,100 @@
+#!/bin/sh
+# nzeus-status [--short] - what the console is doing, in plain words.
+# Kernel, memory, battery, SD partitions, read-only/read-write state, USB,
+# network, SSH, clock. Only reads; changes nothing.
+# Works with dash, bash and BusyBox ash. NZ_* variables: PC test only.
+SYS=${NZ_SYS:-/sys}
+PROC=${NZ_PROC:-/proc}
+RUN=${NZ_RUN:-/run}
+CFG=${NZ_CONFIGFS:-/sys/kernel/config}
+CONF=${NZ_CONF:-/etc/nzeus/sdroot.conf}
+NZ_DATA_DIR=/data
+NZ_STOCK_DIR=/mnt/stock
+test -r "$CONF" && . "$CONF"
+
+# mode MOUNTPOINT -> "rw", "ro" or "" (not mounted)
+mode() {
+    awk -v m="$1" '$2 == m { split($4, o, ","); r = o[1] } END { print r }' "$PROC/mounts"
+}
+meminfo() { awk -v k="$1:" '$1 == k { print $2 }' "$PROC/meminfo"; }
+battery() {
+    b=$SYS/class/power_supply/battery
+    c=$SYS/class/power_supply/charger
+    if test -r "$b/capacity"; then
+        line="$(cat "$b/capacity")% ($(cat "$b/status" 2>/dev/null))"
+    else
+        line="unknown (no battery driver in this kernel)"
+    fi
+    test -r "$c/online" && case "$(cat "$c/online")" in 1) line="$line, charger plugged in" ;; *) line="$line, on battery" ;; esac
+    echo "$line"
+}
+root_line() {
+    r=$(mode /)
+    s=$(cat "$RUN/nzroot-state" 2>/dev/null)
+    case "$r" in
+        rw) echo "read-write${s:+ ($s)}" ;;
+        ro) echo "READ-ONLY${s:+ ($s)}" ;;
+        *) echo "unknown" ;;
+    esac
+}
+data_line() {
+    case "$(mode "$NZ_DATA_DIR")" in
+        rw) echo "mounted read-write" ;;
+        ro) echo "mounted READ-ONLY" ;;
+        *) echo "NOT mounted (files in $NZ_DATA_DIR land on the root file system)" ;;
+    esac
+}
+
+if test "$1" = --short; then
+    echo "root: $(root_line) | $NZ_DATA_DIR: $(data_line) | battery: $(battery)"
+    exit 0
+fi
+
+echo "NZEUS status - $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+echo "Kernel:     $(uname -r)"
+echo "Up for:     $(awk '{ s = int($1); printf "%d h %d min", s / 3600, (s % 3600) / 60 }' "$PROC/uptime")"
+echo "Memory:     $(($(meminfo MemTotal) / 1024)) MiB total, $(($(meminfo MemAvailable) / 1024)) MiB available"
+echo "Swap:       $(($(meminfo SwapTotal) / 1024)) MiB, $(($(meminfo SwapFree) / 1024)) MiB free (zram = compressed RAM)"
+echo "Battery:    $(battery)"
+echo "Root /:     $(root_line)"
+echo "$NZ_DATA_DIR:      $(data_line)"
+case "$(mode "$NZ_STOCK_DIR")" in
+    ro) echo "$NZ_STOCK_DIR: boot files (read-only, as it must be)" ;;
+    rw) echo "$NZ_STOCK_DIR: boot files are READ-WRITE - this should never happen: umount $NZ_STOCK_DIR" ;;
+    *) echo "$NZ_STOCK_DIR: boot files not mounted" ;;
+esac
+echo "SD partitions (kernel view; ro=1 means the kernel refuses writes):"
+found=0
+for p in "$SYS"/class/block/mmcblk0p*; do
+    test -e "$p/size" || continue
+    found=1
+    n=${p##*/}
+    printf '  %-10s %8s MiB  ro=%s\n' "$n" "$(($(cat "$p/size") / 2048))" "$(cat "$p/ro" 2>/dev/null)"
+done
+test "$found" = 1 || echo "  none (no SD driver, or no partition line in this kernel)"
+if df -h / "$NZ_DATA_DIR" > /dev/null 2>&1; then
+    echo "Space:"
+    df -h / "$NZ_DATA_DIR" 2>/dev/null | awk 'NR == 1 || !seen[$6]++' | sed 's/^/  /'
+fi
+udc=$(cat "$CFG/usb_gadget/nzeus_rescue/UDC" 2>/dev/null)
+echo "USB:        rescue serial port ${udc:+plugged into $udc}${udc:-not plugged in}"
+for g in nzeus_ncm nzeus_rndis; do
+    u=$(cat "$CFG/usb_gadget/$g/UDC" 2>/dev/null)
+    test -n "$u" && echo "            USB network mode ($g) on $u"
+done
+if command -v ip > /dev/null 2>&1; then
+    a=$(ip -o -4 addr show 2>/dev/null | awk '$2 != "lo" { printf "%s %s  ", $2, $4 }')
+    echo "Network:    ${a:-no address (USB network: usbnet-up)}"
+fi
+if test -s "$RUN/nzeus-ssh.pid" && kill -0 "$(cat "$RUN/nzeus-ssh.pid")" 2>/dev/null; then
+    echo "SSH:        running (port ${NZ_SSH_PORT:-22}, keys only)"
+    for k in /etc/dropbear/dropbear_ed25519_host_key /etc/dropbear/dropbear_ecdsa_host_key; do
+        test -r "$k" && command -v dropbearkey > /dev/null 2>&1 &&
+            echo "            host key: $(dropbearkey -y -f "$k" 2>/dev/null | grep -i fingerprint)"
+    done
+else
+    echo "SSH:        not running (needs /root/.ssh/authorized_keys; see /etc/motd)"
+fi
+c=$(sed -n 2p "$NZ_DATA_DIR/nzeus/clock.txt" 2>/dev/null)
+echo "Clock:      last saved ${c:-never} (no clock chip: set from clock.txt at start)"
+exit 0

@@ -1,0 +1,443 @@
+/dts-v1/;
+
+/ {
+	compatible = "nzeus,r36s-e3100\0hichip,hc16xx";
+	#address-cells = <0x01>;
+	#size-cells = <0x01>;
+	model = "NZEUS R36S E3100 V2.7 (experimental bring-up)";
+
+	external-clock {
+		compatible = "fixed-clock";
+		#clock-cells = <0x00>;
+		clock-frequency = <0x16e3600>;
+		phandle = <0x03>;
+	};
+
+	cpus {
+		#address-cells = <0x01>;
+		#size-cells = <0x00>;
+
+		cpu@0 {
+			device_type = "cpu";
+			compatible = "mips,mips74Kc";
+			reg = <0x00>;
+			clocks = <0x01 0x0a>;
+			clock-names = "cpu";
+		};
+	};
+
+	interrupt-controller {
+		compatible = "mti,cpu-interrupt-controller";
+		interrupt-controller;
+		#address-cells = <0x00>;
+		#interrupt-cells = <0x01>;
+		phandle = <0x02>;
+	};
+
+	intc@18800020 {
+		compatible = "hichip,hc16xx-intc";
+		reg = <0x18800020 0x24>;
+		interrupt-controller;
+		#interrupt-cells = <0x01>;
+		interrupt-parent = <0x02>;
+		interrupts = <0x03 0x02>;
+		phandle = <0x04>;
+	};
+
+	clock-controller@18800060 {
+		compatible = "hichip,hc16xx-clk";
+		reg = <0x18800060 0x20>;
+		clocks = <0x03>;
+		clock-names = "hosc";
+		#clock-cells = <0x01>;
+		phandle = <0x01>;
+	};
+
+	reset-controller@18800080 {
+		compatible = "hichip,hc16xx-reset";
+		reg = <0x18800080 0x08>;
+		#reset-cells = <0x01>;
+		phandle = <0x07>;
+	};
+
+	timer@4 {
+		compatible = "hichip,hc16xx-timer";
+		reg = <0x18818a40 0x10>;
+		interrupt-parent = <0x04>;
+		interrupts = <0x16>;
+		clocks = <0x01 0x2e>;
+		clock-names = "counting";
+		status = "disabled";
+	};
+
+	pin-controller@188004a0 {
+		compatible = "hichip,hc16xx-pinctrl";
+		reg = <0x188004a0 0x100>;
+		phandle = <0x05>;
+
+		pins-uart0 {
+			function = "uart0";
+			pins = "l12";
+			drive-strength = <0x02>;
+			phandle = <0x08>;
+		};
+
+		pins-bl {
+			function = "pwm0";
+			pins = "l00";
+			drive-strength = <0x01>;
+			phandle = <0x0d>;
+		};
+
+		pins-sdmmc {
+			function = "sdmmc";
+			pins = "t00\0t01\0t02\0t03\0t04\0t05";
+			drive-strength = <0x10>;
+			phandle = <0x06>;
+		};
+	};
+
+	pwm@18818410 {
+		compatible = "hichip,hc16xx-pwm";
+		reg = <0x18818410 0x24>;
+		clocks = <0x01 0x19>;
+		#pwm-cells = <0x03>;
+		status = "disabled";
+		phandle = <0x0c>;
+	};
+
+	gpio-controller@18800044 {
+		compatible = "hichip,hc16xx-gpio";
+		reg = <0x18800044 0x1c 0x188000c4 0x1c 0x188000e4 0x1c 0x18800344 0x1c>;
+		reg-names = "left\0bottom\0right\0top";
+		gpio-ranges = <0x05 0x00 0x00 0x80>;
+		interrupts = <0x00>;
+		interrupt-parent = <0x04>;
+		gpio-controller;
+		#gpio-cells = <0x02>;
+		interrupt-controller;
+		#interrupt-cells = <0x02>;
+		status = "okay";
+		phandle = <0x0b>;
+	};
+
+	dw-mmc@1884c000 {
+		compatible = "snps,dw-mshc";
+		reg = <0x1884c000 0x2000>;
+		#address-cells = <0x01>;
+		#size-cells = <0x00>;
+		interrupts = <0x0a>;
+		interrupt-parent = <0x04>;
+		clocks = <0x01 0x1d 0x01 0x0c>;
+		clock-names = "biu\0ciu";
+		status = "okay";
+		pinctrl-0 = <0x06>;
+		pinctrl-names = "nzeus-bootloader-pins-kept";
+		bus-width = <0x04>;
+		no-1-8-v;
+		max-frequency = <0x1312d00>;
+		broken-cd;
+		card-detect-delay = <0xc8>;
+	};
+
+	serial@18818300 {
+		compatible = "ns16550a";
+		reg = <0x18818300 0x100>;
+		reg-io-width = <0x01>;
+		reg-shift = <0x00>;
+		fifo-size = <0x10>;
+		interrupt-parent = <0x04>;
+		interrupts = <0x10>;
+		clocks = <0x01 0x29>;
+		clock-names = "baud";
+		resets = <0x07 0x10>;
+		status = "okay";
+		pinctrl-0 = <0x08>;
+		pinctrl-names = "default";
+		clock-frequency = <0x1c2000>;
+		current-speed = <0x4b00>;
+	};
+
+	serial@18818600 {
+		compatible = "ns16550a";
+		reg = <0x18818600 0x100>;
+		reg-io-width = <0x01>;
+		reg-shift = <0x00>;
+		fifo-size = <0x10>;
+		interrupt-parent = <0x04>;
+		interrupts = <0x11>;
+		clocks = <0x01 0x2a>;
+		clock-names = "baud";
+		resets = <0x07 0x11>;
+		status = "disabled";
+	};
+
+	serial@18818800 {
+		compatible = "ns16550a";
+		reg = <0x18818800 0x100>;
+		reg-io-width = <0x01>;
+		reg-shift = <0x00>;
+		fifo-size = <0x10>;
+		interrupt-parent = <0x04>;
+		interrupts = <0x36>;
+		clocks = <0x01 0x3e>;
+		clock-names = "baud";
+		resets = <0x07 0x09>;
+		status = "disabled";
+	};
+
+	serial@18818900 {
+		compatible = "ns16550a";
+		reg = <0x18818900 0x100>;
+		reg-io-width = <0x01>;
+		reg-shift = <0x00>;
+		fifo-size = <0x10>;
+		interrupt-parent = <0x04>;
+		interrupts = <0x37>;
+		clocks = <0x01 0x3e>;
+		clock-names = "baud";
+		resets = <0x07 0x0a>;
+		status = "disabled";
+	};
+
+	usb@18844000 {
+		compatible = "hichip,hc16xx-musb";
+		reg = <0x18844000 0x1000>;
+		interrupt-parent = <0x04>;
+		interrupts = <0x35 0x34>;
+		interrupt-names = "mc\0dma";
+		clocks = <0x01 0x4a>;
+		resets = <0x07 0x1c>;
+		phys = <0x09>;
+		dr_mode = "otg";
+		status = "okay";
+	};
+
+	usb@18850000 {
+		compatible = "hichip,hc16xx-musb";
+		reg = <0x18850000 0x1000>;
+		interrupt-parent = <0x04>;
+		interrupts = <0x33 0x32>;
+		interrupt-names = "mc\0dma";
+		clocks = <0x01 0x4b>;
+		resets = <0x07 0x3d>;
+		phys = <0x0a>;
+		dr_mode = "peripheral";
+		status = "disabled";
+	};
+
+	phy@18845000 {
+		compatible = "hichip,hc16xx-usb-phy";
+		reg = <0x18845000 0x24>;
+		#phy-cells = <0x00>;
+		phandle = <0x09>;
+	};
+
+	phy@18845100 {
+		compatible = "hichip,hc16xx-usb-phy";
+		reg = <0x18845100 0x24>;
+		#phy-cells = <0x00>;
+		phandle = <0x0a>;
+	};
+
+	aliases {
+		serial0 = "/serial@18818300";
+	};
+
+	chosen {
+		bootargs = "console=ttyS0,19200 earlycon rdinit=/init ro panic=0 clk_ignore_unused nzclk=900";
+		stdout-path = "serial0:19200n8";
+	};
+
+	memory {
+		device_type = "memory";
+		reg = <0x00 0x2f91e50 0x30bf000 0x4f41000>;
+	};
+
+	gpio-keys {
+		compatible = "gpio-keys";
+		autorepeat;
+		status = "disabled";
+
+		key-l2 {
+			label = "L2 shoulder button";
+			linux,code = <0x68>;
+			gpios = <0x0b 0x0b 0x01>;
+		};
+
+		key-r2 {
+			label = "R2 shoulder button";
+			linux,code = <0x6d>;
+			gpios = <0x0b 0x07 0x01>;
+		};
+
+		key-volup {
+			label = "Volume+ button";
+			linux,code = <0x73>;
+			gpios = <0x0b 0x0d 0x01>;
+		};
+	};
+
+	serializer-keys {
+		compatible = "gpio-serializer-keys";
+		#address-cells = <0x01>;
+		#size-cells = <0x00>;
+		clock-gpios = <0x0b 0x08 0x01>;
+		data-gpios = <0x0b 0x09 0x07>;
+		num-clocks = <0x0c>;
+		autorepeat;
+		poll-interval = <0x10>;
+		status = "okay";
+
+		key-l1 {
+			reg = <0x00>;
+			linux,code = <0x0f>;
+		};
+
+		key-x {
+			reg = <0x01>;
+			linux,code = <0x39>;
+		};
+
+		key-y {
+			reg = <0x02>;
+			linux,code = <0x2a>;
+		};
+
+		key-r1 {
+			reg = <0x03>;
+			linux,code = <0x0e>;
+		};
+
+		key-b {
+			reg = <0x04>;
+			linux,code = <0x38>;
+		};
+
+		key-a {
+			reg = <0x05>;
+			linux,code = <0x1d>;
+		};
+
+		key-select {
+			reg = <0x06>;
+			linux,code = <0x01>;
+		};
+
+		key-start {
+			reg = <0x07>;
+			linux,code = <0x1c>;
+		};
+
+		key-up {
+			reg = <0x08>;
+			linux,code = <0x67>;
+		};
+
+		key-down {
+			reg = <0x09>;
+			linux,code = <0x6c>;
+		};
+
+		key-left {
+			reg = <0x0a>;
+			linux,code = <0x69>;
+		};
+
+		key-right {
+			reg = <0x0b>;
+			linux,code = <0x6a>;
+		};
+	};
+
+	backlight {
+		compatible = "pwm-backlight";
+		pwms = <0x0c 0x00 0x4e20 0x00>;
+		pinctrl-0 = <0x0d>;
+		pinctrl-names = "default";
+		brightness-levels = <0x00 0x0a 0x14 0x1e 0x28 0x32 0x3c 0x46 0x50 0x5a 0x64>;
+		default-brightness-level = <0x00>;
+		status = "disabled";
+		phandle = <0x0e>;
+	};
+
+	backlight-test {
+		compatible = "backlight-test-disabled";
+		backlight = <0x0e>;
+	};
+
+	framebuffer@1883a000 {
+		compatible = "nzeus,hc16xx-gma-firmware-fb";
+		reg = <0x1883a000 0x1000>;
+		nzeus,firmware-timing;
+		status = "okay";
+	};
+
+	avp-rpc@18800800 {
+		compatible = "nzeus,hc16xx-avp-rpc-poll";
+		reg = <0x18800800 0x20 0x18800820 0x20 0x18800840 0x20 0x18800860 0x20 0x18800880 0x20 0x188008a0 0x20 0x188008c0 0x20 0x188008e0 0x20 0x18866800 0x20 0x18866820 0x20 0x18866840 0x20 0x18866860 0x20 0x18866880 0x20 0x188668a0 0x20 0x188668c0 0x20 0x188668e0 0x20 0x18800040 0x04>;
+		status = "okay";
+	};
+
+	r36s-keys {
+		compatible = "gpio-keys-polled";
+		poll-interval = <0x14>;
+		autorepeat;
+
+		key-l2 {
+			label = "L2 shoulder button";
+			linux,code = <0x68>;
+			gpios = <0x0b 0x07 0x01>;
+		};
+
+		key-r2 {
+			label = "R2 shoulder button";
+			linux,code = <0x6d>;
+			gpios = <0x0b 0x0b 0x01>;
+		};
+
+		key-volup {
+			label = "Volume+ button";
+			linux,code = <0x73>;
+			gpios = <0x0b 0x0d 0x01>;
+		};
+
+		key-fn {
+			label = "FN button";
+			linux,code = <0x8b>;
+			gpios = <0x0b 0x02 0x01>;
+		};
+	};
+
+	power@188184d0 {
+		compatible = "nzeus,r36s-power";
+		reg = <0x188184d0 0x08>;
+		power-gpios = <0x0b 0x0e 0x01>;
+		poweroff-gpios = <0x0b 0x01 0x01>;
+		voldown-gpios = <0x0b 0x0c 0x01>;
+		nzeus,restart-watchdog = <0x18818500>;
+	};
+
+	reserved-memory {
+		#address-cells = <0x01>;
+		#size-cells = <0x01>;
+		ranges;
+
+		avp-area@30bf000 {
+			reg = <0x30bf000 0x4f41000>;
+			phandle = <0x0f>;
+		};
+	};
+
+	avp-free-ram {
+		compatible = "nzeus,r36s-avp-free-ram";
+		memory-region = <0x0f>;
+	};
+
+	audio@1880a000 {
+		compatible = "nzeus,r36s-audio";
+		reg = <0x1880a000 0x100>;
+		mute-gpios = <0x0b 0x13 0x00>;
+		hp-detect-gpios = <0x0b 0x0f 0x00>;
+	};
+};

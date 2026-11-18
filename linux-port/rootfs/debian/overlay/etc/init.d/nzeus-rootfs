@@ -1,0 +1,19 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          nzeus-rootfs
+# Required-Start:    checkroot
+# Required-Stop:
+# X-Start-Before:    checkroot-bootclean checkfs mountall
+# Default-Start:     S
+# Default-Stop:
+# Short-Description: NZEUS: e2fsck the read-only SD root, then make it writable
+### END INIT INFO
+# Debian's checkroot.sh runs first but does nothing to "/" (fstab: "ro", pass 0).
+# This is the one and only check + remount of the root (see nzeus-rootcheck).
+case "$1" in
+    start) /usr/local/sbin/nzeus-rootcheck ;;
+    stop|restart|force-reload) ;;
+    status) cat /run/nzroot-state 2>/dev/null ;;
+    *) echo "Usage: $0 start" >&2; exit 3 ;;
+esac
+exit 0

@@ -1,0 +1,78 @@
+#!/bin/sh
+# nzeus-rootcheck - start-up check of the SD root file system (mmcblk0p3 "nzroot").
+#
+# The kernel's RAM system (initramfs) mounted this root READ-ONLY and switched
+# into it. Here, while it is still read-only (the classic Unix order):
+#   1. it must really be the SD root (device, label), and the stock FAT32 and
+#      both header blocks must be read-only in the kernel;
+#   2. e2fsck -p ("preen": only the safe automatic fixes; never -f, never -y);
+#   3. ONLY if e2fsck answered 0 (clean) or 1 (fixed small things) the root
+#      becomes read-write.
+# Anything else: the root stays read-only and this says why. It never forces a
+# repair and never restarts the console by itself.
+# This is the ONLY place that checks or remounts "/" at start-up: Debian's own
+# checkroot.sh is kept out on purpose (fstab: "/" has "ro" and pass 0).
+#
+# Used by /etc/init.d/nzeus-rootfs (Debian) and S01nzroot (Buildroot).
+# Result for people and nzeus-status: /run/nzroot-state ("rw ..." or "ro ...")
+# and /run/nzroot-fsck-rc. Works with dash, bash and BusyBox ash.
+# NZ_* variables are for the PC test only; on the console they are never set.
+
+CONF=${NZ_CONF:-/etc/nzeus/sdroot.conf}
+MOUNTS=${NZ_MOUNTS:-/proc/mounts}
+RUN=${NZ_RUN:-/run}
+KMSG=${NZ_KMSG:-/dev/kmsg}
+MOUNT=${NZ_MOUNT:-mount}
+
+log() {
+    echo "nzroot: $*"
+    echo "nzroot: $*" > "$KMSG" 2>/dev/null
+}
+state() { echo "$*" > "$RUN/nzroot-state" 2>/dev/null; }
+stay_ro() {
+    log "$* - the root stays READ-ONLY"
+    state "ro $*"
+    exit 0
+}
+
+test -r "$CONF" || stay_ro "missing $CONF"
+. "$CONF"
+
+opts=$(awk '$2 == "/" { o = $4 } END { print o }' "$MOUNTS")
+dev=$(awk '$2 == "/" { d = $1 } END { print d }' "$MOUNTS")
+case ",$opts," in
+    *,rw,*)
+        log "root $dev is already read-write (checked earlier, or not the SD start-up)"
+        state "rw already"
+        exit 0 ;;
+esac
+test "$dev" = "$NZ_ROOT_DEV" || stay_ro "root is '$dev', expected $NZ_ROOT_DEV"
+test -b "$dev" || stay_ro "$dev is not a block device"
+
+# The stock FAT32 and the two header blocks must be read-only in the kernel
+# before anything on the card becomes writable.
+for p in $NZ_NEVER_WRITE; do
+    test "$(blockdev --getro "$p" 2>/dev/null)" = 1 || stay_ro "$p is not read-only in the kernel"
+done
+
+label=$(e2label "$dev" 2>/dev/null)
+test "$label" = "$NZ_ROOT_LABEL" || stay_ro "label of $dev is '$label', expected $NZ_ROOT_LABEL"
+
+log "checking $dev (e2fsck -p, read-only)"
+e2fsck -p "$dev"
+rc=$?
+echo "$rc" > "$RUN/nzroot-fsck-rc" 2>/dev/null
+case $rc in
+    0|1)
+        if $MOUNT -o remount,rw,noatime,errors=remount-ro /; then
+            log "e2fsck rc=$rc; the root is now read-write"
+            state "rw e2fsck=$rc"
+        else
+            stay_ro "e2fsck rc=$rc but the remount read-write FAILED"
+        fi ;;
+    2|3)
+        stay_ro "e2fsck rc=$rc: it fixed something and wants a restart. Switch off and on once" ;;
+    *)
+        stay_ro "e2fsck rc=$rc: problems are left. Repair from the RAM rescue (hold FN at power-on), see linux-port/rootfs/PLAN.md" ;;
+esac
+exit 0

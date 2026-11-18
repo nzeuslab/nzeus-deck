@@ -1,0 +1,58 @@
+# Debian bookworm (mipsel) packages added on top of debootstrap --variant=minbase.
+# One package per line; text after '#' is ignored. Installed with
+# --no-install-recommends by build-debian.sh. Libraries come in automatically.
+# NOT wanted (RAM): systemd, udev, dbus - pinned out in
+# overlay/etc/apt/preferences.d/90nzeus-no-systemd; build-debian.sh also checks.
+
+# init: sysvinit instead of systemd (a few hundred KB of RAM instead of several MB)
+sysvinit-core
+
+# log in from the PC over the network: Dropbear (small; keys only, see init.d/nzeus-ssh).
+# Only the programs; our own start script (nzeus-ssh) replaces Debian's.
+dropbear-bin
+
+# everyday tools
+nano
+less
+htop
+procps
+iproute2
+iputils-ping
+e2fsprogs
+ca-certificates
+curl
+python3
+# Vehicle guide signatures; the dedicated public key ships with the helper.
+openssl
+# Files PDF reader: fonts and page rendering (no desktop/window server required).
+poppler-utils
+# Modern Web app: real framebuffer browser and its standard text font.
+netsurf-fb
+fonts-dejavu-core
+# /etc/services, /etc/protocols: many network programs (and Python) need them
+netbase
+# Debian's BusyBox (not linked as the default tools): "busybox udhcpc" (DHCP
+# for Wi-Fi later) and "busybox ntpd" (clock from the network, SLEEP-CLOCK.md T1)
+busybox
+
+# Wi-Fi (gma-native-host kernel + linux-port/usbhost/wifi-up.sh)
+wpasupplicant
+iw
+# the Realtek dongle's firmware: rtw88/rtw8821c_fw.bin (Wi-Fi), rtl_bt/rtl8821c_*.bin
+# (Bluetooth). Debian "non-free-firmware" component (Realtek's redistributable
+# licence, /usr/share/doc/firmware-realtek/copyright). Loaded from /lib/firmware
+# when the dongle is plugged in (always after the SD root is mounted).
+firmware-realtek
+# the signed Wi-Fi regulatory database (regulatory.db + .p7s) the kernel checks
+wireless-regdb
+# lsusb (usb-host-status.sh works without it; small)
+usbutils
+
+# console hardware: buttons (/dev/input), screen (/dev/fb0)
+evtest
+fbset
+# sound (gma-native-host kernel, ALSA card R36S, linux-port/audio): aplay, amixer, speaker-test
+alsa-utils
+
+# packages: apt is already part of minbase; listed so it is never dropped
+apt

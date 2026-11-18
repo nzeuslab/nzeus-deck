@@ -1,0 +1,24 @@
+#!/bin/sh
+# Experimental initramfs only. Mount virtual filesystems, never a card or flash.
+export PATH=/bin
+mount -t devtmpfs devtmpfs /dev
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
+mount -t tmpfs tmpfs /tmp
+mount -t tmpfs tmpfs /run
+mkdir -p /dev/pts
+mount -t devpts -o mode=0620,ptmxmode=0666 devpts /dev/pts
+# A USB terminal may work without a UART adapter once the USB driver is running.
+/bin/sh /usb-rescue &
+echo
+echo 'NZEUS experimental Linux: serial rescue system'
+uname -a
+echo 'No SD card or internal flash filesystem has been mounted.'
+echo 'This build has not been validated on R36S hardware.'
+echo 'Useful commands: free, cat /proc/iomem, ip link, dmesg'
+echo
+while true; do
+    setsid cttyhack /bin/sh
+    echo 'Shell exited; starting another shell.'
+    sleep 1
+done

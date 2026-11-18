@@ -1,0 +1,433 @@
+{
+  "status": "PASS_PC_QEMU_ONLY",
+  "passed": 42,
+  "total": 42,
+  "binary_sha256": "4f4c90529610897c8247329ad971ddcba31f0c26b71c4efda937ff01533bc100",
+  "header_crc": "a2f0c7aa",
+  "cases": [
+    {
+      "case": "pass: everything matches",
+      "ok": true,
+      "exit": 0,
+      "expected_exit": 0,
+      "seconds": 0.0,
+      "expected_text": "NZ_SDBOOT_OK",
+      "last_lines": [
+        "nz-sdboot: mmcblk0p3: ext4 superblock, UUID ba4d2f0c8dc94908ad65bbcad3080def = header",
+        "NZ_SDBOOT_OK"
+      ]
+    },
+    {
+      "case": "pass: --log file written",
+      "ok": true,
+      "exit": 0,
+      "expected_exit": 0,
+      "seconds": 0.0,
+      "expected_text": "NZ_SDBOOT_OK",
+      "last_lines": [
+        "nz-sdboot: mmcblk0p3: ext4 superblock, UUID ba4d2f0c8dc94908ad65bbcad3080def = header",
+        "NZ_SDBOOT_OK"
+      ]
+    },
+    {
+      "case": "escape: nzeus.ramonly on the command line",
+      "ok": true,
+      "exit": 4,
+      "expected_exit": 4,
+      "seconds": 0.0,
+      "expected_text": "nzeus.ramonly",
+      "last_lines": [
+        "nz-sdboot: kernel command line has nzeus.ramonly",
+        "NZ_SDBOOT_STAY_IN_RAM: escape requested"
+      ]
+    },
+    {
+      "case": "escape: FN held",
+      "ok": true,
+      "exit": 4,
+      "expected_exit": 4,
+      "seconds": 0.0,
+      "expected_text": "FN is held",
+      "last_lines": [
+        "nz-sdboot: FN is held: staying in the RAM rescue system",
+        "NZ_SDBOOT_STAY_IN_RAM: escape requested"
+      ]
+    },
+    {
+      "case": "refuse: no r36s-keys input device",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 3.0,
+      "expected_text": "no input device named r36s-keys",
+      "last_lines": [
+        "nz-sdboot: no input device named r36s-keys: cannot read FN",
+        "NZ_SDBOOT_STAY_IN_RAM: a check failed (see the line above)"
+      ]
+    },
+    {
+      "case": "refuse: bad CRC in p2 header",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 0.0,
+      "expected_text": "mmcblk0p2 (nzhdr): header CRC mismatch",
+      "last_lines": [
+        "nz-sdboot: mmcblk0p2 (nzhdr): header CRC mismatch (stored a2f0c7aa, computed 62a8a982)",
+        "NZ_SDBOOT_STAY_IN_RAM: a check failed (see the line above)"
+      ]
+    },
+    {
+      "case": "refuse: bad CRC in p5 (backup) header",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 0.0,
+      "expected_text": "mmcblk0p5 (nzhdr2): header CRC mismatch",
+      "last_lines": [
+        "nz-sdboot: mmcblk0p5 (nzhdr2): header CRC mismatch (stored a2f0c7aa, computed 62a8a982)",
+        "NZ_SDBOOT_STAY_IN_RAM: a check failed (see the line above)"
+      ]
+    },
+    {
+      "case": "refuse: no header magic",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 0.0,
+      "expected_text": "no NZEUS header magic",
+      "last_lines": [
+        "nz-sdboot: mmcblk0p2 (nzhdr): no NZEUS header magic",
+        "NZ_SDBOOT_STAY_IN_RAM: a check failed (see the line above)"
+      ]
+    },
+    {
+      "case": "refuse: empty header block",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 0.0,
+      "expected_text": "no NZEUS header magic",
+      "last_lines": [
+        "nz-sdboot: mmcblk0p2 (nzhdr): no NZEUS header magic",
+        "NZ_SDBOOT_STAY_IN_RAM: a check failed (see the line above)"
+      ]
+    },
+    {
+      "case": "refuse: both headers valid but different",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 0.0,
+      "expected_text": "both valid but differ",
+      "last_lines": [
+        "nz-sdboot: the two headers (p2, p5) are both valid but differ",
+        "NZ_SDBOOT_STAY_IN_RAM: a check failed (see the line above)"
+      ]
+    },
+    {
+      "case": "refuse: header says nzstock is not read-only",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 0.0,
+      "expected_text": "part 1 is nzstock (kind 0, ro 0)",
+      "last_lines": [
+        "nz-sdboot: mmcblk0p2 (nzhdr): part 1 is nzstock (kind 0, ro 0), expected nzstock (kind 0, ro 1)",
+        "NZ_SDBOOT_STAY_IN_RAM: a check failed (see the line above)"
+      ]
+    },
+    {
+      "case": "refuse: card CID differs from header",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 0.0,
+      "expected_text": "wrong card",
+      "last_lines": [
+        "nz-sdboot: card CID 000000000000000000000000000000b8 is not the header CID 000000000000000000000000000000b7 (wrong card)",
+        "NZ_SDBOOT_STAY_IN_RAM: a check failed (see the line above)"
+      ]
+    },
+    {
+      "case": "refuse: card size differs from header",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 0.0,
+      "expected_text": "card size",
+      "last_lines": [
+        "nz-sdboot: card size 124735480 sectors is not the header card size 63864569856 bytes",
+        "NZ_SDBOOT_STAY_IN_RAM: a check failed (see the line above)"
+      ]
+    },
+    {
+      "case": "refuse: p3 start differs (wrong start)",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 0.0,
+      "expected_text": "mmcblk0p3 starts at sector",
+      "last_lines": [
+        "nz-sdboot: mmcblk0p3 starts at sector 33562632, header nzroot says 33562624",
+        "NZ_SDBOOT_STAY_IN_RAM: a check failed (see the line above)"
+      ]
+    },
+    {
+      "case": "refuse: p1 start differs",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 0.0,
+      "expected_text": "mmcblk0p1 starts at sector 2049",
+      "last_lines": [
+        "nz-sdboot: mmcblk0p1 starts at sector 2049, header nzstock says 2048",
+        "NZ_SDBOOT_STAY_IN_RAM: a check failed (see the line above)"
+      ]
+    },
+    {
+      "case": "refuse: p4 size differs (card shortened it)",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 0.0,
+      "expected_text": "mmcblk0p4 has",
+      "last_lines": [
+        "nz-sdboot: mmcblk0p4 has 82771967 sectors, header nzdata says 82771968",
+        "NZ_SDBOOT_STAY_IN_RAM: a check failed (see the line above)"
+      ]
+    },
+    {
+      "case": "refuse: p3 has another name",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 0.0,
+      "expected_text": "mmcblk0p3 is not named nzroot",
+      "last_lines": [
+        "nz-sdboot: mmcblk0p3 is not named nzroot (blkdevparts= line differs from the header)",
+        "NZ_SDBOOT_STAY_IN_RAM: a check failed (see the line above)"
+      ]
+    },
+    {
+      "case": "refuse: p1 not read-only in the kernel",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 0.1,
+      "expected_text": "mmcblk0p1 (nzstock) is NOT read-only",
+      "last_lines": [
+        "nz-sdboot: mmcblk0p1 (nzstock) is NOT read-only in the kernel",
+        "NZ_SDBOOT_STAY_IN_RAM: a check failed (see the line above)"
+      ]
+    },
+    {
+      "case": "refuse: p2 not read-only in the kernel",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 0.0,
+      "expected_text": "mmcblk0p2 (nzhdr) is NOT read-only",
+      "last_lines": [
+        "nz-sdboot: mmcblk0p2 (nzhdr) is NOT read-only in the kernel",
+        "NZ_SDBOOT_STAY_IN_RAM: a check failed (see the line above)"
+      ]
+    },
+    {
+      "case": "refuse: p5 not read-only in the kernel",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 0.0,
+      "expected_text": "mmcblk0p5 (nzhdr2) is NOT read-only",
+      "last_lines": [
+        "nz-sdboot: mmcblk0p5 (nzhdr2) is NOT read-only in the kernel",
+        "NZ_SDBOOT_STAY_IN_RAM: a check failed (see the line above)"
+      ]
+    },
+    {
+      "case": "refuse: an extra partition p6",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 0.0,
+      "expected_text": "mmcblk0p6 exists",
+      "last_lines": [
+        "nz-sdboot: mmcblk0p6 exists: the partitions are not the planned five",
+        "NZ_SDBOOT_STAY_IN_RAM: a check failed (see the line above)"
+      ]
+    },
+    {
+      "case": "refuse: no ext4 in p3",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 0.0,
+      "expected_text": "holds no ext2/3/4",
+      "last_lines": [
+        "nz-sdboot: mmcblk0p3 (nzroot) holds no ext2/3/4 file system",
+        "NZ_SDBOOT_STAY_IN_RAM: a check failed (see the line above)"
+      ]
+    },
+    {
+      "case": "refuse: p3 ext4 UUID is not the header UUID",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 0.0,
+      "expected_text": "is not the header's nzroot UUID",
+      "last_lines": [
+        "nz-sdboot: mmcblk0p3 file system UUID 454d2f0c8dc94908ad65bbcad3080def is not the header's nzroot UUID ba4d2f0c8dc94908ad65bbcad3080def",
+        "NZ_SDBOOT_STAY_IN_RAM: a check failed (see the line above)"
+      ]
+    },
+    {
+      "case": "refuse: missing devices (no p2), waits then stays",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 2.1,
+      "expected_text": "mmcblk0p2 did not appear within 2 s",
+      "last_lines": [
+        "nz-sdboot: mmcblk0p2 did not appear within 2 s (no card, or no blkdevparts= partitions)",
+        "NZ_SDBOOT_STAY_IN_RAM: a check failed (see the line above)"
+      ]
+    },
+    {
+      "case": "refuse: sysfs has p5 but no /dev node",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 2.1,
+      "expected_text": "mmcblk0p5 did not appear within 2 s",
+      "last_lines": [
+        "nz-sdboot: mmcblk0p5 did not appear within 2 s (no card, or no blkdevparts= partitions)",
+        "NZ_SDBOOT_STAY_IN_RAM: a check failed (see the line above)"
+      ]
+    },
+    {
+      "case": "refuse: no card at all",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 1.1,
+      "expected_text": "mmcblk0p1 did not appear within 1 s",
+      "last_lines": [
+        "nz-sdboot: mmcblk0p1 did not appear within 1 s (no card, or no blkdevparts= partitions)",
+        "NZ_SDBOOT_STAY_IN_RAM: a check failed (see the line above)"
+      ]
+    },
+    {
+      "case": "no answer: a read that never returns -> exit 3",
+      "ok": true,
+      "exit": 3,
+      "expected_exit": 3,
+      "seconds": 3.0,
+      "expected_text": "no answer within 3 s",
+      "last_lines": [
+        "nz-sdboot: no answer within 3 s (card or driver not responding)",
+        "NZ_SDBOOT_STAY_IN_RAM: no answer"
+      ]
+    },
+    {
+      "case": "usage: fake root without marker refused",
+      "ok": true,
+      "exit": 2
+    },
+    {
+      "case": "usage: fake root \"/\" refused",
+      "ok": true,
+      "exit": 2
+    },
+    {
+      "case": "usage: --wait without --fake-root refused",
+      "ok": true,
+      "exit": 2
+    },
+    {
+      "case": "usage: unknown option refused",
+      "ok": true,
+      "exit": 2
+    },
+    {
+      "case": "check-init: static MIPS init",
+      "ok": true,
+      "exit": 0,
+      "expected_exit": 0,
+      "expected_text": "NZ_SDBOOT_INIT_OK"
+    },
+    {
+      "case": "check-init: dynamic init, loader missing",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "expected_text": "/lib/ld.so.1 is missing"
+    },
+    {
+      "case": "check-init: dynamic init with its loader",
+      "ok": true,
+      "exit": 0,
+      "expected_exit": 0,
+      "expected_text": "NZ_SDBOOT_INIT_OK"
+    },
+    {
+      "case": "check-init: usrmerge relative symlinks",
+      "ok": true,
+      "exit": 0,
+      "expected_exit": 0,
+      "expected_text": "NZ_SDBOOT_INIT_OK"
+    },
+    {
+      "case": "check-init: absolute symlink resolved inside root",
+      "ok": true,
+      "exit": 0,
+      "expected_exit": 0,
+      "expected_text": "NZ_SDBOOT_INIT_OK"
+    },
+    {
+      "case": "check-init: no /sbin/init",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "expected_text": "/sbin/init is missing"
+    },
+    {
+      "case": "check-init: PC (x86-64) program",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "expected_text": "not a 32-bit little-endian ELF"
+    },
+    {
+      "case": "check-init: NaN2008 program",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "expected_text": "NaN2008"
+    },
+    {
+      "case": "check-init: init not executable",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "expected_text": "not an executable file"
+    },
+    {
+      "case": "check-init: script init with /bin/sh",
+      "ok": true,
+      "exit": 0,
+      "expected_exit": 0,
+      "expected_text": "NZ_SDBOOT_INIT_OK"
+    },
+    {
+      "case": "check-init: script init, interpreter missing",
+      "ok": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "expected_text": "/bin/missing-shell is missing"
+    }
+  ],
+  "limits": [
+    "fake /proc, /sys and /dev under qemu-mipsel; no real card, kernel or input device"
+  ]
+}

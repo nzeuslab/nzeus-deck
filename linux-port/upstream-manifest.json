@@ -1,0 +1,44 @@
+{
+  "repository": "https://github.com/SiarheiVolkau/linux-hichip",
+  "branch": "hc16xx-7.2",
+  "commit": "da5f1a22ef2ff5c46aa3f750fa10825813970b09",
+  "verified_date": "2026-10-07",
+  "files": [
+    {
+      "path": "hc16xx.dtsi",
+      "sha256": "d6a4a19e50f049aeca6421bbc9368da0f03db34d678ad6d9d7e622c7078df609"
+    },
+    {
+      "path": "Readme.md",
+      "sha256": "57b8c29f2acd81510aeebc6d0fbb469f8a5e271bfc86e7fef5e3a9524ab4275e"
+    },
+    {
+      "path": "sf3000_defconfig",
+      "sha256": "4d8551c1c4a4be1053d33c76458faf6c36986aa0ff3162dc52373240c9a962ea"
+    },
+    {
+      "path": "sf3000.dts",
+      "sha256": "54dc90855eb0ed0b8c92b8f11b4ddd432eb22a47f46285ac1c9b65606cefc0c1"
+    },
+    {
+      "path": "include/dt-bindings/clock/hichip,hc16xx-clock.h",
+      "sha256": "cc6ff13c510921c21bcb1d89bdfefb8675a96b48d30c2f288f62efb77ad8b5d0"
+    },
+    {
+      "path": "include/dt-bindings/gpio/gpio.h",
+      "sha256": "5423b3866877ead0920ec978b5b072f06087443033a72445b39faed8f288ddc1"
+    },
+    {
+      "path": "include/dt-bindings/input/input.h",
+      "sha256": "2f7ae2ec64f1b033e9c3d34d9128c0851f86cfffa010a890b46ac49aae4f17ea"
+    },
+    {
+      "path": "include/dt-bindings/reset/hichip,hc16xx-reset.h",
+      "sha256": "dab6ea2e531c9c6a6df122b12c565f968d97260e17a3be241e927c11987d0553"
+    },
+    {
+      "path": "include/uapi/linux/input-event-codes.h",
+      "sha256": "0aa175af6b02a096e7dc172bd31e81d499eba9083777515e8c20aa915ab79dec"
+    }
+  ]
+}

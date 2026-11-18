@@ -1,0 +1,30 @@
+# build output
+build/
+out/
+*.o
+*.ko
+*.so
+*-mipsel
+# never commit
+*.img
+*.bin
+*.uImage*
+.env
+*.pem
+*_key
+*_key.pub
+private_*words*.txt
+tools/emoji_cache/
+apps/dropbear/
+reports/gui/
+dist/
+.superpowers/
+linux-port/upstream/*.tar.xz
+linux-port/upstream/*.tar.bz2
+linux-port/upstream/*.tar.gz
+__pycache__/
+apps/frontend-modern/mips/
+linux-port/deck-modern/dropbearmulti
+
+# design-review notes (Impeccable)
+.impeccable/

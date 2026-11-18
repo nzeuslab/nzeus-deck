@@ -1,0 +1,19 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          nzeus-zram
+# Required-Start:    mountkernfs mountdevsubfs
+# Required-Stop:
+# X-Start-Before:    checkroot
+# Default-Start:     S
+# Default-Stop:
+# Short-Description: NZEUS: compressed swap in RAM (zram, half the RAM)
+### END INIT INFO
+# Not switched off at shutdown on purpose: bringing swapped pages back into
+# RAM at that moment could run out of memory; it is RAM anyway.
+case "$1" in
+    start) /usr/local/sbin/nzeus-zram ;;
+    stop|restart|force-reload) ;;
+    status) cat /proc/swaps ;;
+    *) echo "Usage: $0 start" >&2; exit 3 ;;
+esac
+exit 0

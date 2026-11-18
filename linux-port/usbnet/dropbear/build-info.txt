@@ -1,0 +1,5 @@
+dropbear 2026.94, static, stripped, 1394916 bytes
+compiler: mipsel-linux-gnu-gcc (Ubuntu 12.4.0-2ubuntu1~24.04) 12.4.0
+flags: -march=mips32r2 -mtune=74kc -O2 -Wl,-z,noexecstack, configure --enable-static (hardening on: stack protector, FORTIFY)
+options: linux-port/usbnet/dropbear/localoptions.h (keys only, no passwords); plain Dropbear
+sha256: 2cb1600373b93e4903d68d32f113f7283c62038be2961f6c38503451ccd3e1dc

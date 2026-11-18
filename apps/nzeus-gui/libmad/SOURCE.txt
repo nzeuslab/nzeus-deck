@@ -1,0 +1,32 @@
+libmad 0.16.4 - MPEG audio decoder, whole-number (fixed-point) maths only.
+License: GPL-2.0-or-later (COPYING, COPYRIGHT). NZEUS Deck is GPL-3.0: compatible.
+Why: the console's kernel runs with "nofpu" (apt fix), so every floating-point
+instruction is emulated in the kernel. minimp3 (floats) then used ~72% CPU in
+the kernel for a 320 kbps MP3 and stuttered (measured 2026-10-12). libmad needs
+no floating point at all.
+
+Where it came from (Debian's maintained copy of the Tenacity fork,
+https://codeberg.org/tenacityteam/libmad), downloaded 2026-10-12 over HTTPS from
+https://deb.debian.org/debian/pool/main/libm/libmad/ :
+  libmad_0.16.4-3.dsc
+  libmad_0.16.4.orig.tar.xz       sha256 cd4c3aa4bf894c957b9b8662eca109927b43b19adafc4ff67eb5349d29d45198
+  libmad_0.16.4-3.debian.tar.xz   sha256 66cc60b15fa932557ecd348352a32119566623e7cf76dc3f3608d3a98f399b93
+Both hashes match the .dsc. NOT checked: the .dsc's PGP signature and Debian's
+signed archive index (the PC's Debian keyring is from 2023, too old for the
+2026 archive key). Debian's only patch (static.patch) is about building a
+static library with CMake and is not needed here.
+
+Files used unchanged: bit.c fixed.c frame.c huffman.c layer12.c layer3.c
+stream.c synth.c timer.c huffman.h layer12.h layer3.h *.dat COPYING COPYRIGHT
+CREDITS README.md. (Not copied: decoder.c, version.c, minimad.c, the CMake
+files, imdct_l_arm.S - the low-level API below does not need them.)
+
+Changed by NZEUS (the two things CMake would normally do):
+  mad.h     = mad.h.in with SIZEOF_INT 4, version 0.16.4, and the fixed-point
+              kind picked by the compiler's target instead of #cmakedefine:
+              MIPS -> FPM_MIPS, x86-64/arm64 (PC tests) -> FPM_64BIT,
+              anything else -> FPM_DEFAULT.
+  global.h  = adds OPT_SPEED (CMake's default), HAVE_LIMITS_H, HAVE_ASSERT_H.
+
+Used by audio.c through the low-level API: mad_stream_buffer,
+mad_frame_decode, mad_synth_frame.

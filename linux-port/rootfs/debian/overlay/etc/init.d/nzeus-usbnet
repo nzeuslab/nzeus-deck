@@ -1,0 +1,18 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          nzeus-usbnet
+# Required-Start:    $local_fs nzeus-usb
+# Required-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:
+# Short-Description: NZEUS: USB serial + network at power-on (if /etc/nzeus/usbnet-at-boot exists)
+### END INIT INFO
+# In the background: the switch + the wait for the PC take up to 3 minutes.
+# The result goes to /run/nzeus-usbnet-boot.log.
+case "$1" in
+    start) /usr/local/sbin/nzeus-usbnet-boot > /run/nzeus-usbnet-boot.log 2>&1 & ;;
+    stop|restart|force-reload) ;;
+    status) cat /run/nzeus-usbnet-boot.log 2>/dev/null; /usr/local/bin/usbnet-up --status ;;
+    *) echo "Usage: $0 start" >&2; exit 3 ;;
+esac
+exit 0

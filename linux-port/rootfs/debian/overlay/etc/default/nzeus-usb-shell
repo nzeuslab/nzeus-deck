@@ -1,0 +1,4 @@
+# Shell for the root shell on the USB cable (/usr/local/sbin/nzeus-usb-shell).
+# /bin/bash = line editing + history; /bin/sh (dash) = the plainest shell.
+# Both work with linux-port/diagnostics/rescue-command.py and rescue-upload.py.
+NZ_USB_SHELL=/bin/bash

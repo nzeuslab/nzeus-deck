@@ -1,0 +1,52 @@
+#!/bin/sh
+# nzeus-usbnet-boot - at power-on: USB serial + network with no typing, so
+# "ssh nzeus-deck" works from the PC. Keeps usbnet-up's automatic way back:
+#  1. runs "usbnet-up MODE 180" exactly as by hand (the USB link changes from
+#     the plain rescue serial port to serial + network card, 192.168.77.1);
+#  2. confirms by itself as soon as the PC has SENT packets to the console's
+#     USB network card - proof that the PC sees and uses it (Windows sends a
+#     few within seconds of the adapter coming up);
+#  3. if no PC does that within the 180 s (charger only, or something wrong),
+#     usbnet-up switches back to the plain rescue port (COM9) by itself.
+# On/off: /etc/nzeus/usbnet-at-boot, first line = rndis, ncm or auto. No file = off.
+# Hold FN at power-on = the RAM rescue shell (no Debian, no network), as always.
+# Works with dash, bash and BusyBox ash. NZ_* variables: PC test only.
+FLAG=${NZ_FLAG:-/etc/nzeus/usbnet-at-boot}
+STATE=${NZ_USBNET_STATE:-/tmp/nzeus-usbnet}
+NETDIR=${NZ_NETDIR:-/sys/class/net}
+UP=${NZ_UP:-/usr/local/bin/usbnet-up}
+WAIT=${NZ_WAIT:-170}
+
+test -f "$FLAG" || { echo "usbnet-boot: off (no $FLAG)"; exit 0; }
+mode=$(head -n 1 "$FLAG")
+case "$mode" in
+    auto|ncm|rndis) ;;
+    *) mode=rndis ;;          # Windows 11 here has no NCM driver: RNDIS works
+esac
+rm -f "$STATE/ifname"         # never read an interface name left from before
+"$UP" "$mode" 180 || { echo "usbnet-boot: usbnet-up refused (see usbnet-up --status)"; exit 0; }
+n=0
+while test "$n" -lt "$WAIT"; do
+    sleep 1
+    n=$((n + 1))
+    case "$(cat "$STATE/state" 2>/dev/null)" in
+        net-*) echo "usbnet-boot: already confirmed"; exit 0 ;;
+        waiting-*) ;;
+        rescue|down|failed) echo "usbnet-boot: usbnet-up went back to the rescue port"; exit 0 ;;
+        *) continue ;;
+    esac
+    ifname=$(cat "$STATE/ifname" 2>/dev/null)
+    test -n "$ifname" || continue
+    rx=$(cat "$NETDIR/$ifname/statistics/rx_packets" 2>/dev/null)
+    case "$rx" in ''|*[!0-9]*) continue ;; esac
+    if test "$rx" -gt 0; then
+        if "$UP" --confirm; then
+            echo "usbnet-boot: the PC sent $rx packets on $ifname after $n s: network stays on"
+        else
+            echo "usbnet-boot: confirm refused (see usbnet-up --status)"
+        fi
+        exit 0
+    fi
+done
+echo "usbnet-boot: no PC traffic in $WAIT s: usbnet-up goes back to the rescue port by itself"
+exit 0

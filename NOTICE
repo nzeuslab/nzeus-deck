@@ -1,0 +1,16 @@
+NZEUS Deck - Copyright (C) 2026 NZEUS LAB
+
+NZEUS Deck is free software: you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation, version 3 of the License, or (at your option) any later version.
+The full licence text is in LICENSE.
+
+NZEUS Deck is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+Exceptions:
+- Linux kernel code in linux-port/ (device trees, drivers, kernel patches and
+  the files taken from linux-hichip) is under GPL-2.0, like the Linux kernel.
+  Text: licenses/GPL-2.0.txt
+- Every outside part keeps its own licence: see THIRD_PARTY.md and licenses/.

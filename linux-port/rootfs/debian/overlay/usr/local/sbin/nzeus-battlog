@@ -1,0 +1,32 @@
+#!/bin/sh
+# nzeus-battlog - battery logger for calibrating the battery % (2026-10-10).
+# Every 60 s one CSV line goes to /data/nzeus/battlog.csv (kept after power-off):
+#   epoch,uptime_s,ref,battery,charger,capacity,status
+# ref/battery/charger = the raw stock-scale ADC levels from the nzeus-r36s-power
+# driver (stock_levels); capacity/status = what Linux shows today (a rough
+# straight line 128..175). One full charge -> empty run, then on the PC:
+#   python linux-port/battery/battlog-analyze.py battlog.csv
+# turns it into a real level -> % table. About 60 bytes a minute; above 2 MB
+# the file is renamed to battlog.csv.1 (one old file kept).
+# Works with dash, bash and BusyBox ash. NZ_* variables: PC test only.
+OUT=${NZ_BATTLOG:-/data/nzeus/battlog.csv}
+SYS=${NZ_SYS:-/sys}
+EVERY=${NZ_EVERY:-60}
+MAX=${NZ_MAX:-2000000}
+
+L=$(ls "$SYS"/bus/platform/devices/*.power/stock_levels 2>/dev/null | head -n 1)
+test -n "$L" || { echo "battlog: no battery driver (stock_levels): not logging"; exit 0; }
+B=$SYS/class/power_supply/battery
+mkdir -p "$(dirname "$OUT")" || exit 0
+test -s "$OUT" || echo "epoch,uptime_s,ref,battery,charger,capacity,status" > "$OUT"
+while true; do
+    # "ref=246 battery=173 charger=137" -> 246,173,137
+    levels=$(sed 's/ref=//; s/ battery=/,/; s/ charger=/,/' "$L" 2>/dev/null)
+    echo "$(date +%s),$(cut -d' ' -f1 /proc/uptime),$levels,$(cat "$B/capacity" 2>/dev/null),$(cat "$B/status" 2>/dev/null)" >> "$OUT"
+    if test "$(wc -c < "$OUT")" -gt "$MAX"; then
+        mv "$OUT" "$OUT.1"
+        echo "epoch,uptime_s,ref,battery,charger,capacity,status" > "$OUT"
+    fi
+    test -n "$NZ_ONCE" && exit 0
+    sleep "$EVERY"
+done

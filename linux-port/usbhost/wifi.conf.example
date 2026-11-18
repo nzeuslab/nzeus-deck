@@ -1,0 +1,7 @@
+# Example for /data/nzeus/wifi.conf ON THE CONSOLE (never in git).
+# Copy it there, put in your network, then:  chmod 600 /data/nzeus/wifi.conf
+# One setting per line, no quotes: everything after the first '=' is the value.
+ssid=YOUR-NETWORK-NAME
+psk=YOUR-WIFI-PASSWORD
+# auto = WPA2 or WPA3 (whatever the router offers); or wpa2, or wpa3
+security=auto

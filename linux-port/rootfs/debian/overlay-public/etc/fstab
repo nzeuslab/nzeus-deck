@@ -1,0 +1,12 @@
+# /etc/fstab - NZEUS Deck, copy-and-go install (public image).
+# The boot RAM disk (nz-fatroot) set everything up before this system started:
+#   /dev/loop0 -> /sdcard  the SD card's own FAT32 (your games and files), read-write
+#   /dev/loop1 -> /        this system: the file nzeus/nzroot.img on that card
+#   /dev/loop2 -> /data    your NZEUS files: the file nzeus/nzdata.img
+# "/" says "ro" and pass 0 ON PURPOSE: /usr/local/sbin/nzeus-rootcheck makes it
+# read-write after its e2fsck -p (see the private overlay's fstab for why).
+#
+# <file system>  <mount point>  <type>  <options>                                       <dump> <pass>
+/dev/loop1       /              ext4    ro,noatime,errors=remount-ro                        0      0
+# /tmp is RAM: keep it small. Big files go to /data.
+tmpfs            /tmp           tmpfs   nosuid,nodev,mode=1777,size=8M                      0      0

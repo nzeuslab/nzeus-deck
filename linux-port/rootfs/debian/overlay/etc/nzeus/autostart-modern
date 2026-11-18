@@ -1,0 +1,2 @@
+# NZEUS Deck (nzeus-modern) starts at power-on while this file exists (init.d/nzeus-modern).
+# Delete it (or /data/nzeus/autostart-modern) to boot to the plain logo; "nzeus-deck start" by hand.

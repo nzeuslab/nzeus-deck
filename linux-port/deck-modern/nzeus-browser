@@ -1,0 +1,87 @@
+#!/bin/sh
+# nzeus-browser URL|home - the Deck's Web app: NetSurf, full screen.
+#
+# The Deck (nzeus-modern) stops drawing and runs this; it gets the screen back
+# when this ends. NetSurf (Debian's netsurf-fb) draws through SDL's fbcon driver
+# in 16-bit colour (RGB565: in 32-bit it would write alpha 0 = see-through on
+# this display); nzeus-browser-input.py turns the buttons into its mouse and keys.
+#   home   the start page: the owner's favourites (nzeus/web/favourites.txt,
+#          "Name|https://address" per line), quick links, the saved pages
+# Exit: 0 = quit (SELECT+START), 10 = the owner wants to type an address (Y),
+#       3 = NetSurf is not installed / could not start.
+# NetSurf's profile (cookies, history, Choices) is kept in NZ_DIR/browser.
+# Works with dash. NZ_NETSURF / NZ_ROOT / NZ_BIN change paths (PC tests).
+NZ_BIN="${NZ_BIN:-$(cd "$(dirname "$0")" && pwd)}"
+NZ_ROOT="${NZ_ROOT:-${NZ_DECK_DIR:-/tmp/nzeus-data/nzeus}}"
+NS="${NZ_NETSURF:-/usr/bin/netsurf-fb}"
+test -x "$NS" || { echo "error NetSurf is not installed (apt install netsurf-fb)"; exit 3; }
+
+PROFILE="$NZ_ROOT/browser"
+mkdir -p "$PROFILE/.netsurf" || exit 3
+# NetSurf's settings, written once (the owner may change them afterwards)
+if [ ! -f "$PROFILE/.netsurf/Choices" ]; then
+    cat > "$PROFILE/.netsurf/Choices" <<EOF
+enable_javascript:0
+memory_cache_size:4194304
+ca_bundle:/etc/ssl/certs/ca-certificates.crt
+EOF
+fi
+
+# HTML-safe text (names from the favourites file)
+html() { printf '%s' "$1" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g'; }
+
+url="$1"
+if [ -z "$url" ] || [ "$url" = home ]; then
+    page="$PROFILE/start.html"
+    {
+        echo '<html><head><meta charset="utf-8"><title>NZEUS Web</title></head>'
+        echo '<body style="font-family:sans-serif;background:#eef4ff">'
+        echo '<h2 style="color:#1c4fd0">NZEUS Web</h2>'
+        echo '<p>D-pad: pointer &nbsp; A: click &nbsp; B: back &nbsp; L1/R1, L2/R2: scroll &nbsp; X: zoom<br>'
+        echo '<b>Y: type an address or a search</b> &nbsp; SELECT+START: back to the Deck</p>'
+        favs="$NZ_ROOT/web/favourites.txt"
+        if [ -s "$favs" ]; then
+            echo '<h3>Favourites</h3><ul>'
+            tr -d '\r' < "$favs" | while IFS='|' read -r name addr; do
+                case "$name" in \#*) continue ;; esac            # (the file's comment lines)
+                case "$addr" in http://*|https://*) echo "<li><a href=\"$(html "$addr")\">$(html "$name")</a></li>" ;; esac
+            done
+            echo '</ul>'
+        fi
+        echo '<h3>Quick links (light pages that suit this console)</h3><ul>'
+        echo '<li><a href="https://html.duckduckgo.com/html/">DuckDuckGo search (simple)</a></li>'
+        echo '<li><a href="http://frogfind.com/">FrogFind: the web made simple for old computers</a></li>'
+        echo '<li><a href="https://en.m.wikipedia.org/">Wikipedia (mobile)</a></li>'
+        echo '<li><a href="https://lite.cnn.com/">CNN Lite</a></li>'
+        echo '<li><a href="https://text.npr.org/">NPR text</a></li>'
+        echo '<li><a href="http://68k.news/">68k.news: headlines for old computers</a></li>'
+        echo '<li><a href="https://news.ycombinator.com/">Hacker News</a></li>'
+        echo '</ul><h3>On this console</h3><ul>'
+        for d in "$NZ_ROOT/web" "$NZ_ROOT/../docs" "$NZ_ROOT/../web"; do
+            test -d "$d" && echo "<li><a href=\"file://$(cd "$d" && pwd)/\">Saved pages: $(html "$(cd "$d" && pwd)")</a></li>"
+        done
+        echo '</ul></body></html>'
+    } > "$page.tmp" && mv -f "$page.tmp" "$page"
+    url="file://$page"
+fi
+
+fifo="/tmp/nzeus-browser-mouse.$$"
+rm -f "$fifo"
+mkfifo -m 600 "$fifo" || exit 3
+python3 "$NZ_BIN/nzeus-browser-input.py" "$fifo" > /tmp/nzeus-browser-input.log 2>&1 &
+bridge=$!
+HOME="$PROFILE" SDL_VIDEODRIVER=fbcon SDL_FBDEV=/dev/fb0 SDL_MOUSEDEV="$fifo" SDL_MOUSEDRV=PS2 \
+    "$NS" -f sdl -w 640 -h 480 -b 16 "$url" > /tmp/nzeus-browser.log 2>&1 &
+browser=$!
+# until the owner quits (the bridge ends) or NetSurf ends by itself
+while kill -0 "$bridge" 2>/dev/null && kill -0 "$browser" 2>/dev/null; do sleep 0.3; done
+if kill -0 "$bridge" 2>/dev/null; then                   # NetSurf ended first (closed, crashed)
+    kill "$bridge" 2>/dev/null; wait "$bridge" 2>/dev/null
+    rc=0
+else
+    wait "$bridge"; rc=$?
+    kill "$browser" 2>/dev/null
+    wait "$browser" 2>/dev/null
+fi
+rm -f "$fifo"
+case "$rc" in 0|10) exit "$rc" ;; *) echo "error the button bridge stopped ($rc)"; exit 0 ;; esac

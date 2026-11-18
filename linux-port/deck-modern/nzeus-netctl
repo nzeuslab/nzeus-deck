@@ -1,0 +1,13 @@
+#!/bin/sh
+# nzeus-netctl status - the Deck's "is the internet up" line. Stock: asked
+# nzeus-netd; SD Debian: the kernel's own address on wlan0. Prints e.g.
+#   iface=wlan0 link=up ip=192.168.1.57
+#   daemon=none link=down ip=none
+test "$1" = status || { echo "usage: nzeus-netctl status"; exit 2; }
+a=$(ip -4 -o addr show dev wlan0 2>/dev/null | awk '{ split($4, x, "/"); print x[1]; exit }')
+if test -n "$a"; then
+    echo "iface=wlan0 link=up ip=$a"
+else
+    echo "daemon=none link=down ip=none"
+fi
+exit 0

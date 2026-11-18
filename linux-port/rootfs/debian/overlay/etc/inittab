@@ -1,0 +1,34 @@
+# /etc/inittab - NZEUS R36S SD Linux (Debian, sysvinit).
+#
+# How we get here: the kernel's RAM system (initramfs) checked the card,
+# mounted this root READ-ONLY and did switch_root to /sbin/init (this init).
+#
+# Differences from Debian's default inittab, on purpose:
+#  - no gettys on tty1..tty6 (no keyboard yet; each would cost RAM)
+#  - no sulogin anywhere: the kernel console is the UART, which is only
+#    listened to (Arduino logger), so nobody could ever type a password there
+#  - the root shell on the USB cable (ttyGS0) comes BEFORE the runlevel lines,
+#    so it is already there while the start-up scripts of runlevel 2 run
+
+# Default runlevel (2 = normal multi-user).
+id:2:initdefault:
+
+# Start-up scripts (/etc/rcS.d): USB port, zram, root check, /data, clock...
+si::sysinit:/etc/init.d/rcS
+
+# Root shell on the USB serial port, same behaviour as the RAM rescue.
+GS0:S12345:respawn:/usr/local/sbin/nzeus-usb-shell
+
+# Runlevels: 0 = power off, 6 = restart. "poweroff" goes to 0; at the end
+# /etc/init.d/halt switches off (HALT=poweroff in /etc/default/halt) and the
+# kernel's power driver pulls the power pin (GPIO L14) low.
+l0:0:wait:/etc/init.d/rc 0
+l1:1:wait:/etc/init.d/rc 1
+l2:2:wait:/etc/init.d/rc 2
+l3:3:wait:/etc/init.d/rc 3
+l4:4:wait:/etc/init.d/rc 4
+l5:5:wait:/etc/init.d/rc 5
+l6:6:wait:/etc/init.d/rc 6
+
+# Ctrl+Alt+Del (a USB keyboard, later): restart cleanly.
+ca:12345:ctrlaltdel:/sbin/shutdown -t1 -a -r now

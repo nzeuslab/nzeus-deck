@@ -1,0 +1,10 @@
+#!/bin/sh
+# NZEUS: check and mount the big data area (mmcblk0p4 "nzdata") at /data.
+# Shared logic with the Debian root: /usr/local/sbin/nzeus-datamount.
+case "$1" in
+    start) /usr/local/sbin/nzeus-datamount ;;
+    stop)
+        sync
+        mountpoint -q /data && umount /data ;;
+esac
+exit 0

@@ -1,0 +1,952 @@
+{
+ "what": "What the docs say is on my live SD Debian (BLACK console, card CID 000000000000000000000000000000b7), as of 2026-10-12. NOT read from the console today (it is offline). Hashes come from the last verified install records.",
+ "root_image_installed": {
+  "sha256": "a41d2a0c33026e2107a731b25fc1aa8f3fec5c1a69cbac10a41152d3a1d17c08",
+  "source": "<work folder>/card-region/build.json rootfs_source (Linux area install 2026-10-10 ~20:12)",
+  "installed_utc": "2026-10-10T17:12:00+00:00"
+ },
+ "added_by_hand_after_image": [
+  {
+   "what": "nzeus-ram overlay + init script (RAM release at boot)",
+   "source": "lab notes 2026-10-10 21:14 \"installed live on the card's Debian\"",
+   "hash": null
+  },
+  {
+   "what": "nzeus-usbnet + /etc/nzeus/usbnet-at-boot (rndis)",
+   "source": "lab notes 2026-10-10 21:33",
+   "hash": null
+  },
+  {
+   "what": "nzeus-voldown",
+   "source": "lab notes 2026-10-10 23:00",
+   "hash": null
+  },
+  {
+   "what": "time zone (my local zone)",
+   "source": "lab notes 2026-10-10 21:25 (\"card set live\")",
+   "hash": null
+  },
+  {
+   "what": "/root/.ssh/authorized_keys (my public key)",
+   "source": "lab notes 2026-10-10 21:25 (image a41d2a0c had \"no SSH key yet\")",
+   "hash": null
+  },
+  {
+   "what": "Realtek Wi-Fi/BT firmware + upstream regulatory.db copied live (not via dpkg)",
+   "source": "lab notes 2026-10-11 Wi-Fi entry",
+   "hash": null
+  },
+  {
+   "what": "alsa-utils installed with dpkg from the official mirror",
+   "source": "lab notes 2026-10-11 ALSA entry",
+   "hash": null
+  },
+  {
+   "what": "Deck helpers in /usr/local/lib/nzeus/deck-bin + nzeus-deck start/autostart",
+   "source": "lab notes 2026-10-11 Deck Settings audit; signed updates 2026-10-12",
+   "hash": "see managed"
+  },
+  {
+   "what": "poppler-utils + 27 dependencies (apt, nofpu kernel)",
+   "source": "reports/continuation/pdf-reader-20261012.md",
+   "hash": null
+  }
+ ],
+ "packages": {
+  "adduser": {
+   "version": "3.134",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "alsa-utils": {
+   "version": "1.2.8-1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "apt": {
+   "version": "2.6.1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "base-files": {
+   "version": "12.4+deb12u15",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "base-passwd": {
+   "version": "3.6.1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "bash": {
+   "version": "5.2.15-2+b13",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "bsdutils": {
+   "version": "1:2.38.1-5+deb12u3",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "busybox": {
+   "version": "1:1.35.0-4+deb12u1+b1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "ca-certificates": {
+   "version": "20230311+deb12u1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "coreutils": {
+   "version": "9.1-1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "curl": {
+   "version": "7.88.1-10+deb12u15",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "dash": {
+   "version": "0.5.12-2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "debconf": {
+   "version": "1.5.82",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "debian-archive-keyring": {
+   "version": "2023.3+deb12u2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "debianutils": {
+   "version": "5.7-0.5~deb12u1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "diffutils": {
+   "version": "1:3.8-4",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "dpkg": {
+   "version": "1.21.23",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "dropbear-bin": {
+   "version": "2022.83-1+deb12u3",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "e2fsprogs": {
+   "version": "1.47.0-2+b2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "evtest": {
+   "version": "1:1.35-1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "fbset": {
+   "version": "2.1-33",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "findutils": {
+   "version": "4.9.0-4",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "fontconfig-config": {
+   "version": "2.14.1-4",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "fonts-dejavu-core": {
+   "version": "2.37-6",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "gcc-12-base": {
+   "version": "12.2.0-14+deb12u1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "gpgv": {
+   "version": "2.2.40-1.1+deb12u2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "grep": {
+   "version": "3.8-5",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "gzip": {
+   "version": "1.12-1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "hostname": {
+   "version": "3.23+nmu1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "htop": {
+   "version": "3.2.2-2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "init-system-helpers": {
+   "version": "1.65.2+deb12u1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "initscripts": {
+   "version": "3.06-4",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "insserv": {
+   "version": "1.24.0-1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "iproute2": {
+   "version": "6.1.0-3",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "iputils-ping": {
+   "version": "3:20221126-1+deb12u1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "iw": {
+   "version": "5.19-1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "kmod": {
+   "version": "30+20221128-1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "less": {
+   "version": "590-2.1~deb12u2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libacl1": {
+   "version": "2.3.1-3",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libapt-pkg6.0": {
+   "version": "2.6.1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libasound2": {
+   "version": "1.2.8-1+b1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libasound2-data": {
+   "version": "1.2.8-1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libatomic1": {
+   "version": "12.2.0-14+deb12u1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libatopology2": {
+   "version": "1.2.8-1+b1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libattr1": {
+   "version": "1:2.5.1-4",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libaudit-common": {
+   "version": "1:3.0.9-1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libaudit1": {
+   "version": "1:3.0.9-1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libblkid1": {
+   "version": "2.38.1-5+deb12u3",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libbpf1": {
+   "version": "1:1.1.2-0+deb12u1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libbrotli1": {
+   "version": "1.0.9-2+b6",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libbsd0": {
+   "version": "0.11.7-2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libbz2-1.0": {
+   "version": "1.0.8-5+b1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libc-bin": {
+   "version": "2.36-9+deb12u14",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libc6": {
+   "version": "2.36-9+deb12u14",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libcairo2": {
+   "version": "1.16.0-7",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "libcap-ng0": {
+   "version": "0.8.3-1+b3",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libcap2": {
+   "version": "1:2.66-4+deb12u3+b1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libcap2-bin": {
+   "version": "1:2.66-4+deb12u3+b1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libcom-err2": {
+   "version": "1.47.0-2+b2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libcrypt1": {
+   "version": "1:4.4.33-2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libcurl4": {
+   "version": "7.88.1-10+deb12u15",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libdb5.3": {
+   "version": "5.3.28+dfsg2-1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libdbus-1-3": {
+   "version": "1.14.10-1~deb12u1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libdebconfclient0": {
+   "version": "0.270",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libdeflate0": {
+   "version": "1.14-1",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "libelf1": {
+   "version": "0.188-2.1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libexpat1": {
+   "version": "2.5.0-1+deb12u2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libext2fs2": {
+   "version": "1.47.0-2+b2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libffi8": {
+   "version": "3.4.4-1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libfftw3-single3": {
+   "version": "3.3.10-1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libfontconfig1": {
+   "version": "2.14.1-4",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "libfreetype6": {
+   "version": "2.12.1+dfsg-5+deb12u4",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "libgcc-s1": {
+   "version": "12.2.0-14+deb12u1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libgcrypt20": {
+   "version": "1.10.1-3+deb12u1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libgmp10": {
+   "version": "2:6.2.1+dfsg1-1.1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libgnutls30": {
+   "version": "3.7.9-2+deb12u7",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libgomp1": {
+   "version": "12.2.0-14+deb12u1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libgpg-error0": {
+   "version": "1.46-1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libgssapi-krb5-2": {
+   "version": "1.20.1-2+deb12u5",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libhogweed6": {
+   "version": "3.8.1-2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libidn2-0": {
+   "version": "2.3.3-1+b1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libjbig0": {
+   "version": "2.1-6.1",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "libjpeg62-turbo": {
+   "version": "1:2.1.5-2",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "libk5crypto3": {
+   "version": "1.20.1-2+deb12u5",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libkeyutils1": {
+   "version": "1.6.3-2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libkmod2": {
+   "version": "30+20221128-1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libkrb5-3": {
+   "version": "1.20.1-2+deb12u5",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libkrb5support0": {
+   "version": "1.20.1-2+deb12u5",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "liblcms2-2": {
+   "version": "2.14-2+deb12u1",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "libldap-2.5-0": {
+   "version": "2.5.13+dfsg-5",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "liblerc4": {
+   "version": "4.0.0+ds-2",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "liblz4-1": {
+   "version": "1.9.4-1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "liblzma5": {
+   "version": "5.4.1-1+deb12u1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libmd0": {
+   "version": "1.0.4-2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libmnl0": {
+   "version": "1.0.4-3",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libmount1": {
+   "version": "2.38.1-5+deb12u3",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libncursesw6": {
+   "version": "6.4-4",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libnettle8": {
+   "version": "3.8.1-2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libnghttp2-14": {
+   "version": "1.52.0-1+deb12u3",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libnl-3-200": {
+   "version": "3.7.0-0.2+b1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libnl-genl-3-200": {
+   "version": "3.7.0-0.2+b1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libnl-route-3-200": {
+   "version": "3.7.0-0.2+b1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libnsl2": {
+   "version": "1.3.0-2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libnspr4": {
+   "version": "2:4.35-1",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "libnss3": {
+   "version": "2:3.87.1-1+deb12u2",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "libopenjp2-7": {
+   "version": "2.5.0-2+deb12u3",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "libp11-kit0": {
+   "version": "0.24.1-2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libpam-modules": {
+   "version": "1.5.2-6+deb12u2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libpam-modules-bin": {
+   "version": "1.5.2-6+deb12u2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libpam-runtime": {
+   "version": "1.5.2-6+deb12u2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libpam0g": {
+   "version": "1.5.2-6+deb12u2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libpcre2-8-0": {
+   "version": "10.42-1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libpcsclite1": {
+   "version": "1.9.9-2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libpixman-1-0": {
+   "version": "0.42.2-1",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "libpng16-16": {
+   "version": "1.6.39-2+deb12u5",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "libpoppler126": {
+   "version": "22.12.0-2+deb12u2",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "libproc2-0": {
+   "version": "2:4.0.2-3",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libpsl5": {
+   "version": "0.21.2-1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libpython3-stdlib": {
+   "version": "3.11.2-1+b1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libpython3.11-minimal": {
+   "version": "3.11.2-6+deb12u8",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libpython3.11-stdlib": {
+   "version": "3.11.2-6+deb12u8",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libreadline8": {
+   "version": "8.2-1.3",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "librtmp1": {
+   "version": "2.4+20151223.gitfa8646d.1-2+b2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libsamplerate0": {
+   "version": "0.2.2-3",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libsasl2-2": {
+   "version": "2.1.28+dfsg-10",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libsasl2-modules-db": {
+   "version": "2.1.28+dfsg-10",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libseccomp2": {
+   "version": "2.5.4-1+deb12u1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libselinux1": {
+   "version": "3.4-1+b6",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libsemanage-common": {
+   "version": "3.4-1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libsemanage2": {
+   "version": "3.4-1+b5",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libsepol2": {
+   "version": "3.4-2.1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libsmartcols1": {
+   "version": "2.38.1-5+deb12u3",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libsqlite3-0": {
+   "version": "3.40.1-2+deb12u2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libss2": {
+   "version": "1.47.0-2+b2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libssh2-1": {
+   "version": "1.10.0-3+b1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libssl3": {
+   "version": "3.0.20-1~deb12u2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libstdc++6": {
+   "version": "12.2.0-14+deb12u1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libsystemd0": {
+   "version": "252.39-1~deb12u2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libtasn1-6": {
+   "version": "4.19.0-2+deb12u1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libtiff6": {
+   "version": "4.5.0-6+deb12u4",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "libtinfo6": {
+   "version": "6.4-4",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libtirpc-common": {
+   "version": "1.3.3+ds-1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libtirpc3": {
+   "version": "1.3.3+ds-1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libtomcrypt1": {
+   "version": "1.18.2-6",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libtommath1": {
+   "version": "1.2.0-6+deb12u1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libudev1": {
+   "version": "252.39-1~deb12u2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libunistring2": {
+   "version": "1.0-2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libuuid1": {
+   "version": "2.38.1-5+deb12u3",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libwebp7": {
+   "version": "1.2.4-0.2+deb12u1",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "libx11-6": {
+   "version": "2:1.8.4-2+deb12u2",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "libx11-data": {
+   "version": "2:1.8.4-2+deb12u2",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "libxau6": {
+   "version": "1:1.0.9-1",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "libxcb-render0": {
+   "version": "1.15-1",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "libxcb-shm0": {
+   "version": "1.15-1",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "libxcb1": {
+   "version": "1.15-1",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "libxdmcp6": {
+   "version": "1:1.1.2-3",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "libxext6": {
+   "version": "2:1.3.4-1+b1",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "libxrender1": {
+   "version": "1:0.9.10-1.1",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "libxtables12": {
+   "version": "1.8.9-2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libxxhash0": {
+   "version": "0.8.1-1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "libzstd1": {
+   "version": "1.5.4+dfsg2-5",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "login": {
+   "version": "1:4.13+dfsg1-1+deb12u2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "logsave": {
+   "version": "1.47.0-2+b2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "makedev": {
+   "version": "2.3.1-97",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "mawk": {
+   "version": "1.3.4.20200120-3.1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "media-types": {
+   "version": "10.0.0",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "mount": {
+   "version": "2.38.1-5+deb12u3",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "nano": {
+   "version": "7.2-1+deb12u1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "ncurses-base": {
+   "version": "6.4-4",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "ncurses-bin": {
+   "version": "6.4-4",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "netbase": {
+   "version": "6.4",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "openssl": {
+   "version": "3.0.20-1~deb12u2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "passwd": {
+   "version": "1:4.13+dfsg1-1+deb12u2",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "perl-base": {
+   "version": "5.36.0-7+deb12u3",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "poppler-utils": {
+   "version": "22.12.0-2+deb12u2",
+   "source": "Poppler install 2026-10-12 (28 packages, dpkg audit clean)"
+  },
+  "procps": {
+   "version": "2:4.0.2-3",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "python3": {
+   "version": "3.11.2-1+b1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "python3-minimal": {
+   "version": "3.11.2-1+b1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "python3.11": {
+   "version": "3.11.2-6+deb12u8",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "python3.11-minimal": {
+   "version": "3.11.2-6+deb12u8",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "readline-common": {
+   "version": "8.2-1.3",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "sed": {
+   "version": "4.9-1+deb12u1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "startpar": {
+   "version": "0.65-1+b1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "sysv-rc": {
+   "version": "3.06-4",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "sysvinit-core": {
+   "version": "3.06-4",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "sysvinit-utils": {
+   "version": "3.06-4",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "tar": {
+   "version": "1.34+dfsg-1.2+deb12u1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "tzdata": {
+   "version": "2026b-0+deb12u1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "usr-is-merged": {
+   "version": "37~deb12u1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "util-linux": {
+   "version": "2.38.1-5+deb12u3",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "util-linux-extra": {
+   "version": "2.38.1-5+deb12u3",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "wpasupplicant": {
+   "version": "2:2.10-12+deb12u3",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  },
+  "zlib1g": {
+   "version": "1:1.2.13.dfsg-1",
+   "source": "package-preflight 2026-10-12 (dpkg inventory read on the console before the Poppler install)"
+  }
+ },
+ "managed": {
+  "/usr/local/bin/nzeus-modern": {
+   "sha256_prefix": "3bf416e9",
+   "bytes": 2477464,
+   "source": "reports/continuation/updater-resync-20261012.md: normal signed update installed 2026-10-12 19:56 from commit ac6300c (1 changed file; 23 deck-bin helpers already matched); watcher kept it",
+   "previous": "0b1f31cb... kept as /usr/local/bin/nzeus-modern.prev (before that 95162cfe..., b5e91a0d...)"
+  },
+  "/usr/local/lib/nzeus/deck-bin/dropbearmulti": {
+   "sha256": "fed0e192f1de5734918bb8f8fa4d70261864f52a34fc3da0a1ab2eaa6bbf879b",
+   "bytes": 1140,
+   "source": "car-support polish install 2026-10-12 13:15, 24-path readback PASS on BLACK"
+  },
+  "/usr/local/lib/nzeus/deck-bin/flag-now.sh": {
+   "sha256": "d59d3a2e6da773bc7908529b4c85b4a22c958514a25a3a72c4f41c786e632a3a",
+   "bytes": 230,
+   "source": "car-support polish install 2026-10-12 13:15, 24-path readback PASS on BLACK"
+  },
+  "/usr/local/lib/nzeus/deck-bin/nzeus-bt": {
+   "sha256": "e732e67d68d0f341cb795b850382de6415fcacd1f00142298475b927e5e2a785",
+   "bytes": 488,
+   "source": "car-support polish install 2026-10-12 13:15, 24-path readback PASS on BLACK"
+  },
+  "/usr/local/lib/nzeus/deck-bin/nzeus-bt-up.sh": {
+   "sha256": "2a6572cd9dd9e0bb1c81890db4873cfd67ae8684afcabeb58bad0516cffd5f78",
+   "bytes": 1805,
+   "source": "car-support polish install 2026-10-12 13:15, 24-path readback PASS on BLACK"
+  },
+  "/usr/local/lib/nzeus/deck-bin/nzeus-bt.bin": {
+   "sha256": "dd7d52504d7f3e2f2ddfcb2305db929445ea369369c810f6dc2d29db38af3e8c",
+   "bytes": 659752,
+   "source": "car-support polish install 2026-10-12 13:15, 24-path readback PASS on BLACK"
+  },
+  "/usr/local/lib/nzeus/deck-bin/nzeus-car-support": {
+   "sha256": "8ae2028a492294b8a15c7a08dd4852e01a63dba17b3cb185ef887c57fbf4e9e5",
+   "bytes": 14554,
+   "source": "car-support polish install 2026-10-12 13:15, 24-path readback PASS on BLACK"
+  },
+  "/usr/local/lib/nzeus/deck-bin/nzeus-claude-access.sh": {
+   "sha256": "9122a7d267015ee05edb8dbddcdb5985cd2eadd9a3b427163a33e2cbfbd1a365",
+   "bytes": 1006,
+   "source": "car-support polish install 2026-10-12 13:15, 24-path readback PASS on BLACK"
+  },
+  "/usr/local/lib/nzeus/deck-bin/nzeus-claude-connect.sh": {
+   "sha256": "ad4ce76d9f4035a1884dc825169c460bfceb5b738c4b626ee87474acd8ab96a6",
+   "bytes": 4437,
+   "source": "car-support polish install 2026-10-12 13:15, 24-path readback PASS on BLACK"
+  },
+  "/usr/local/lib/nzeus/deck-bin/nzeus-common.sh": {
+   "sha256": "0b6f6bf77982f5f8671a6894d062ccd2875f76945c729665ff5bc01442a3285c",
+   "bytes": 2201,
+   "source": "car-support polish install 2026-10-12 13:15, 24-path readback PASS on BLACK"
+  },
+  "/usr/local/lib/nzeus/deck-bin/nzeus-fetch": {
+   "sha256": "68e6a1166ea0280c5b7899c7a832c513506ac08ade7aaab24df24ea6e8f5ef03",
+   "bytes": 13114,
+   "source": "car-support polish install 2026-10-12 13:15, 24-path readback PASS on BLACK"
+  },
+  "/usr/local/lib/nzeus/deck-bin/nzeus-net-up.sh": {
+   "sha256": "b67f3c474811610435ea8af2496db976b01a24510b62fba92c313c511812c90d",
+   "bytes": 829,
+   "source": "car-support polish install 2026-10-12 13:15, 24-path readback PASS on BLACK"
+  },
+  "/usr/local/lib/nzeus/deck-bin/nzeus-netctl": {
+   "sha256": "740d39aeac9d1784cbceb750726889c86f248c2bad48263af28ea4984c5c2287",
+   "bytes": 509,
+   "source": "car-support polish install 2026-10-12 13:15, 24-path readback PASS on BLACK"
+  },
+  "/usr/local/lib/nzeus/deck-bin/nzeus-update.sh": {
+   "sha256": "cdba2ac72d5a0a1476b2c369056a276bde29b01d45eb63562bb39f0caab23ac6",
+   "bytes": 11980,
+   "source": "car-support polish install 2026-10-12 13:15, 24-path readback PASS on BLACK"
+  },
+  "/usr/local/lib/nzeus/deck-bin/nzeus-upload.sh": {
+   "sha256": "0abf0084d357f00eb1ec8fdf37a7ea29582b73220978d81efeae33cc5ca2613c",
+   "bytes": 11525,
+   "source": "car-support polish install 2026-10-12 13:15, 24-path readback PASS on BLACK"
+  },
+  "/usr/local/lib/nzeus/deck-bin/nzeus-usbmode.sh": {
+   "sha256": "079cb6e5cc8e66d30ba63b9c37b54e0f2f87ca816e9e27e0602d921c180e9b8b",
+   "bytes": 5896,
+   "source": "car-support polish install 2026-10-12 13:15, 24-path readback PASS on BLACK"
+  },
+  "/usr/local/lib/nzeus/deck-bin/nzeus-usbserial.sh": {
+   "sha256": "d040744358bdcfdc9fd6611424699e7f242de86335ecd3bf7aa14328a50ee62d",
+   "bytes": 611,
+   "source": "car-support polish install 2026-10-12 13:15, 24-path readback PASS on BLACK"
+  },
+  "/usr/local/lib/nzeus/deck-bin/nzeus-wa.sh": {
+   "sha256": "34e657716bc47ba3187c627fdcd2b490cbcd98ced7742b4e1299b6c15153e4f8",
+   "bytes": 10339,
+   "source": "car-support polish install 2026-10-12 13:15, 24-path readback PASS on BLACK"
+  },
+  "/usr/local/lib/nzeus/deck-bin/python": {
+   "sha256": "dc809aac56ccec617534efde31ed653999c29742d104a01f6c0cd7fb870d3eeb",
+   "bytes": 963,
+   "source": "car-support polish install 2026-10-12 13:15, 24-path readback PASS on BLACK"
+  },
+  "/usr/local/lib/nzeus/deck-bin/wifi-auto.sh": {
+   "sha256": "3b2bb127589fd1a9ebb3c939546292c8ff6b96ce7725a2696eecb055d4215b2d",
+   "bytes": 861,
+   "source": "car-support polish install 2026-10-12 13:15, 24-path readback PASS on BLACK"
+  },
+  "/usr/local/lib/nzeus/deck-bin/wifi-join-core.sh": {
+   "sha256": "5413cefc16a0c3468a4d792d9dc13c000ccc12b3698c33fb4250e6900c7dc2fd",
+   "bytes": 11442,
+   "source": "car-support polish install 2026-10-12 13:15, 24-path readback PASS on BLACK"
+  },
+  "/usr/local/lib/nzeus/deck-bin/wifi-join.sh": {
+   "sha256": "dbf6d06ccac29cfae47fe9c79fde68148e1ac0f3e782dc5abd879967204142ea",
+   "bytes": 1131,
+   "source": "car-support polish install 2026-10-12 13:15, 24-path readback PASS on BLACK"
+  },
+  "/usr/local/lib/nzeus/deck-bin/wifi-on.sh": {
+   "sha256": "f44dcb03925a49f01b3a8a1fd1618eaf9bc2956ff37eb6512e5c29768627912c",
+   "bytes": 2106,
+   "source": "car-support polish install 2026-10-12 13:15, 24-path readback PASS on BLACK"
+  },
+  "/usr/local/lib/nzeus/deck-bin/wifi-scan.sh": {
+   "sha256": "a51229d5ea488fbf49b1f9b815c07798b71bfea8a802ac2eaa2aa00fb0f2fc34",
+   "bytes": 1845,
+   "source": "car-support polish install 2026-10-12 13:15, 24-path readback PASS on BLACK"
+  }
+ }
+}

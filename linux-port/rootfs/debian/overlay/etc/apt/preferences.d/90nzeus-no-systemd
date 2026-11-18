@@ -1,0 +1,7 @@
+# NZEUS: this system uses sysvinit (less RAM). Never install these: they would
+# replace the init system or start background services that need several MB of RAM.
+# A package that really needs one of them will fail to install (on purpose)
+# instead of silently pulling it in.
+Package: systemd systemd-sysv udev dbus dbus-daemon dbus-system-bus-common libpam-systemd
+Pin: version *
+Pin-Priority: -1

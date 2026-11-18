@@ -1,0 +1,270 @@
+#!/bin/sh
+# nzeus-fetch - download a web page or file: NZEUS Deck's downloader on the
+# SD Debian. Stock (apps/tls/nzeus-fetch.c) did HTTPS itself with mbedTLS
+# through nzeus-netd, because the old kernel had no TCP/IP. Here the kernel
+# has TCP/IP, so this is Debian's curl with the SAME interface:
+#
+#   nzeus-fetch [options] URL [OUTFILE]
+#     -I                show only the status line + headers (HEAD request)
+#     -o FILE           same as giving OUTFILE ("-" = the screen)
+#     -v / -q           more messages / only errors
+#     --cafile FILE     trusted CA bundle (default: Debian's, /etc/ssl/certs)
+#     --max-size N      biggest download in bytes, k/m allowed (default 4m)
+#     --timeout SEC     give up after SEC seconds of silence (default 30)
+#     --max-time SEC    give up after SEC seconds in total (default 300)
+#     --max-redirs N    follow at most N redirects (default 5)
+#     --set-clock-from-date  first set the clock from the server's Date header
+#                       (https only, root; only the DATE check of the
+#                       certificate is skipped for that one request)
+#     --selftest, --help
+#   Environment: NZFETCH_LANG = the pages' language (Accept-Language), e.g. ar
+#   Exit codes: 0 OK, 1 wrong usage, 2 failed (the Web app tries once more),
+#               3 the server answered with an error (4xx/5xx)
+# The data goes to OUTFILE.part first and is renamed at the end, so a broken
+# download never looks like a finished file. Certificates are ALWAYS checked
+# (no -k). The last line on stderr says what happened ("nzeus-fetch: ...").
+# Works with dash and BusyBox ash. NZ_CURL: PC tests only.
+CURL=${NZ_CURL:-curl}
+# the stock name: with "fetch" in it DuckDuckGo answered every search with a robot check
+UA="Mozilla/5.0 (compatible; NZEUS-Web/1.0; R36S handheld)"
+BUILD_TIME=1791072000          # 2026-10-04: the clock is never set to before this
+
+usage() {
+    cat << 'EOF'
+usage: nzeus-fetch [options] URL [OUTFILE]
+Downloads URL (http:// or https://). The data goes to OUTFILE, or to the
+screen (stdout) if there is none.
+
+  -I                   show only the status line + headers (HEAD request)
+  -o FILE              same as giving OUTFILE
+  -v                   explain each step
+  -q                   quiet: no messages except errors
+  --cafile FILE        trusted CA bundle (default: the system's)
+  --max-size N         biggest download in bytes, k/m allowed (default 4m)
+  --timeout SEC        give up after SEC seconds of silence (default 30)
+  --max-time SEC       give up after SEC seconds in total (default 300)
+  --max-redirs N       follow at most N redirects (default 5)
+  --set-clock-from-date  first set the clock from the server's Date header
+                       (https only, needs root)
+  --selftest           check that curl and the CA bundle are there
+  --help               this text
+
+Environment: NZFETCH_LANG = language of the pages (default en)
+Exit codes: 0 OK, 1 wrong usage, 2 failed, 3 the server answered with an error (4xx/5xx)
+EOF
+}
+
+bad() { echo "nzeus-fetch: $*" >&2; exit 1; }      # wrong usage
+fail() { echo "nzeus-fetch: $*" >&2; exit 2; }     # it did not work
+info() { test "$VERB" -ge 0 && echo "nzeus-fetch: $*" >&2; return 0; }
+
+# "4m", "500k", "123" -> bytes (empty = invalid). At most 256 MB.
+parse_size() {
+    n=$1; mul=1
+    case "$n" in *[kK]) n=${n%?}; mul=1024 ;; *[mM]) n=${n%?}; mul=1048576 ;; esac
+    case "$n" in ''|*[!0-9]*) return 1 ;; esac
+    test ${#n} -le 9 || return 1
+    n=$((n * mul))
+    test "$n" -gt 0 && test "$n" -le 268435456 || return 1
+    echo "$n"
+}
+# whole number LO..HI (empty = invalid)
+parse_int() {
+    case "$1" in ''|*[!0-9]*) return 1 ;; esac
+    test ${#1} -le 6 && test "$1" -ge "$2" && test "$1" -le "$3" || return 1
+    echo "$1"
+}
+
+MAXSIZE=4194304; TIMEOUT=30; MAXTIME=300; REDIRS=5
+CAFILE=""; HEAD=0; VERB=0; SETCLOCK=0; SELFTEST=0; URL=""; OUT=""
+while test $# -gt 0; do
+    a=$1
+    case "$a" in
+        -h|--help) usage; exit 0 ;;
+        -I) HEAD=1 ;;
+        -v) VERB=1 ;;
+        -q) VERB=-1 ;;
+        --selftest) SELFTEST=1 ;;
+        --set-clock-from-date) SETCLOCK=1 ;;
+        -o|--cafile|--max-size|--timeout|--max-time|--max-redirs)
+            test $# -ge 2 || bad "unknown option '$a' (see --help)"
+            v=$2; shift
+            case "$a" in
+                -o) OUT=$v ;;
+                --cafile) CAFILE=$v ;;
+                --max-size) MAXSIZE=$(parse_size "$v") || bad "bad --max-size '$v'" ;;
+                --timeout) TIMEOUT=$(parse_int "$v" 1 3600) || bad "bad --timeout '$v'" ;;
+                --max-time) MAXTIME=$(parse_int "$v" 1 86400) || bad "bad --max-time '$v'" ;;
+                --max-redirs) REDIRS=$(parse_int "$v" 0 50) || bad "bad --max-redirs '$v'" ;;
+            esac ;;
+        -?*) bad "unknown option '$a' (see --help)" ;;
+        *)  if test -z "$URL"; then URL=$a
+            elif test -z "$OUT"; then OUT=$a
+            else bad "too many arguments (see --help)"; fi ;;
+    esac
+    shift
+done
+
+if test "$SELFTEST" = 1; then
+    command -v "$CURL" > /dev/null 2>&1 || fail "curl is not installed (apt install curl)"
+    ca=${CAFILE:-/etc/ssl/certs/ca-certificates.crt}
+    test -s "$ca" || fail "CA bundle missing: $ca (apt install ca-certificates)"
+    echo "nzeus-fetch: ok ($("$CURL" --version | head -n 1 | cut -d' ' -f1-2), CA bundle $ca)"
+    exit 0
+fi
+test -n "$URL" || { usage >&2; exit 1; }
+command -v "$CURL" > /dev/null 2>&1 || fail "curl is not installed (apt install curl)"
+test -z "$CAFILE" || test -s "$CAFILE" || fail "CA bundle missing: $CAFILE (use --cafile)"
+
+# ---- the address: http(s)://host[:port]/..., no user names, no spaces
+case "$URL" in
+    http://*|https://*) ;;
+    *) fail "not a web address: '$URL' (it must start with http:// or https://)" ;;
+esac
+case "$URL" in *[[:space:]]*|*[[:cntrl:]]*) fail "bad character in the address" ;; esac
+hp=${URL#*://}; hp=${hp%%[/?#]*}
+case "$hp" in *@*) fail "addresses with a user name (user@host) are not supported" ;; esac
+case "$hp" in \[*) fail "IPv6 addresses are not supported" ;; esac
+HOST=${hp%%:*}
+test -n "$HOST" || fail "no host name in the address"
+case "$HOST" in *[!A-Za-z0-9.-]*) fail "bad character in the host name '$HOST'" ;; esac
+PORT=443; case "$URL" in http://*) PORT=80 ;; esac
+case "$hp" in *:*) PORT=${hp#*:}; case "$PORT" in ''|*[!0-9]*) fail "bad port number in the address" ;; esac ;; esac
+
+# ---- the pages' language: only letters, '-' and ',' (nothing can be added to the request)
+LANG_=en
+case "${NZFETCH_LANG:-}" in
+    ''|*[!A-Za-z,-]*) ;;
+    *) test ${#NZFETCH_LANG} -le 30 && LANG_=$NZFETCH_LANG ;;
+esac
+
+# a default route = some network is up (Wi-Fi); used only to explain a failure
+have_route() { awk 'NR > 1 && $2 == "00000000" && $1 != "lo" { f = 1 } END { exit !f }' /proc/net/route 2>/dev/null; }
+
+# ---- --set-clock-from-date: one HEAD request with Python's TLS where ONLY the
+# certificate's date check is off (chain + name are still checked), then the
+# clock is set from the answer's Date header - never to before BUILD_TIME.
+if test "$SETCLOCK" = 1; then
+    case "$URL" in https://*) ;; *) fail "--set-clock-from-date needs an https:// address" ;; esac
+    command -v python3 > /dev/null 2>&1 || fail "--set-clock-from-date needs python3"
+    msg=$(python3 - "$HOST" "$PORT" "$CAFILE" "$BUILD_TIME" "$UA" "$TIMEOUT" << 'PY' 2>&1
+import email.utils, socket, ssl, sys, time
+host, port, ca, build, ua, tmo = sys.argv[1], int(sys.argv[2]), sys.argv[3], int(sys.argv[4]), sys.argv[5], int(sys.argv[6])
+try:
+    ctx = ssl.create_default_context(cafile=ca or None)
+    ctx.verify_flags |= 0x200000          # X509_V_FLAG_NO_CHECK_TIME: the date check only
+    with socket.create_connection((host, port), timeout=tmo) as raw:
+        with ctx.wrap_socket(raw, server_hostname=host) as s:
+            s.sendall(("HEAD / HTTP/1.1\r\nHost: %s\r\nUser-Agent: %s\r\nConnection: close\r\n\r\n" % (host, ua)).encode())
+            data = b""
+            while b"\r\n\r\n" not in data and len(data) < 65536:
+                part = s.recv(4096)
+                if not part:
+                    break
+                data += part
+except ssl.SSLCertVerificationError as e:
+    sys.exit("certificate rejected (%s): %s" % (host, e.verify_message))
+except OSError as e:
+    sys.exit("could not reach %s to read the date: %s" % (host, e))
+date = None
+for line in data.decode("latin-1").split("\r\n")[1:]:
+    if line.lower().startswith("date:"):
+        date = line[5:].strip()
+if not date:
+    sys.exit("%s sent no Date header" % host)
+try:
+    t = email.utils.parsedate_to_datetime(date).timestamp()
+except (TypeError, ValueError):
+    sys.exit("%s sent a bad Date header" % host)
+if t < build:
+    sys.exit("%s says it is %s - before this program was made: refused" % (host, date))
+old = time.time()
+try:
+    time.clock_settime(time.CLOCK_REALTIME, t)
+except PermissionError:
+    sys.exit("setting the clock needs root")
+print("clock set to %s (was %s), from %s's Date header" % (
+    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(t)), time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(old)), host))
+PY
+) || fail "$msg"
+    info "$msg"
+fi
+
+# ---- the download
+T=$(mktemp -d "${TMPDIR:-/tmp}/nzfetch.XXXXXX") || fail "cannot make a temporary folder"
+PART=""; STDOUT=0
+cleanup() { rm -rf "$T"; test -z "$PART" || rm -f "$PART"; }
+trap cleanup EXIT
+trap 'exit 2' INT TERM HUP
+
+set -- -sS -L --max-redirs "$REDIRS" --proto =http,https --proto-redir =http,https \
+    --connect-timeout "$TIMEOUT" --speed-limit 1 --speed-time "$TIMEOUT" --max-time "$MAXTIME" \
+    -A "$UA" -H "Accept-Language: $LANG_" --max-filesize "$MAXSIZE" -D "$T/headers"
+test -z "$CAFILE" || set -- "$@" --cacert "$CAFILE"
+test "$VERB" = 1 && echo "nzeus-fetch: GET $URL (curl, at most $MAXSIZE bytes, $MAXTIME s)" >&2
+
+if test "$HEAD" = 1; then
+    "$CURL" "$@" -I -o /dev/null "$URL" 2> "$T/err"
+    echo $? > "$T/rc"
+    tr -d '\r' < "$T/headers" 2>/dev/null          # every answer's headers, an empty line after each
+elif test -n "$OUT" && test "$OUT" != "-"; then
+    PART=$OUT.part
+    # head stops the transfer one byte past the limit (curl's own limit needs a known size)
+    { "$CURL" "$@" -o - "$URL" 2> "$T/err"; echo $? > "$T/rc"; } | head -c $((MAXSIZE + 1)) > "$PART" ||
+        fail "cannot write $PART"
+else
+    OUT=""
+    STDOUT=1; PART=$T/body
+    { "$CURL" "$@" -o - "$URL" 2> "$T/err"; echo $? > "$T/rc"; } | head -c $((MAXSIZE + 1)) > "$PART" ||
+        fail "cannot save the answer"
+fi
+rc=$(cat "$T/rc" 2>/dev/null); rc=${rc:-99}
+why=$(grep "^curl: (" "$T/err" 2>/dev/null | tail -n 1 | sed "s/^curl: ([0-9]*) //")
+status=$(tr -d '\r' < "$T/headers" 2>/dev/null | awk '/^HTTP\// { s = $2 } END { print s + 0 }')
+
+too_big="too big: the data is bigger than the limit of $MAXSIZE bytes (use --max-size)"
+if test -n "$PART" && { test "$rc" = 0 || test "$rc" = 23; }; then
+    sz=$(wc -c < "$PART")
+    test "$sz" -le "$MAXSIZE" || fail "$too_big"
+fi
+case "$rc" in
+    0) ;;
+    63) fail "$too_big" ;;
+    23) if test "$HEAD" = 0; then fail "$too_big"; fi; fail "stopped: the data could not be saved" ;;
+    6)  have_route || fail "no network yet: join a Wi-Fi network first"
+        fail "name not found: $HOST" ;;
+    7)  have_route || fail "no network yet: join a Wi-Fi network first"
+        fail "could not connect to $HOST port $PORT ($why)" ;;
+    28) fail "timed out: no answer from $HOST for $TIMEOUT seconds, or the whole download took longer than $MAXTIME seconds" ;;
+    47) fail "too many redirects (more than $REDIRS)" ;;
+    1)  fail "a redirect went to an address that is not http:// or https://" ;;
+    3)  fail "bad web address: $URL" ;;
+    52) fail "$HOST closed the connection without answering" ;;
+    18|56) fail "the server closed the connection early ($why)" ;;
+    77) fail "CA bundle missing or unreadable: ${CAFILE:-the system's} (apt install ca-certificates)" ;;
+    35) fail "TLS handshake with $HOST failed: $why" ;;
+    51|60|58|83|90|91)
+        case "$why" in
+            *expired*) fail "certificate expired: $HOST's certificate (or one above it) has run out - or the clock is wrong ($(date '+%Y-%m-%d %H:%M'))" ;;
+            *"not yet valid"*) fail "certificate not valid yet: $HOST's certificate starts later - is the clock right? ($(date '+%Y-%m-%d %H:%M'))" ;;
+            *"subject name"*|*"match"*) fail "certificate is for a different name: it is not valid for '$HOST'" ;;
+            *) fail "certificate not trusted: $HOST ($why)" ;;
+        esac ;;
+    *)  fail "network error with $HOST: ${why:-curl exit code $rc}" ;;
+esac
+
+if test "$HEAD" = 1; then
+    test "$status" -ge 400 && { test "$VERB" -ge 0 && echo "nzeus-fetch: the server answered $status (an error page)" >&2; exit 3; }
+    exit 0
+fi
+if test -n "$PART"; then
+    if test "$STDOUT" = 1; then cat "$PART" || fail "cannot write the answer"
+    else mv -f "$PART" "$OUT" || fail "could not rename $PART to $OUT"; fi
+    PART=""
+fi
+if test "$status" -ge 400; then
+    test "$VERB" -ge 0 && echo "nzeus-fetch: the server answered $status (an error page)" >&2
+    exit 3
+fi
+test -n "$OUT" && info "saved $OUT"
+exit 0

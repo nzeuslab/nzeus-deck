@@ -1,0 +1,18 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          nzeus-ram
+# Required-Start:    mountkernfs
+# Required-Stop:
+# Default-Start:     S
+# Default-Stop:
+# Short-Description: NZEUS: give the AVP's old RAM to Linux in pure mode (~38 -> ~118 MiB)
+### END INIT INFO
+# Runs in the background: the kernel's AVP check takes 10 s and nothing else
+# has to wait for it. The result goes to /run/nzeus-ram.log.
+case "$1" in
+    start) /usr/local/sbin/nzeus-ram > /run/nzeus-ram.log 2>&1 & ;;
+    stop|restart|force-reload) ;;
+    status) cat /run/nzeus-ram.log 2>/dev/null; grep MemTotal /proc/meminfo ;;
+    *) echo "Usage: $0 start" >&2; exit 3 ;;
+esac
+exit 0

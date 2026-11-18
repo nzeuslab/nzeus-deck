@@ -1,0 +1,78 @@
+{
+  "status": "PASS_PC_GUARD_ONLY",
+  "cases": [
+    {
+      "version": "7.2.0-rc5-nzeus-gma-native-sdroot+",
+      "admitted": true,
+      "pc_sh": true,
+      "mips_busybox": true,
+      "ok": true
+    },
+    {
+      "version": "7.2.0-rc5-nzeus-gma-native-sdroot",
+      "admitted": true,
+      "pc_sh": true,
+      "mips_busybox": true,
+      "ok": true
+    },
+    {
+      "version": "7.2.0-rc5-nzeus-gma-native-net+",
+      "admitted": true,
+      "pc_sh": true,
+      "mips_busybox": true,
+      "ok": true
+    },
+    {
+      "version": "7.2.0-rc5-nzeus-gma-native-pure+",
+      "admitted": true,
+      "pc_sh": true,
+      "mips_busybox": true,
+      "ok": true
+    },
+    {
+      "version": "7.2.0-rc5-nzeus-gma-native-usbfix+",
+      "admitted": true,
+      "pc_sh": true,
+      "mips_busybox": true,
+      "ok": true
+    },
+    {
+      "version": "7.2.0-rc5-nzeus-screenlog-usbfix+",
+      "admitted": true,
+      "pc_sh": true,
+      "mips_busybox": true,
+      "ok": true
+    },
+    {
+      "version": "7.2.0-rc5-nzeus-experimental+",
+      "admitted": true,
+      "pc_sh": true,
+      "mips_busybox": true,
+      "ok": true
+    },
+    {
+      "version": "4.4.186",
+      "admitted": false,
+      "pc_sh": true,
+      "mips_busybox": true,
+      "ok": true
+    },
+    {
+      "version": "3.18.24",
+      "admitted": false,
+      "pc_sh": true,
+      "mips_busybox": true,
+      "ok": true
+    },
+    {
+      "version": "7.2.0-rc5-stock",
+      "admitted": false,
+      "pc_sh": true,
+      "mips_busybox": true,
+      "ok": true
+    }
+  ],
+  "limits": [
+    "No USB hardware exercised"
+  ]
+}

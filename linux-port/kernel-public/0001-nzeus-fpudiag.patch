@@ -1,0 +1,162 @@
+--- a/arch/mips/generic/init.c
++++ b/arch/mips/generic/init.c
+@@ -153,6 +153,10 @@
+ 	return err;
+ }
+ 
++#ifdef CONFIG_MACH_HICHIP
++void __init nzeus_fpudiag_early(struct clk *cpu_clk);
++#endif
++
+ void __init plat_time_init(void)
+ {
+ 	struct device_node *np;
+@@ -177,6 +181,10 @@
+ 			return;
+ 		}
+ 
++#ifdef CONFIG_MACH_HICHIP
++		/* NZEUS FPU diagnostic: report CP0/clock state; optional nzclk=/nzc7= */
++		nzeus_fpudiag_early(clk);
++#endif
+ 		mips_hpt_frequency = clk_get_rate(clk);
+ 		clk_put(clk);
+ 
+--- a/arch/mips/generic/Makefile
++++ b/arch/mips/generic/Makefile
+@@ -14,3 +14,4 @@
+ obj-$(CONFIG_MACH_INGENIC)			+= board-ingenic.o
+ obj-$(CONFIG_VIRT_BOARD_RANCHU)		+= board-ranchu.o
+ obj-$(CONFIG_MACH_REALTEK_RTL)		+= board-realtek.o
++obj-$(CONFIG_MACH_HICHIP)		+= nzeus-fpudiag.o
+--- /dev/null
++++ b/arch/mips/generic/nzeus-fpudiag.c
+@@ -0,0 +1,128 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * NZEUS R36S FPU diagnostic, 2026-10-12. A PC-built TEST AID, not a fix.
++ *
++ * Always (read-only): print the CP0 words that decide how the 74K FPU runs,
++ * including Config7 FPR1/FPR0 (core:FPU clock ratio; read-only per the 74K
++ * Software User's Manual MD00519 rev 1.05, table 7.36), and the HiChip MCPU
++ * clock-select register. Every line starts with "NZEUS_FPUDIAG" for grep.
++ *
++ * Optional boot parameters. If they are absent nothing changes:
++ *   nzclk=<MHz>  lower the main CPU clock to 297, 396, 594 or 900 MHz.
++ *                Applied in plat_time_init() BEFORE the CP0 timer rate is
++ *                read, through the existing hc16xx clock driver (the same
++ *                MCPU select field the stock HiChip 4.4 kernel writes in
++ *                hc16xx_set_cpu_clk). Raising the clock is refused.
++ *   nzc7=<hex>   OR documented Config7 pipeline-control bits into Config7:
++ *                CP1IO (6), SG (22), IALU (24), IAGN (25) only. Any other
++ *                bit makes the whole value be ignored.
++ */
++#include <linux/clk.h>
++#include <linux/init.h>
++#include <linux/io.h>
++#include <linux/kernel.h>
++#include <linux/printk.h>
++
++#include <asm/addrspace.h>
++#include <asm/cpu-info.h>
++#include <asm/hazards.h>
++#include <asm/mipsregs.h>
++
++#define NZ_C7_CP1IO	BIT(6)
++#define NZ_C7_SG	BIT(22)
++#define NZ_C7_IALU	BIT(24)
++#define NZ_C7_IAGN	BIT(25)
++#define NZ_C7_ALLOWED	((u32)(NZ_C7_CP1IO | NZ_C7_SG | NZ_C7_IALU | NZ_C7_IAGN))
++
++/* HiChip system registers, read through the uncached KSEG1 window. */
++#define NZ_MCLK_SEL	0x18800074	/* bits 10:8 = MCPU clock select */
++#define NZ_MCPU_DPLL	0x18800380	/* bits 31:16 = MCPU digital PLL control */
++
++static unsigned int nz_clk_mhz;		/* 0 = leave the clock alone */
++static unsigned int nz_c7_mask;		/* 0 = leave Config7 alone */
++
++static int __init nz_clk_param(char *s)
++{
++	unsigned int mhz;
++
++	if (kstrtouint(s, 10, &mhz))
++		return 0;
++	/* Only rates that exist in the clock table AND are below 1188 MHz. */
++	if (mhz == 297 || mhz == 396 || mhz == 594 || mhz == 900)
++		nz_clk_mhz = mhz;
++	else
++		pr_warn("NZEUS_FPUDIAG nzclk=%u refused (allowed 297/396/594/900)\n", mhz);
++	return 0;
++}
++early_param("nzclk", nz_clk_param);
++
++static int __init nz_c7_param(char *s)
++{
++	unsigned int mask;
++
++	if (kstrtouint(s, 16, &mask))
++		return 0;
++	if (mask & ~NZ_C7_ALLOWED)
++		pr_warn("NZEUS_FPUDIAG nzc7=%#x refused (allowed bits %#x)\n",
++			mask, NZ_C7_ALLOWED);
++	else
++		nz_c7_mask = mask;
++	return 0;
++}
++early_param("nzc7", nz_c7_param);
++
++static u32 nz_sysreg(u32 phys)
++{
++	return __raw_readl((void __iomem *)CKSEG1ADDR(phys));
++}
++
++static void nz_report(const char *when)
++{
++	struct cpuinfo_mips *c = &current_cpu_data;
++	u32 c7 = read_c0_config7();
++	u32 ratio = ((c7 >> 28) & 1) << 1 | ((c7 >> 17) & 1);
++	static const char * const ratios[] = { "1:1", "2:1", "3:2", "reserved" };
++
++	pr_info("NZEUS_FPUDIAG %s prid=%08x fir=%08x fpu_in_use=%d\n", when,
++		c->processor_id, c->fpu_id, !!(c->options & MIPS_CPU_FPU));
++	pr_info("NZEUS_FPUDIAG %s config0=%08x config1=%08x config2=%08x config3=%08x\n",
++		when, read_c0_config(), read_c0_config1(), read_c0_config2(),
++		read_c0_config3());
++	pr_info("NZEUS_FPUDIAG %s config6=%08x config7=%08x status=%08x\n",
++		when, read_c0_config6(), c7, read_c0_status());
++	pr_info("NZEUS_FPUDIAG %s core:FPU=%s CP1IO=%u SG=%u IALU=%u IAGN=%u ES=%u AR=%u\n",
++		when, ratios[ratio], !!(c7 & NZ_C7_CP1IO), !!(c7 & NZ_C7_SG),
++		!!(c7 & NZ_C7_IALU), !!(c7 & NZ_C7_IAGN), !!(c7 & BIT(8)),
++		!!(c7 & BIT(16)));
++	pr_info("NZEUS_FPUDIAG %s mclk_sel=%08x (select %u) mcpu_dpll=%08x\n",
++		when, nz_sysreg(NZ_MCLK_SEL), (nz_sysreg(NZ_MCLK_SEL) >> 8) & 7,
++		nz_sysreg(NZ_MCPU_DPLL));
++}
++
++void __init nzeus_fpudiag_early(struct clk *cpu_clk);
++
++/*
++ * Called once from plat_time_init() with the CPU clock, before the CP0
++ * counter frequency is read, so timekeeping follows any lowered rate.
++ */
++void __init nzeus_fpudiag_early(struct clk *cpu_clk)
++{
++	nz_report("before");
++
++	if (nz_clk_mhz && cpu_clk) {
++		unsigned long before = clk_get_rate(cpu_clk);
++		int ret = clk_set_rate(cpu_clk, nz_clk_mhz * 1000000UL);
++
++		pr_info("NZEUS_FPUDIAG nzclk: %lu -> %lu Hz (request %u MHz, ret %d)\n",
++			before, clk_get_rate(cpu_clk), nz_clk_mhz, ret);
++	}
++
++	if (nz_c7_mask) {
++		write_c0_config7(read_c0_config7() | nz_c7_mask);
++		back_to_back_c0_hazard();
++		instruction_hazard();
++		pr_info("NZEUS_FPUDIAG nzc7: set %#x\n", nz_c7_mask);
++	}
++
++	nz_report("after");
++}

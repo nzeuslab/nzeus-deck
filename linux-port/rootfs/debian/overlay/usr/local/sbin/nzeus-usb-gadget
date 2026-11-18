@@ -1,0 +1,82 @@
+#!/bin/sh
+# nzeus-usb-gadget - the USB serial rescue port of the SD Linux.
+#
+# It is EXACTLY the gadget that the RAM system's /usb-rescue (linux-port/usb-rescue)
+# makes: configfs gadget "nzeus_rescue", VID 1d6b PID 0104, bcdDevice 0x0100,
+# class 0x02, serial NZEUS-RAM-RESCUE-01, ONE function acm.usb0 -> /dev/ttyGS0.
+# So the PC sees the same device (COM9) and linux-port/diagnostics/
+# rescue-command.py and rescue-upload.py work unchanged.
+#
+# Normally the RAM system already made and plugged in this gadget before it
+# switched to the SD root; then nothing is changed here (no unplug/replug).
+# If the USB network mode (linux-port/usbnet) holds the port, it is left alone.
+# The root shell on /dev/ttyGS0 is started by init (/etc/inittab ->
+# /usr/local/sbin/nzeus-usb-shell), not here.
+# Works with dash, bash and BusyBox ash. NZ_* variables: PC test only.
+
+CFG=${NZ_CONFIGFS:-/sys/kernel/config}
+UDCDIR=${NZ_UDCDIR:-/sys/class/udc}
+WAIT=${NZ_UDC_WAIT:-30}
+gadget=$CFG/usb_gadget/nzeus_rescue
+
+say() {
+    echo "nzeus-usb: $*"
+    echo "nzeus-usb: $*" > "${NZ_KMSG:-/dev/kmsg}" 2>/dev/null
+}
+case "$(uname -r)" in
+    *-nzeus*) ;;
+    *) say 'refusing USB setup outside an NZEUS modern kernel'; exit 1 ;;
+esac
+if ! test -d "$CFG/usb_gadget"; then
+    mount -t configfs configfs "$CFG" 2>/dev/null
+    test -d "$CFG/usb_gadget" || { say "no USB gadget support in $CFG"; exit 1; }
+fi
+for g in "$gadget" "$CFG/usb_gadget/nzeus_ncm" "$CFG/usb_gadget/nzeus_rndis"; do
+    udc=$(cat "$g/UDC" 2>/dev/null)
+    if test -n "$udc"; then
+        say "${g##*/} is already plugged into $udc: unchanged"
+        exit 0
+    fi
+done
+
+# Same values, same order as /usb-rescue. Re-writing an existing, unplugged
+# gadget with the same values is harmless.
+if ! test -L "$gadget/configs/c.1/acm.usb0"; then
+    mkdir -p "$gadget" || exit 1
+    echo 0x1d6b > "$gadget/idVendor"
+    echo 0x0104 > "$gadget/idProduct"
+    echo 0x0200 > "$gadget/bcdUSB"
+    echo 0x0100 > "$gadget/bcdDevice"
+    echo 0x02 > "$gadget/bDeviceClass"
+    mkdir -p "$gadget/strings/0x409"
+    echo NZEUS-RAM-RESCUE-01 > "$gadget/strings/0x409/serialnumber"
+    echo 'NZEUS LAB' > "$gadget/strings/0x409/manufacturer"
+    echo 'NZEUS Experimental Linux Rescue' > "$gadget/strings/0x409/product"
+    mkdir -p "$gadget/configs/c.1/strings/0x409"
+    echo 'USB rescue terminal' > "$gadget/configs/c.1/strings/0x409/configuration"
+    echo 250 > "$gadget/configs/c.1/MaxPower"
+    mkdir -p "$gadget/functions/acm.usb0"
+    ln -s "$gadget/functions/acm.usb0" "$gadget/configs/c.1/acm.usb0" || { say 'could not link acm.usb0'; exit 1; }
+fi
+
+# The board's one USB device controller; never bind a second one.
+controller=
+attempt=0
+while test "$attempt" -lt "$WAIT"; do
+    for path in "$UDCDIR"/*; do
+        if test -d "$path"; then
+            controller=${path##*/}
+            break
+        fi
+    done
+    test -z "$controller" || break
+    sleep 1
+    attempt=$((attempt + 1))
+done
+if test -z "$controller"; then
+    say 'no USB device controller appeared'
+    exit 1
+fi
+echo "$controller" > "$gadget/UDC" || { say "could not plug the gadget into $controller"; exit 1; }
+say "rescue port bound to $controller (NZEUS-RAM-RESCUE-01)"
+exit 0

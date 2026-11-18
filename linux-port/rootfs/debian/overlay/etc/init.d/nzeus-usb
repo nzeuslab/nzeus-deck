@@ -1,0 +1,17 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          nzeus-usb
+# Required-Start:    mountkernfs
+# Required-Stop:
+# X-Start-Before:    checkroot
+# Default-Start:     S
+# Default-Stop:
+# Short-Description: NZEUS: USB serial rescue port (same identity as the RAM rescue)
+### END INIT INFO
+# Very early, before any file system check, so the USB shell can come up.
+case "$1" in
+    start) /usr/local/sbin/nzeus-usb-gadget ;;
+    stop|restart|force-reload|status) ;;
+    *) echo "Usage: $0 start" >&2; exit 3 ;;
+esac
+exit 0

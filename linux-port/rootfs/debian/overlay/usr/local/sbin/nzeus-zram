@@ -1,0 +1,32 @@
+#!/bin/sh
+# nzeus-zram - compressed swap in RAM (zram), about half of the RAM Linux sees
+# (~19 MiB with the factory AVP running, ~59 MiB in pure mode). Nothing is
+# written to the SD card (swapping to the card would wear it and be slow).
+# Does nothing if the kernel has no zram or zram0 is already in use (e.g. the
+# RAM system's nz-zram switched it on before).
+# Works with dash, bash and BusyBox ash. NZ_* variables: PC test only.
+SYS=${NZ_SYS:-/sys}
+PROC=${NZ_PROC:-/proc}
+DEV=${NZ_ZRAM_DEV:-/dev/zram0}
+Z=$SYS/block/zram0
+
+if grep -q '^/dev/zram0 ' "$PROC/swaps" 2>/dev/null; then
+    echo "zram: already on"
+    exit 0
+fi
+test -w "$Z/disksize" || { echo "zram: this kernel has no zram0 (CONFIG_ZRAM): no swap"; exit 0; }
+if test "$(cat "$Z/disksize" 2>/dev/null)" != 0; then
+    echo "zram: zram0 is already set up for something else: left alone"
+    exit 0
+fi
+mem=$(awk '/^MemTotal:/ { print $2 }' "$PROC/meminfo")
+case "$mem" in ''|*[!0-9]*) echo "zram: cannot read MemTotal"; exit 0 ;; esac
+size=$((mem / 2))
+test "$size" -ge 4096 || { echo "zram: only ${mem} KiB RAM?"; exit 0; }
+echo "${size}K" > "$Z/disksize" || { echo "zram: the kernel refused size ${size}K"; exit 0; }
+if mkswap "$DEV" > /dev/null && swapon -p 100 "$DEV"; then
+    echo "zram: ${size} KiB compressed swap on (half of ${mem} KiB)"
+else
+    echo "zram: mkswap/swapon failed"
+fi
+exit 0

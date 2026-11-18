@@ -1,0 +1,343 @@
+#!/usr/bin/python3
+"""Signed, data-only vehicle guides. This helper never opens an OBD device."""
+import argparse
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import subprocess
+import tempfile
+import time
+import urllib.parse
+import urllib.request
+
+LIMIT = 65536
+PUBLIC = b'''-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqG5RqJgRIW3t0r2hNWUV
+x+xT7HxvQitFcYD9PdcHzmBLFuuZHMAoeDNAbL0nnbuYHU6jwTF55c6fIGGrrnlr
+4gjps7hUdJzItclPw5aak8WMYMYo/PQ2qN+5w1jkCuZSWVgWrPATjeWmx/QQaMKt
+1X1M/ztSeFfoFPwAo9LHVcHZdaIF5VbAYs9Il6VUSbTdPWDGdS5RxANqpvVy3ZZ6
+pqris4wX4LLBOUUXe2mcka6GaQ/dvhRrbfiKGgorw2AvDScb0wMrXuX3XhK2/H1g
+HEExzXgjdfBv6Uu5DtjMecBiLD/NndeXWhENxFOYDNMlfbZYNS2OD/BuM/XlG/UH
+NQIDAQAB
+-----END PUBLIC KEY-----
+'''
+VEHICLES = {'Chevrolet': ('Silverado', 2010, 2026), 'Ford': ('Ranger', 2020, 2026),
+            'Land Rover': ('Evoque', 2020, 2026)}
+
+
+def require(condition, message='Invalid support data'):
+    if not condition:
+        raise ValueError(message)
+
+
+def decode(raw):
+    require(len(raw) <= LIMIT, 'Support data too large')
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            require(key not in result, 'Duplicate JSON field')
+            result[key] = value
+        return result
+    return json.loads(raw, object_pairs_hook=unique)
+
+
+def fields(value, names):
+    require(type(value) is dict and set(value) == set(names.split()))
+
+
+def text(value, maximum=400):
+    require(type(value) is str and 0 < len(value) <= maximum and
+            all(ord(c) >= 32 and ord(c) != 127 for c in value))
+
+
+def positive(value):
+    require(type(value) is int and 0 < value < 2**31)
+
+
+def identifier(value):
+    require(type(value) is str and re.fullmatch('[a-z0-9][a-z0-9-]{0,63}', value))
+
+
+def bounded(path, maximum=LIMIT):
+    with Path(path).open('rb') as stream:
+        result = stream.read(maximum + 1)
+    require(len(result) <= maximum, 'Support file too large')
+    return result
+
+
+def verify(raw, signature, public):
+    require(len(raw) <= LIMIT and len(signature) == 256, 'Invalid signature size')
+    with tempfile.TemporaryDirectory(prefix='car-verify-') as tmp:
+        folder = Path(tmp)
+        (folder / 'public.pem').write_bytes(public)
+        (folder / 'signature').write_bytes(signature)
+        (folder / 'data').write_bytes(raw)
+        result = subprocess.run(['openssl', 'dgst', '-sha256', '-verify', str(folder / 'public.pem'),
+                                 '-signature', str(folder / 'signature'), str(folder / 'data')],
+                                capture_output=True, timeout=8)
+        require(result.returncode == 0, 'Support signature did not verify')
+
+
+def validate_catalog(catalog, check_time=True):
+    fields(catalog, 'schema generation expires packs')
+    require(type(catalog['schema']) is int and catalog['schema'] == 1)
+    positive(catalog['generation'])
+    require(type(catalog['expires']) is int)
+    if check_time:
+        require(catalog['expires'] > time.time(), 'Catalog expired; check date and refresh')
+    packs = catalog['packs']
+    require(type(packs) is list and len(packs) <= 12)
+    ids = set()
+    for pack in packs:
+        fields(pack, 'id version sha256 bytes file')
+        identifier(pack['id'])
+        require(pack['id'] not in ids)
+        ids.add(pack['id'])
+        positive(pack['version'])
+        require(type(pack['bytes']) is int and 0 < pack['bytes'] <= LIMIT)
+        require(type(pack['sha256']) is str and re.fullmatch('[a-f0-9]{64}', pack['sha256']))
+        require(pack['file'] == pack['id'] + '.json', 'Invalid package path')
+
+
+def validate_pack(pack):
+    fields(pack, 'schema id version kind make model year market title source features')
+    require(type(pack['schema']) is int and pack['schema'] == 1 and pack['kind'] == 'owner-guide',
+            'This version accepts owner guides only, never vehicle-write definitions')
+    identifier(pack['id'])
+    positive(pack['version'])
+    text(pack['make'], 40)
+    require(pack['make'] in VEHICLES)
+    model, first, last = VEHICLES[pack['make']]
+    require(pack['model'] == model and type(pack['year']) is int and first <= pack['year'] <= last)
+    require(pack['market'] in ('US', 'GCC', 'EU', 'Other'))
+    text(pack['title'], 80)
+    text(pack['source'], 500)
+    https_base(pack['source'])
+    require(type(pack['features']) is list and len(pack['features']) <= 24)
+    ids = set()
+    for feature in pack['features']:
+        fields(feature, 'id title description instructions')
+        identifier(feature['id'])
+        require(feature['id'] not in ids)
+        ids.add(feature['id'])
+        text(feature['title'], 80)
+        text(feature['description'])
+        text(feature['instructions'])
+
+
+def sync_dir(folder):
+    fd = os.open(folder, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
+def write_private(path, data):
+    with open(path, 'xb') as stream:
+        os.chmod(path, 0o600)
+        stream.write(data)
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
+def atomic_json(path, value):
+    path = Path(path)
+    fd, name = tempfile.mkstemp(prefix='.state-', dir=path.parent)
+    try:
+        with os.fdopen(fd, 'wb') as stream:
+            stream.write(json.dumps(value, ensure_ascii=True).encode())
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(name, path)
+        sync_dir(path.parent)
+    finally:
+        if os.path.exists(name):
+            os.unlink(name)
+
+
+def current(root):
+    path = root / 'current.json'
+    return decode(bounded(path)) if path.exists() else {}
+
+
+def read_generation(root, pointer, public, check_time=True):
+    digest = pointer.get('digest', '')
+    require(re.fullmatch('[a-f0-9]{64}', digest) is not None)
+    folder = root / 'generations' / digest
+    raw, sig = bounded(folder / 'catalog.json'), bounded(folder / 'catalog.sig', 256)
+    require(hashlib.sha256(raw).hexdigest() == digest)
+    verify(raw, sig, public)
+    catalog = decode(raw)
+    validate_catalog(catalog, check_time)
+    packs = []
+    for entry in catalog['packs']:
+        data = bounded(folder / entry['file'])
+        require(len(data) == entry['bytes'] and hashlib.sha256(data).hexdigest() == entry['sha256'],
+                'Package hash/size did not verify')
+        pack = decode(data)
+        validate_pack(pack)
+        require(pack['id'] == entry['id'] and pack['version'] == entry['version'])
+        packs.append(pack)
+    return catalog, packs
+
+
+def installed(root, public=PUBLIC):
+    pointer = current(root)
+    return read_generation(root, pointer, public)[1] if pointer else []
+
+
+def install(root, fetch, public=PUBLIC):
+    """Download into a private generation; the one atomic pointer is the commit."""
+    root = Path(root)
+    root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    with (root / '.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        raw, sig = fetch('catalog.json'), fetch('catalog.sig')
+        verify(raw, sig, public)
+        catalog = decode(raw)
+        validate_catalog(catalog)
+        digest = hashlib.sha256(raw).hexdigest()
+        previous = current(root)
+        versions = {}
+        if previous:
+            old, _ = read_generation(root, previous, public, check_time=False)
+            require(catalog['generation'] >= old['generation'], 'Catalog downgrade refused')
+            require(catalog['generation'] != old['generation'] or digest == previous['digest'],
+                    'Catalog changed without a new generation')
+            versions = dict(previous.get('versions', {}))
+        generations = root / 'generations'
+        generations.mkdir(exist_ok=True, mode=0o700)
+        # Temporary paths are created inside this store; no archive extraction.
+        with tempfile.TemporaryDirectory(prefix='.download-', dir=generations) as tmp:
+            staging = Path(tmp)
+            write_private(staging / 'catalog.json', raw)
+            write_private(staging / 'catalog.sig', sig)
+            for entry in catalog['packs']:
+                require(entry['version'] >= versions.get(entry['id'], 0), 'Package downgrade refused')
+                data = fetch(entry['file'])
+                require(len(data) == entry['bytes'] and hashlib.sha256(data).hexdigest() == entry['sha256'],
+                        'Package hash/size did not verify')
+                pack = decode(data)
+                validate_pack(pack)
+                require(pack['id'] == entry['id'] and pack['version'] == entry['version'])
+                write_private(staging / entry['file'], data)
+                versions[entry['id']] = entry['version']
+            sync_dir(staging)
+            destination = generations / digest
+            if not destination.exists():
+                # Keep the TemporaryDirectory container so cleanup cannot remove a committed generation.
+                committed = staging / 'committed'
+                committed.mkdir()
+                for path in list(staging.iterdir()):
+                    if path != committed:
+                        os.replace(path, committed / path.name)
+                sync_dir(committed)
+                os.replace(committed, destination)
+                sync_dir(generations)
+            else:
+                read_generation(root, {'digest': digest}, public)
+            old_digest = previous.get('previous') if previous.get('digest') == digest else previous.get('digest')
+            atomic_json(root / 'current.json', dict(digest=digest, versions=versions, previous=old_digest))
+        # Retain current and one prior generation. Only hash-named directories in this store.
+        keep = {digest, old_digest}
+        for path in generations.iterdir():
+            if re.fullmatch('[a-f0-9]{64}', path.name) and path.name not in keep and not path.is_symlink():
+                shutil.rmtree(path)
+        return len(catalog['packs'])
+
+
+def https_base(url):
+    text(url, 500)
+    parsed = urllib.parse.urlsplit(url)
+    require(parsed.scheme == 'https' and parsed.hostname and not parsed.username and
+            not parsed.password and not parsed.query and not parsed.fragment,
+            'Use an HTTPS support URL without credentials or query strings')
+    return url.rstrip('/') + '/'
+
+
+class SameOrigin(urllib.request.HTTPRedirectHandler):
+    def __init__(self, base):
+        self.origin = urllib.parse.urlsplit(base).netloc
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        parsed = urllib.parse.urlsplit(newurl)
+        require(parsed.scheme == 'https' and parsed.netloc == self.origin and
+                not parsed.username and not parsed.query and not parsed.fragment,
+                'Support server redirected outside its HTTPS origin')
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def refresh(root, server, public=PUBLIC):
+    if not server:
+        return 'Download server not configured. Verified offline guides remain usable. No coding packs are available.'
+    base = https_base(server)
+    opener = urllib.request.build_opener(SameOrigin(base))  # Standard TLS certificate verification.
+    def fetch(name):
+        request = urllib.request.Request(base + name, headers={'User-Agent': 'NZEUS-Car-Support/1'})
+        with opener.open(request, timeout=8) as reply:
+            data = reply.read(LIMIT + 1)
+            require(len(data) <= LIMIT, 'Download too large')
+            return data
+    count = install(root, fetch, public)
+    return f'Verified {count} owner-guide packs. No vehicle settings were changed.'
+
+
+def describe(root, selection, public=PUBLIC):
+    lines = ['0 verified app-controlled changes. Current car settings: not read.',
+             'A scan finds responding computers, not every available setting.']
+    if not selection:
+        return '\n'.join(lines + ['Choose manufacturer, model, year and market with A > Choose vehicle.'])
+    lines.append('Manual selection: {make} {model} {year}, {market}. Equipment not confirmed.'.format(**selection))
+    matches = [p for p in installed(root, public)
+               if all(p[k] == selection.get(k) for k in ('make', 'model', 'year', 'market'))]
+    if not matches:
+        lines.append('No matching verified guide. No verified coding profile exists in this version.')
+    for pack in matches:
+        lines += [pack['title'] + f" (v{pack['version']})", 'Owner-menu guide only; not scan-discovered support.']
+        for feature in pack['features']:
+            lines += [feature['title'], feature['description'], feature['instructions']]
+        lines.append('Source: ' + pack['source'])
+    return '\n'.join(lines)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--root', default='/data/nzeus/deck/nzeus/car/support')
+    parser.add_argument('action', choices=['view', 'refresh', 'select', 'import'])
+    parser.add_argument('args', nargs='*')
+    args = parser.parse_args()
+    root = Path(args.root)
+    root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    if args.action == 'select':
+        require(len(args.args) == 4)
+        make, model, year, market = args.args
+        require(make in VEHICLES and model == VEHICLES[make][0] and
+                year.isdigit() and VEHICLES[make][1] <= int(year) <= VEHICLES[make][2] and
+                market in ('US', 'GCC', 'EU', 'Other'))
+        atomic_json(root / 'vehicle.json', dict(make=make, model=model, year=int(year), market=market))
+    if args.action == 'refresh':
+        server = bounded(root / 'server', 500).decode().strip() if (root / 'server').exists() else None
+        print(refresh(root, server))
+    if args.action == 'import':
+        require(len(args.args) == 1)
+        folder = Path(args.args[0])
+        print(f'Verified {install(root, lambda name: bounded(folder / name))} offline owner-guide packs.')
+    selection = decode(bounded(root / 'vehicle.json')) if (root / 'vehicle.json').exists() else {}
+    if selection:
+        fields(selection, 'make model year market')
+    print(describe(root, selection))
+    print('A: support actions. Guides never send vehicle commands. Your VIN stays on this SD card.')
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except (ValueError, OSError, subprocess.SubprocessError) as exc:
+        # Network exceptions can contain URLs: do not echo tokens or query strings.
+        print('Support operation failed. Open View installed support to check retained data. Check connection, date, signatures and catalog.')
+        raise SystemExit(1)

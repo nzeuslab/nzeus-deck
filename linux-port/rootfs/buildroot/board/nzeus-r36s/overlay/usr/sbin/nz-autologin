@@ -1,0 +1,4 @@
+#!/bin/sh
+# getty -n -l runs this instead of asking for a user name: log in as root
+# without a password prompt. Only used on the USB serial cable (ttyGS0).
+exec /bin/login -f root
