@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/images/banner.jpg" alt="NZEUS Deck: a photo of the green R36S clone starting NZEUS, next to the Deck's home screen in its six colour themes"></p>
+<p align="center"><img src="docs/images/banner.jpg" alt="NZEUS Deck: a photo of the green R36S clone starting NZEUS, next to the Deck's home screen in three of its colour themes"></p>
 
 <p align="center">
   <a href="#install-in-3-steps-windows"><img src="https://img.shields.io/badge/console-R36S%20V2.7%20(HiChip%20E3100)-2ea043" alt="console: R36S V2.7 (HiChip E3100)"></a>
