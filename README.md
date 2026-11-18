@@ -1,10 +1,10 @@
 <p align="center"><img src="docs/images/banner.jpg" alt="NZEUS Deck: a photo of the green R36S clone starting NZEUS, next to the Deck's home screen in three of its colour themes"></p>
 
 <p align="center">
-  <a href="#install-in-3-steps-windows"><img src="https://img.shields.io/badge/console-R36S%20V2.7%20(HiChip%20E3100)-2ea043" alt="console: R36S V2.7 (HiChip E3100)"></a>
-  <a href="docs/WRITEUP.md"><img src="https://img.shields.io/badge/Linux%207.2-Debian%2012-2ea043" alt="Linux 7.2, Debian 12"></a>
-  <a href="#install-in-3-steps-windows"><img src="https://img.shields.io/badge/install-copy%20to%20SD%20card-2ea043" alt="install: copy to SD card"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-blue" alt="license: GPL-3.0"></a>
+  <a href="#install-in-3-steps-windows"><img src="https://img.shields.io/badge/console-R36S%20V2.7%20%C2%B7%20HiChip%20E3100-4ade80?style=for-the-badge&labelColor=0b0f0d" alt="console: R36S V2.7, HiChip E3100"></a>
+  <a href="docs/WRITEUP.md"><img src="https://img.shields.io/badge/Linux%207.2-Debian%2012-4ade80?style=for-the-badge&labelColor=0b0f0d&logo=linux&logoColor=4ade80" alt="Linux 7.2, Debian 12"></a>
+  <a href="#install-in-3-steps-windows"><img src="https://img.shields.io/badge/install-copy%20to%20SD%20card-4ade80?style=for-the-badge&labelColor=0b0f0d" alt="install: copy to SD card"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-4ade80?style=for-the-badge&labelColor=0b0f0d" alt="license: GPL-3.0"></a>
 </p>
 
 # NZEUS Deck

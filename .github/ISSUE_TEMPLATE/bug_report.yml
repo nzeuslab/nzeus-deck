@@ -1,0 +1,80 @@
+name: Something went wrong
+description: Installing, starting or using NZEUS Deck didn't work as expected.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying NZEUS Deck! A few details help a lot. If NZEUS won't start,
+        `uninstall.bat` brings the console's own system back first.
+
+  - type: dropdown
+    id: what
+    attributes:
+      label: What happened?
+      options:
+        - install.bat stopped with a message
+        - The console shows "NZEUS could not start"
+        - The screen stays on the start-up picture or goes black
+        - NZEUS starts, but an app or feature doesn't work
+        - uninstall.bat didn't bring the stock system back
+        - Something else
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: console
+    attributes:
+      label: Your console
+      options:
+        - label: It's the R36S V2.7 with the HiChip E3100 chip (board marked HC16E3100V20)
+          required: true
+
+  - type: dropdown
+    id: colour
+    attributes:
+      label: Console colour
+      options:
+        - Green
+        - Black
+        - Other
+    validations:
+      required: false
+
+  - type: input
+    id: release
+    attributes:
+      label: Which release?
+      description: The name of the zip you downloaded.
+      placeholder: NZEUS-Deck-xxxxxxx.zip
+    validations:
+      required: true
+
+  - type: textarea
+    id: window
+    attributes:
+      label: What did the install.bat or uninstall.bat window say?
+      description: Copy all the text from the window (or say "it worked").
+      render: text
+
+  - type: textarea
+    id: screen
+    attributes:
+      label: What did you see on the console?
+      description: A photo of the screen helps a lot. Drag it into this box.
+
+  - type: textarea
+    id: bootlog
+    attributes:
+      label: Boot log (if you can)
+      description: |
+        NZEUS writes `nzeus/boot-log.txt` on the SD card each time it starts. On Mac or Linux:
+        `sudo python3 r36s_card.py open /dev/YOUR-CARD`, copy the file, then `close`
+        (see INSTALL.md). Paste it here or attach it.
+      render: text
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Anything else?
+      description: What you did just before it went wrong, and anything you noticed.
