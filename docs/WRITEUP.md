@@ -2,6 +2,8 @@
 
 *NZEUS LAB, October 2026. Device: R36S V2.7 clone (green), board HC16E3100V20.*
 
+*Naser Ashknani, NZEUS LAB. I directed the project, did the bench work, and tested it on my consoles. Claude helped write much of the code.*
+
 The R36S is a cheap retro-gaming handheld. Most R36S units use a Rockchip chip
 and run community Linux images. My unit is a **clone**: a HiChip E3100 (MIPS
 74Kc) running the maker's own stock Linux 4.4. None of the usual images work on
