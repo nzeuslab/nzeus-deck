@@ -46,7 +46,7 @@ Mac and Linux steps, and what to do if the screen stays black:
 
 | | |
 |:-:|:-:|
-| <img src="docs/images/shot-retro-blue.png" width="400" alt="Desktop mode in the Retro Blue theme: a green hill wallpaper, glossy app icons, a blue taskbar and the start menu open"><br>Retro Blue desktop (new in 1.0 beta 2) | <img src="docs/images/shot-terminal.png" width="400" alt="Terminal app: a Linux shell prompt with its help text"><br>Real Linux terminal |
+| <img src="docs/images/shot-retro-blue.png" width="400" alt="Desktop mode in the Retro Blue theme: a green hill wallpaper, glossy app icons and a blue taskbar"><br>Retro Blue desktop (new in 1.0 beta 2) | <img src="docs/images/shot-terminal.png" width="400" alt="Terminal app: a Linux shell prompt with its help text"><br>Real Linux terminal |
 | <img src="docs/images/shot-car.png" width="400" alt="Car app: live gauges for engine speed, road speed, coolant temperature and engine load from an OBD-II adapter"><br>Live car data (OBD-II) | <img src="docs/images/shot-car-report.png" width="400" alt="Car health report: no active faults, vehicle details and check-engine self-tests"><br>Car health report |
 | <img src="docs/images/shot-scope.png" width="400" alt="Probe app: oscilloscope showing a triangle wave from 0.3 to 3.0 volts"><br>Oscilloscope (NZEUS Probe) | <img src="docs/images/shot-green-crt.png" width="400" alt="Home screen in the Green CRT theme"><br>Green CRT theme |
 | <img src="docs/images/shot-bluetooth-id.png" width="400" alt="Bluetooth ID card: name, address, maker, signal and distance of a nearby device"><br>Bluetooth "ID card" | |
