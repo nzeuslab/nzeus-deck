@@ -3697,12 +3697,27 @@ int main(int argc, char **argv)
         settings_set("desk_wall", "plain"); desktop_cycle_wallpaper(); frames(2);   /* (Plain -> Hills) */
         desktop_reload_own_icons(); frames(2);
         check(desktop_own_icon_count() == 0 && lv_obj_has_flag(desktop_start_icon(), LV_OBJ_FLAG_HIDDEN) &&
-              !lv_obj_has_flag(desktop_icon_part(0, 0), LV_OBJ_FLAG_HIDDEN),
-              "Own icons: no files on the card: no start logo, the built-in icons");
-        check(!lv_obj_has_flag(desktop_icon_part(0, 2), LV_OBJ_FLAG_HIDDEN) &&
-              lv_color_to32(lv_obj_get_style_img_recolor(desktop_icon_part(0, 0), 0)) == lv_color_to32(lv_color_hex(0xE0A010)) &&
-              lv_color_to32(lv_obj_get_style_img_recolor(desktop_icon_part(3, 0), 0)) == lv_color_to32(lv_color_hex(0xD32F2F)),
-              "Retro Blue desktop icons: each on a tile, in its own colour (Files yellow, Car red)");
+              lv_obj_has_flag(desktop_icon_part(0, 0), LV_OBJ_FLAG_HIDDEN) && !lv_obj_has_flag(desktop_icon_part(0, 1), LV_OBJ_FLAG_HIDDEN),
+              "Own icons: no files on the card: no start logo; Retro Blue shows its own built-in pictures");
+        {   /* the pictures themselves: Files = a yellow folder, Car = a red car, no tiles behind them */
+            lv_area_t fa, ca;
+            lv_obj_get_coords(desktop_icon_part(0, 1), &fa);
+            lv_obj_get_coords(desktop_icon_part(3, 1), &ca);
+            int yellow = 0, red = 0;
+            for (int y = fa.y1; y <= fa.y2; y++)
+                for (int x = fa.x1; x <= fa.x2; x++) {
+                    uint16_t p = frame[y * NZ_W + x];
+                    if (R5(p) > 24 && G6(p) > 40 && (p & 31) < 12) yellow++;
+                }
+            for (int y = ca.y1; y <= ca.y2; y++)
+                for (int x = ca.x1; x <= ca.x2; x++) {
+                    uint16_t p = frame[y * NZ_W + x];
+                    if (R5(p) > 22 && G6(p) < 24 && (p & 31) < 12) red++;
+                }
+            check(lv_obj_has_flag(desktop_icon_part(0, 2), LV_OBJ_FLAG_HIDDEN) && lv_obj_get_width(desktop_icon_part(0, 1)) == 32 &&
+                  yellow > 150 && red > 100,
+                  "Retro Blue desktop icons: the theme's own pictures at 32 x 32 (Files a yellow folder, Car a red car), no tiles");
+        }
         save("core_icons_0_builtin_retro");
         write_icon_bmp(OWN "/start-icon.bmp", 20, 0xFF0000);       /* a red square, green all round */
         write_icon_bmp(OWN "/icons/files.bmp", 48, 0x0000FF);      /* bigger than 32: made smaller */
@@ -3722,8 +3737,9 @@ int main(int argc, char **argv)
         check(!lv_obj_has_flag(fo, LV_OBJ_FLAG_HIDDEN) && lv_obj_has_flag(desktop_icon_part(0, 0), LV_OBJ_FLAG_HIDDEN) &&
               lv_obj_get_width(fo) == 32 && mid == 0x001F && edge != 0x07E0,
               "Own desktop icon: icons/files.bmp (48 x 48) replaces Files' icon at 32 x 32, green see-through");
-        check(!lv_obj_has_flag(desktop_icon_part(2, 0), LV_OBJ_FLAG_HIDDEN) && lv_obj_has_flag(desktop_icon_part(2, 1), LV_OBJ_FLAG_HIDDEN),
-              "Own desktop icon: a broken icons/web.bmp is ignored (the built-in Web icon)");
+        check(lv_obj_has_flag(desktop_icon_part(2, 0), LV_OBJ_FLAG_HIDDEN) && !lv_obj_has_flag(desktop_icon_part(2, 1), LV_OBJ_FLAG_HIDDEN) &&
+              lv_obj_get_width(desktop_icon_part(2, 1)) == 32,
+              "Own desktop icon: a broken icons/web.bmp is ignored (Retro Blue's own Web picture)");
         check(desktop_own_icon_count() == 4, "Own icons: start logo + Files on the desktop, in the start menu and the desktop menu");
         mkdir(OWN "/icons/small", 0755);
         write_icon_bmp(OWN "/icons/small/files.bmp", 16, 0xFF0000); /* a ready-made small copy */
@@ -3744,13 +3760,16 @@ int main(int argc, char **argv)
         theme_set(TH_ORIGINAL); frames(3);
         check(!lv_obj_has_flag(desktop_start_icon(), LV_OBJ_FLAG_HIDDEN) && lv_obj_has_flag(desktop_icon_part(0, 2), LV_OBJ_FLAG_HIDDEN),
               "Own start logo in the other themes too (on the NZEUS button); no Retro tiles there");
+        check(!lv_obj_has_flag(desktop_icon_part(2, 0), LV_OBJ_FLAG_HIDDEN) && lv_obj_has_flag(desktop_icon_part(2, 1), LV_OBJ_FLAG_HIDDEN) &&
+              !lv_obj_has_flag(desktop_icon_part(0, 1), LV_OBJ_FLAG_HIDDEN),
+              "Other themes: Retro Blue's pictures are not used (Web = the theme's own icon); the owner's Files icon still is");
         save("core_icons_3_original");
         theme_set(TH_RETRO_BLUE); frames(2);
         unlink(OWN "/start-icon.bmp"); unlink(OWN "/icons/files.bmp"); unlink(OWN "/icons/web.bmp");
         desktop_reload_own_icons(); frames(2);
         check(desktop_own_icon_count() == 0 && lv_obj_has_flag(desktop_start_icon(), LV_OBJ_FLAG_HIDDEN) &&
-              !lv_obj_has_flag(desktop_icon_part(0, 0), LV_OBJ_FLAG_HIDDEN),
-              "Own icons: files removed: back to the built-in icons");
+              lv_obj_has_flag(desktop_icon_part(0, 0), LV_OBJ_FLAG_HIDDEN) && !lv_obj_has_flag(desktop_icon_part(0, 1), LV_OBJ_FLAG_HIDDEN),
+              "Own icons: files removed: back to Retro Blue's own pictures");
         #undef OWN
         /* back to the theme and wallpaper from before */
         settings_set("desk_wall_auto", "0");

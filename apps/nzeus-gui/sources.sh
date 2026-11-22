@@ -42,6 +42,6 @@ UI_FILES="$UI_FILES app_update.c"
 UI_FILES="$UI_FILES pdfreader.c"
 UI_FILES="$UI_FILES carsupport.c"
 # the desktop's picture wallpapers (Hills, the user's own Picture): drawn once into a buffer
-UI_FILES="$UI_FILES wallpaper.c"
+UI_FILES="$UI_FILES wallpaper.c wallpaper_hill_data.c"   # (+ the built-in Hills picture, art/hill.jpg)
 # the owner's own start-button logo and desktop icons (nzeus/start-icon.bmp, nzeus/icons/NAME.bmp)
-UI_FILES="$UI_FILES ownicons.c"
+UI_FILES="$UI_FILES ownicons.c retroicons_data.c"   # (+ Retro Blue's built-in app icons, art/retro-icons.png)

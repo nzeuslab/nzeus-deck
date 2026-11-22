@@ -42,6 +42,15 @@ echo "LVGL: $(ls $B/lvgl/*.o | wc -l) objects"
 
 # 2) our files
 . $S/sources.sh                                   # UI_FILES, CONSOLE_FILES, THIRD_FILES
+# the built-in pictures must match their art/ files (after changing one: python3 apps/nzeus-gui/art/make_*_data.py)
+while read -r art data; do
+    want=$(sha256sum "$WIN/apps/nzeus-gui/$art" | cut -d' ' -f1)
+    grep -q "sha256 $want" "$WIN/apps/nzeus-gui/$data" || { echo "FAIL  $data does not match $art: run its art/make_*_data.py"; exit 1; }
+done <<'ART'
+art/hill.jpg wallpaper_hill_data.c
+art/retro-icons.png retroicons_data.c
+ART
+echo "PASS  built-in pictures match art/hill.jpg and art/retro-icons.png"
 # other people's libraries (libvterm, libmad): compiled once, without our warning checks
 mkdir -p $B/third
 for f in $THIRD_FILES; do

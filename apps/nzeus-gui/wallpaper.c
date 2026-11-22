@@ -46,7 +46,8 @@ static const Blob blobs[] = {
 };
 #define BLOB_COUNT (int)(sizeof blobs / sizeof blobs[0])
 
-uint16_t *wallpaper_hills(int w, int h)
+/* the drawn scene: used when the built-in picture can't be (another screen size, no memory) */
+static uint16_t *draw_hills(int w, int h)
 {
     uint16_t *px = malloc((size_t)w * h * sizeof *px);
     float *crest = malloc((size_t)w * sizeof *crest);
@@ -90,6 +91,21 @@ uint16_t *wallpaper_hills(int w, int h)
     }
     free(crest);
     return px;
+}
+
+/* the built-in picture (art/hill.jpg, 640 x 446), in wallpaper_hill_data.c */
+extern const unsigned char nz_hill_jpg[];
+extern const unsigned int nz_hill_jpg_len;
+
+uint16_t *wallpaper_hills(int w, int h)
+{
+    Picture p;
+    char err[64];
+    if (picture_load_mem(nz_hill_jpg, nz_hill_jpg_len, w, h, &p, err, sizeof err) == 0) {
+        if (p.w == w && p.h == h) return p.px;       /* the desktop's own size: shown as it is */
+        picture_free(&p);
+    }
+    return draw_hills(w, h);
 }
 
 /* ---------- Picture ---------- */

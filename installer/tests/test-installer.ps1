@@ -348,9 +348,84 @@ $msg = Invoke-NzeusCollectLogs -DiskImage $fimg2 -Root $froot2 -Dest (Join-Path 
 Check "test_collect_logs_failure_closes_card" (((Get-R36sCards -DiskImages @($fimg2))[0].State -eq "closed") -and
     $msg -like "*collect-logs.bat again*") $msg
 
+# ---- new (empty) cards: install-new-card.bat ----
+# N1. the FAT32 layout fits the card, starts its data on a cluster boundary and has a big enough FAT
+$layoutOk = $true; $layoutDetail = ""
+foreach ($size in @(7948206080, 15931539456, 31914983424, 63864569856, 127865454592, 1TB)) {
+    $L = Get-NewCardLayout $size
+    $ok = ($L.Start -eq 2048) -and ((($L.Start + $L.Reserved + $L.Fats * $L.FatSize) % $L.SectorsPerCluster) -eq 0) -and
+        ($L.FatSize * 128 -ge $L.Clusters + 2) -and ((($L.Start + $L.Count) * 512) -le $size) -and ($L.Clusters -ge 65525) -and
+        (($L.Start + $L.Reserved + $L.Fats * $L.FatSize + $L.Clusters * $L.SectorsPerCluster) -le ($L.Start + $L.Count))
+    if (-not $ok) { $layoutOk = $false; $layoutDetail += "$size; " }
+}
+$tooSmall = try { Get-NewCardLayout 512MB | Out-Null; "" } catch { $_.Exception.Message }
+$tooBig = try { Get-NewCardLayout 3TB | Out-Null; "" } catch { $_.Exception.Message }
+Check "test_new_card_layout" ($layoutOk -and $tooSmall -like "*too small*" -and $tooBig -like "*2 TB*") "$layoutDetail $tooSmall $tooBig"
+
+# fixtures: an empty "new card" image (only its first megabytes are ever written) and a board file
+function New-BlankImage([string]$path, [long]$size) { $fs = [IO.File]::Open($path, [IO.FileMode]::Create); try { $fs.SetLength($size) } finally { $fs.Close() }; return $path }
+$boardFile = Join-Path $tmp "Bubbles.scr"
+$bf = New-Object byte[] 300; [Array]::Copy([byte[]](0xD0, 0x0D, 0xFE, 0xED), $bf, 4); $bf[100] = 7
+[IO.File]::WriteAllBytes($boardFile, $bf)
+
+# N2. a new card: flagged + scrambled table, an R36S card afterwards, board file + NZEUS on it, closed
+$nimg = New-BlankImage (Join-Path $tmp "newcard.img") 1536MB
+$nroot = Join-Path $tmp "newcardroot"; New-Item -ItemType Directory $nroot | Out-Null
+$msg = Invoke-NzeusNewCard -DiskImage $nimg -Release $rel -BoardFile $boardFile -Root $nroot -FreeBytes $big
+$s0 = Sector0 $nimg
+$plain = Switch-R36sScramble $s0
+$state = @(Get-R36sCards -DiskImages @($nimg))
+Check "test_new_card_install" (($msg -like "Done*") -and $s0[444] -eq 0x69 -and $s0[445] -eq 0x96 -and
+    $plain[510] -eq 0x55 -and $plain[511] -eq 0xAA -and [BitConverter]::ToUInt32($plain, 454) -eq 2048 -and
+    $state.Count -eq 1 -and $state[0].State -eq "closed" -and
+    (Hash "$nroot\cubegm\Bubbles.scr") -eq (Hash $boardFile) -and
+    (Get-Content "$nroot\nzeus\VERSION" -Raw) -eq "v1" -and (Test-Path "$nroot\nzeus\new-card") -and
+    -not (Test-Path "$nroot\nzeus\backup")) "$msg | 444-445 $($s0[444]) $($s0[445])"
+
+# N3. later updates with install.bat work on a new card; uninstall explains instead of breaking it
+$v = Install-NzeusFiles -Root $nroot -Release $rel2 -FreeBytes $big
+$un = try { Uninstall-NzeusFiles -Root $nroot; "" } catch { $_.Exception.Message }
+Check "test_new_card_update_and_uninstall" ($v -eq "v2" -and -not (Test-Path "$nroot\nzeus\backup") -and
+    $un -like "*install-new-card.bat*Nothing was changed*" -and (Test-Path "$nroot\nzeus\nzroot.img")) "$v | $un"
+
+# N4. a file that isn't a board file is refused before the card is touched
+$junk = Join-Path $tmp "junk.scr"; [IO.File]::WriteAllBytes($junk, (New-Object byte[] 300))
+$jimg = New-BlankImage (Join-Path $tmp "junkcard.img") 1536MB
+$jroot = Join-Path $tmp "junkroot"; New-Item -ItemType Directory $jroot | Out-Null
+$msg = Invoke-NzeusNewCard -DiskImage $jimg -Release $rel -BoardFile $junk -Root $jroot -FreeBytes $big
+$js0 = Sector0 $jimg
+Check "test_new_card_refuses_bad_board_file" ($msg -like "*Nothing was changed*" -and ($js0 | Measure-Object -Sum).Sum -eq 0 -and
+    @(Get-ChildItem $jroot).Count -eq 0) $msg
+
+# N5. a card too small for FAT32 is refused before it is touched
+$simg = New-BlankImage (Join-Path $tmp "smallcard.img") 256MB
+$msg = Invoke-NzeusNewCard -DiskImage $simg -Release $rel -BoardFile $boardFile -Root $jroot -FreeBytes $big
+Check "test_new_card_refuses_small_card" ($msg -like "*too small*Nothing was changed*" -and ((Sector0 $simg) | Measure-Object -Sum).Sum -eq 0) $msg
+
+# N6. step 1 copies the board file off the original card, which ends closed and unchanged
+$oimg = New-FakeCardImage (Join-Path $tmp "original.img")
+$oroot = New-StockFolder (Join-Path $tmp "originalroot")
+Copy-Item $boardFile "$oroot\cubegm\Bubbles.scr" -Force
+$before = Hash $oimg
+$dest = Join-Path $tmp "saved\Bubbles.scr"
+$msg = Invoke-NzeusSaveBoardFile -DiskImage $oimg -Root $oroot -Dest $dest
+Check "test_save_board_file" (($msg -like "Saved*") -and (Hash $dest) -eq (Hash $boardFile) -and (Hash $oimg) -eq $before) $msg
+
+# N7. a card whose Bubbles.scr isn't a board file: nothing saved, card closed again
+$bimg = New-FakeCardImage (Join-Path $tmp "badoriginal.img")
+$broot = New-StockFolder (Join-Path $tmp "badoriginalroot")       # its Bubbles.scr is plain text
+$dest2 = Join-Path $tmp "saved2\Bubbles.scr"
+$msg = Invoke-NzeusSaveBoardFile -DiskImage $bimg -Root $broot -Dest $dest2
+Check "test_save_board_file_refuses_non_board_file" (($msg -like "Could not read*") -and -not (Test-Path $dest2) -and
+    ((Get-R36sCards -DiskImages @($bimg))[0].State -eq "closed")) $msg
+
+# N8. the new-card disk list marks cards that already have the console's system (or NZEUS) on them
+$list = @(Get-NewCardDisks -DiskImages @($oimg, $simg))
+Check "test_new_card_disks_mark_r36s_cards" ($list.Count -eq 2 -and $list[0].IsR36s -and -not $list[1].IsR36s) ($list | Out-String)
+
 # 12. the scripts people double-click parse cleanly
 $errs = @()
-foreach ($f in @("install.ps1", "uninstall.ps1", "collect-logs.ps1")) {
+foreach ($f in @("install.ps1", "uninstall.ps1", "collect-logs.ps1", "new-card.ps1")) {
     $e = $null; [void][Management.Automation.Language.Parser]::ParseFile((Join-Path (Join-Path $here "..") $f), [ref]$null, [ref]$e); $errs += $e
 }
 Check "test_scripts_parse" ($errs.Count -eq 0) ($errs -join "; ")

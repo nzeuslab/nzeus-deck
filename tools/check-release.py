@@ -26,7 +26,7 @@ from image_codec import factory_key  # noqa: E402
 
 TOP = None                       # set from the zip: NZEUS-Deck-<version>/
 EXPECTED = ['install.bat', 'uninstall.bat', 'installer/NzeusCard.psm1', 'installer/install.ps1',
-            'installer/uninstall.ps1', 'collect-logs.bat', 'installer/collect-logs.ps1', 'r36s_card.py', 'INSTALL.md', 'README.txt', 'SOURCE.txt', 'LICENSE',
+            'installer/uninstall.ps1', 'collect-logs.bat', 'installer/collect-logs.ps1', 'install-new-card.bat', 'installer/new-card.ps1', 'r36s_card.py', 'INSTALL.md', 'README.txt', 'SOURCE.txt', 'LICENSE',
             'SHA256SUMS', 'card/cubegm/advapi32.dll', 'card/cubegm/ApplicationFrame.dll',
             'card/cubegm/xgame-logo.bmp',
             'card/nzeus/nzroot.img', 'card/nzeus/nzdata.img', 'card/nzeus/VERSION']

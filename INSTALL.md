@@ -23,6 +23,23 @@ offers to delete all the games to make room (it asks first; deleted games don't 
 4. Put the card back in the console and switch it on. NZEUS starts in about
    30 seconds.
 
+### On a new, empty SD card
+
+Want to keep the console's own card exactly as it is? Put NZEUS on a second card
+instead (8 GB or bigger; everything on it is erased):
+
+1. Double-click **install-new-card.bat**.
+2. Step 1: put the console's **original** card in the card reader. One small file
+   is copied off it (`cubegm/Bubbles.scr`, the console's own board file, which
+   NZEUS can't include). That card is only read, never changed.
+3. Step 2: put the **new** card in, type ERASE. The card is set up the way the
+   console's start-up expects, then NZEUS is copied and checked.
+4. Put the new card in the console and switch it on.
+
+Keep the original card: it still has the console's own system. Later releases
+update the new card with install.bat as usual; uninstall.bat has nothing to put
+back on it.
+
 If the screen shows a message starting "NZEUS could not start", do what it
 says. If the screen stays black for 2 minutes, run **uninstall.bat**: your
 console goes back to its own system.

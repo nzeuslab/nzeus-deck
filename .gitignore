@@ -28,3 +28,5 @@ linux-port/deck-modern/dropbearmulti
 
 # design-review notes (Impeccable)
 .impeccable/
+# the console board file install-new-card.bat copies off a user's own card (never shipped)
+installer/your-console/

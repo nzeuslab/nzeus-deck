@@ -26,6 +26,9 @@ This is the R36S that ArkOS and the other custom firmwares **can't** run on. Now
 `install.bat` offers to delete the games to make room. It asks first, and deleted
 games don't come back, so copy them to your PC first if you want to keep them.
 
+**Keep your original card as it is:** `install-new-card.bat` puts NZEUS on a second,
+empty SD card instead (see [INSTALL.md](INSTALL.md#on-a-new-empty-sd-card)).
+
 **Going back:** `uninstall.bat` brings the console's own system back. The console's
 flash chip is never touched.
 

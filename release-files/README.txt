@@ -6,6 +6,7 @@ Most R36S consoles use a Rockchip chip: this is NOT for them.
 Tested on real consoles.
 
 Install (Windows):  console's SD card in a card reader -> double-click install.bat
+On a NEW SD card:   double-click install-new-card.bat (the original card is only read)
 Undo (Windows):     double-click uninstall.bat
 Bug report logs:    double-click collect-logs.bat
 Mac / Linux:        see INSTALL.md

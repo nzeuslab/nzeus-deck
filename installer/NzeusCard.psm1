@@ -183,6 +183,206 @@ function Close-R36sCard([int]$Number = -1, [string]$DiskImage) {
     if (-not $DiskImage) { Update-Disk -Number $Number }
 }
 
+# ---------------- new (empty) cards ----------------
+#
+# The console's bootloader only reads a card whose sector 0 is scrambled AND carries the
+# bootloader's "scrambled" flag: bytes 444-445 = 69 96 on the card, which is 86 28 before
+# scrambling (factory bootloader code at 0x7c334: if the flag is there, it XORs the sector with
+# DEADBEEF; if not, it reads garbage and shows "Please insert TF card"). Every stock card has the
+# flag. Proven on the console 2026-11-22: the same card boots with the flag and not without it.
+#
+# It also loads cubegm\Bubbles.scr (the console's own board file) and stops with "TF card is
+# damaged" if it is missing. That file is the console maker's, so NZEUS never ships it: it is
+# copied from the user's own original card (Save-BoardFile). Nothing else from the stock card is needed.
+
+$Script:BoardFileMagic = [byte[]](0xD0, 0x0D, 0xFE, 0xED)   # a device tree file starts with this
+$Script:NewCardMarker = "nzeus\new-card"                     # on cards set up by install-new-card.bat
+
+# FAT32 layout for a new card of SizeBytes: partition at 1 MB (as the stock 64 GB card),
+# 16 KB clusters (as the stock cards), data area starting on a cluster boundary.
+function Get-NewCardLayout([long]$SizeBytes) {
+    $start = 2048; $spc = 32; $fats = 2
+    $count = [long][math]::Floor($SizeBytes / 512) - $start
+    $count -= $count % 2048                                   # whole megabytes
+    if ($count -gt [uint32]::MaxValue) { throw "this card is bigger than 2 TB, which FAT32 can't use. Nothing was changed." }
+    $reserved = 32
+    # Microsoft's FAT32 size formula (fatgen103): always big enough
+    $fatSize = [long][math]::Ceiling(($count - $reserved) / ((256 * $spc + $fats) / 2))
+    $reserved += ($spc - (($start + $reserved + $fats * $fatSize) % $spc)) % $spc
+    $clusters = [long][math]::Floor(($count - $reserved - $fats * $fatSize) / $spc)
+    if ($clusters -lt 65525) { throw "this card is too small. Nothing was changed." }
+    return [pscustomobject]@{ Start = $start; Count = $count; Reserved = $reserved; Fats = $fats
+        FatSize = $fatSize; SectorsPerCluster = $spc; Clusters = $clusters }
+}
+
+function Set-Le([byte[]]$b, [int]$o, [long]$v, [int]$n) { for ($i = 0; $i -lt $n; $i++) { $b[$o + $i] = [byte](($v -shr (8 * $i)) -band 0xFF) } }
+
+# A FAT directory entry (name = 11 characters, 8.3 style).
+function New-DirEntry([string]$name, [byte]$attr, [long]$cluster) {
+    $e = New-Object byte[] 32
+    [Array]::Copy([Text.Encoding]::ASCII.GetBytes($name), 0, $e, 0, 11)
+    $e[11] = $attr
+    $now = Get-Date
+    $time = ($now.Hour -shl 11) -bor ($now.Minute -shl 5) -bor [int]($now.Second / 2)
+    $date = (($now.Year - 1980) -shl 9) -bor ($now.Month -shl 5) -bor $now.Day
+    foreach ($o in @(14, 22)) { Set-Le $e $o $time 2 }
+    foreach ($o in @(16, 18, 24)) { Set-Le $e $o $date 2 }
+    Set-Le $e 20 ($cluster -shr 16) 2; Set-Le $e 26 ($cluster -band 0xFFFF) 2
+    return , $e
+}
+
+# Writes a complete, empty R36S card: scrambled + flagged partition table, FAT32 with one empty
+# CUBEGM folder (what makes it an R36S card for Get-R36sCards / Open-R36sCard). Reads it back.
+function Write-NewCardLayout([string]$path, $L) {
+    $mbr = New-Object byte[] 512
+    $sig = New-Object byte[] 4; (New-Object Random).NextBytes($sig); [Array]::Copy($sig, 0, $mbr, 440, 4)
+    $mbr[444] = 0x86; $mbr[445] = 0x28                       # the bootloader's flag (69 96 once scrambled)
+    [Array]::Copy([byte[]](0x00, 0x20, 0x21, 0x00, 0x0C, 0xFE, 0xFF, 0xFF), 0, $mbr, 446, 8)   # as the stock 64 GB card
+    Set-Le $mbr 454 $L.Start 4; Set-Le $mbr 458 $L.Count 4
+    $mbr[510] = 0x55; $mbr[511] = 0xAA
+    $mbr = Switch-R36sScramble $mbr
+
+    $boot = New-Object byte[] 512
+    [Array]::Copy([byte[]](0xEB, 0x58, 0x90), 0, $boot, 0, 3)
+    [Array]::Copy([Text.Encoding]::ASCII.GetBytes("MSDOS5.0"), 0, $boot, 3, 8)
+    Set-Le $boot 11 512 2; $boot[13] = $L.SectorsPerCluster; Set-Le $boot 14 $L.Reserved 2; $boot[16] = $L.Fats
+    $boot[21] = 0xF8; Set-Le $boot 24 63 2; Set-Le $boot 26 255 2
+    Set-Le $boot 28 $L.Start 4; Set-Le $boot 32 $L.Count 4; Set-Le $boot 36 $L.FatSize 4
+    Set-Le $boot 44 2 4; Set-Le $boot 48 1 2; Set-Le $boot 50 6 2      # root folder cluster 2, FSInfo 1, backup 6
+    $boot[64] = 0x80; $boot[66] = 0x29
+    $serial = New-Object byte[] 4; (New-Object Random).NextBytes($serial); [Array]::Copy($serial, 0, $boot, 67, 4)
+    [Array]::Copy([Text.Encoding]::ASCII.GetBytes("NO NAME    FAT32   "), 0, $boot, 71, 19)
+    $boot[510] = 0x55; $boot[511] = 0xAA
+    $info = New-Object byte[] 512
+    Set-Le $info 0 0x41615252 4; Set-Le $info 484 0x61417272 4
+    Set-Le $info 488 ($L.Clusters - 2) 4; Set-Le $info 492 4 4; Set-Le $info 508 0xAA550000 4
+    $fat = New-Object byte[] 512                              # clusters 2 (top folder) and 3 (CUBEGM): one cluster each
+    Set-Le $fat 0 0x0FFFFFF8 4; Set-Le $fat 4 0x0FFFFFFF 4; Set-Le $fat 8 0x0FFFFFFF 4; Set-Le $fat 12 0x0FFFFFFF 4
+    $clusterBytes = $L.SectorsPerCluster * 512
+    $root = New-Object byte[] $clusterBytes; [Array]::Copy((New-DirEntry "CUBEGM     " 0x10 3), 0, $root, 0, 32)
+    $cubegm = New-Object byte[] $clusterBytes
+    [Array]::Copy((New-DirEntry ".          " 0x10 3), 0, $cubegm, 0, 32)
+    [Array]::Copy((New-DirEntry "..         " 0x10 0), 0, $cubegm, 32, 32)
+
+    $p = [long]$L.Start * 512
+    $fatAt = $p + [long]$L.Reserved * 512
+    $dataAt = $fatAt + [long]$L.Fats * $L.FatSize * 512
+    $fs = [IO.File]::Open($path, [IO.FileMode]::Open, [IO.FileAccess]::ReadWrite, [IO.FileShare]::ReadWrite)
+    try {
+        # wipe everything from sector 0 to the end of the two folders, 1 MB at a time
+        $zero = New-Object byte[] 1MB
+        $end = $dataAt + 2 * $clusterBytes
+        $fs.Position = 0
+        while ($fs.Position -lt $end) { $fs.Write($zero, 0, [int][math]::Min($zero.Length, $end - $fs.Position)) }
+        # (positions in brackets: in PowerShell the comma binds tighter than +)
+        $writes = @(@(0, $mbr), @($p, $boot), @(($p + 512), $info), @(($p + 6 * 512), $boot), @(($p + 7 * 512), $info),
+            @($fatAt, $fat), @(($fatAt + [long]$L.FatSize * 512), $fat), @($dataAt, $root), @(($dataAt + $clusterBytes), $cubegm))
+        foreach ($w in $writes) { $fs.Position = $w[0]; $fs.Write($w[1], 0, $w[1].Length) }
+        $fs.Flush()
+        foreach ($w in $writes) {
+            if ([Convert]::ToBase64String((Read-At $fs $w[0] $w[1].Length)) -ne [Convert]::ToBase64String($w[1])) {
+                throw "the new card read back differently: it may be failing or fake. Try another card."
+            }
+        }
+    } finally { $fs.Close() }
+}
+
+# Is this file a device tree (what Bubbles.scr is)? "" or the reason it isn't.
+function Test-BoardFile([string]$path) {
+    if (-not (Test-Path -LiteralPath $path)) { return "the file is missing" }
+    $len = (Get-Item -LiteralPath $path).Length
+    if ($len -lt 64 -or $len -gt 1MB) { return "it has the wrong size" }
+    $b = [IO.File]::ReadAllBytes($path)
+    for ($i = 0; $i -lt 4; $i++) { if ($b[$i] -ne $Script:BoardFileMagic[$i]) { return "it is not a board file" } }
+    return ""
+}
+
+# Removable disks a new card could be (any card reader disk that isn't Windows' own).
+function Get-NewCardDisks([string[]]$DiskImages) {
+    $out = @()
+    if ($DiskImages) {
+        foreach ($img in $DiskImages) {
+            $st = Get-R36sState $img (Get-Item $img).Length
+            $out += [pscustomobject]@{ Number = -1; Image = $img; FriendlyName = (Split-Path -Leaf $img); SizeBytes = (Get-Item $img).Length; IsR36s = ($st -ne "unknown") }
+        }
+        return $out
+    }
+    foreach ($d in (Get-Disk | Where-Object { $_.BusType -in @("SD", "USB", "MMC") -and -not $_.IsBoot -and -not $_.IsSystem -and [long]$_.Size -gt 0 })) {
+        $isR36s = $false
+        try { $isR36s = (Get-R36sState (Get-CardPath $d.Number) ([long]$d.Size)) -ne "unknown" } catch { }
+        $out += [pscustomobject]@{ Number = $d.Number; Image = ""; FriendlyName = $d.FriendlyName; SizeBytes = [long]$d.Size; IsR36s = $isR36s }
+    }
+    return $out
+}
+
+# install-new-card.bat, step 1: copies cubegm\Bubbles.scr off the user's ORIGINAL card to Dest.
+# The card is only opened, read and closed again. Returns the message for the user.
+function Invoke-NzeusSaveBoardFile([int]$Number = -1, [string]$DiskImage, [string]$Root, [string]$Dest) {
+    try {
+        $drive = Open-R36sCard -Number $Number -DiskImage $DiskImage
+        if (-not $Root) { $Root = $drive }
+        $from = Join-Path $Root "cubegm\Bubbles.scr"
+        $why = Test-BoardFile $from
+        if ($why) { throw "This card has no usable console board file (cubegm\Bubbles.scr: $why). Use the card that came with the console." }
+        New-Item -ItemType Directory -Force (Split-Path -Parent $Dest) | Out-Null
+        Copy-Item -LiteralPath $from -Destination $Dest -Force
+        if ((Get-Sha $Dest) -ne (Get-Sha $from)) { Remove-Item -LiteralPath $Dest -Force; throw "the board file did not copy correctly." }
+        $msg = "Saved the console's board file from your original card. Nothing on that card was changed."
+    } catch {
+        $msg = "Could not read your original card: $($_.Exception.Message)"
+    } finally {
+        $msg += Close-IfOpen $Number $DiskImage "install-new-card.bat"
+    }
+    return $msg
+}
+
+# install-new-card.bat, step 2: ERASES the disk, writes a fresh R36S card layout, puts the board
+# file and NZEUS on it, reads everything back from a fresh mount and ALWAYS closes the card.
+function Invoke-NzeusNewCard([int]$Number = -1, [string]$DiskImage, [string]$Release, [string]$BoardFile, [string]$Root, [long]$FreeBytes = -1) {
+    Set-StayAwake $true
+    $msg = ""
+    try {
+        $why = Test-BoardFile $BoardFile
+        if ($why) { throw "The saved board file can't be used ($why). Delete $BoardFile and run install-new-card.bat again. Nothing was changed." }
+        if ($DiskImage) {
+            $size = (Get-Item $DiskImage).Length
+        } else {
+            $disk = Get-Disk -Number $Number
+            if ($disk.IsBoot -or $disk.IsSystem) { throw "disk $Number is one of Windows' own disks. Nothing was changed." }
+            $size = [long]$disk.Size
+        }
+        $layout = Get-NewCardLayout $size
+        if (-not $DiskImage -and $disk.PartitionStyle -ne "RAW") {
+            # Windows must let go of the card's old drive before it can be written directly
+            Clear-Disk -Number $Number -RemoveData -RemoveOEM -Confirm:$false
+            Start-Sleep -Seconds 2
+        }
+        Write-NewCardLayout (Get-CardPath $Number $DiskImage) $layout
+        $drive = Open-R36sCard -Number $Number -DiskImage $DiskImage
+        if (-not $Root) { $Root = $drive }
+        New-Item -ItemType Directory -Force (Join-Path $Root "nzeus") | Out-Null
+        Set-Content -LiteralPath (Join-Path $Root $Script:NewCardMarker) -Value "Set up by install-new-card.bat: this card has NZEUS only, not the console's own system."
+        Copy-ToPart $BoardFile (Join-Path $Root "cubegm\Bubbles.scr")
+        Commit-Parts $Root @("cubegm\Bubbles.scr")
+        Write-Log $Root "new card: wrote a fresh R36S card layout and the console's board file"
+        Install-NzeusFiles -Root $Root -Release $Release -FreeBytes $FreeBytes -NewCard | Out-Null
+        if (-not $DiskImage) {                       # fresh mount: the read-back really reads the card
+            Close-R36sCard -Number $Number
+            $Root = Open-R36sCard -Number $Number
+        }
+        Test-NzeusFiles -Root $Root -Release $Release
+        if ((Get-Sha (Join-Path $Root "cubegm\Bubbles.scr")) -ne (Get-Sha $BoardFile)) { throw "Bubbles.scr did not read back correctly from the card. The card may be failing or fake: try another card." }
+        $msg = "Done. Eject the new card, put it in the console and switch it on. NZEUS starts in about 30 seconds. Keep your original card: it still has the console's own system."
+    } catch {
+        $msg = $_.Exception.Message
+        if ($msg -notlike "*Nothing was changed*") { $msg += " Run install-new-card.bat again: it starts the new card over." }
+    } finally {
+        $msg += Close-IfOpen $Number $DiskImage "install-new-card.bat"
+        Set-StayAwake $false
+    }
+    return $msg
+}
+
 # ---------------- files ----------------
 
 function Get-Sha([string]$p) { return (Get-FileHash -Algorithm SHA256 -LiteralPath $p).Hash.ToLower() }
@@ -218,6 +418,7 @@ function Get-NzeusFileList([string]$Root) {
 # Saves the card's stock boot files to nzeus\backup ONCE. Never overwrites a saved file, and never
 # saves NZEUS's own files as "stock" (they would replace the maker's files, which nobody can give back).
 function Save-StockBackup([string]$Root, [string]$Release) {
+    if (Test-Path (Join-Path $Root $Script:NewCardMarker)) { return }   # a new card never had the stock system
     $backup = Join-Path $Root "nzeus\backup"
     $names = @("advapi32.dll", "ApplicationFrame.dll")
     $have = @($names | Where-Object { Test-Path (Join-Path $backup $_) })
@@ -293,10 +494,15 @@ function Remove-NzeusGames([string]$Root) {
 
 # Install or update. Release = the unzipped release folder (it has card\...).
 # -RemoveGames: when the card is too full, save the stock boot files, then empty the game folders.
-function Install-NzeusFiles([string]$Root, [string]$Release, [long]$FreeBytes = -1, [int]$FailAfterFiles = -1, [switch]$RemoveGames) {
+# -NewCard: a card install-new-card.bat just set up (board file only, no stock system to save).
+function Install-NzeusFiles([string]$Root, [string]$Release, [long]$FreeBytes = -1, [int]$FailAfterFiles = -1, [switch]$RemoveGames, [switch]$NewCard) {
     $measured = $FreeBytes -lt 0                   # tests pass -FreeBytes; a real run measures the card
     $src = Join-Path $Release "card"
-    if (-not (Test-Path (Join-Path $Root "cubegm\advapi32.dll")) -or -not (Test-Path (Join-Path $Root "cubegm\Bubbles.scr"))) {
+    if ($NewCard) {
+        if (-not (Test-Path (Join-Path $Root "cubegm\Bubbles.scr")) -or -not (Test-Path (Join-Path $Root $Script:NewCardMarker))) {
+            throw "This is not a card set up by install-new-card.bat. Nothing was changed."
+        }
+    } elseif (-not (Test-Path (Join-Path $Root "cubegm\advapi32.dll")) -or -not (Test-Path (Join-Path $Root "cubegm\Bubbles.scr"))) {
         throw "This drive is not an R36S card (no cubegm\advapi32.dll and cubegm\Bubbles.scr). Nothing was changed."
     }
     if ($FreeBytes -lt 0) { $FreeBytes = Get-FreeBytes $Root }
@@ -356,6 +562,9 @@ function Test-NzeusFiles([string]$Root, [string]$Release) {
 
 function Uninstall-NzeusFiles([string]$Root, [switch]$DeleteData) {
     $backup = Join-Path $Root "nzeus\backup"
+    if (Test-Path (Join-Path $Root $Script:NewCardMarker)) {
+        throw "This card was set up by install-new-card.bat, so the console's own system was never on it. Use your original card for that. Nothing was changed."
+    }
     if (-not (Test-Path (Join-Path $backup "SHA256SUMS"))) { throw "No NZEUS backup on this card (nzeus\backup), so there is nothing to put back." }
     foreach ($line in (Get-Content -LiteralPath (Join-Path $backup "SHA256SUMS"))) {
         $sha, $n = $line -split "\s+", 2
@@ -458,4 +667,5 @@ function Invoke-NzeusCollectLogs([int]$Number = -1, [string]$DiskImage, [string]
 }
 
 Export-ModuleMember -Function Switch-R36sScramble, Get-R36sCards, Open-R36sCard, Close-R36sCard, Install-NzeusFiles,
-    Test-NzeusFiles, Uninstall-NzeusFiles, Invoke-NzeusInstall, Invoke-NzeusUninstall, Remove-NzeusGames, Set-NzeusTestHook, Invoke-NzeusCollectLogs
+    Test-NzeusFiles, Uninstall-NzeusFiles, Invoke-NzeusInstall, Invoke-NzeusUninstall, Remove-NzeusGames, Set-NzeusTestHook, Invoke-NzeusCollectLogs,
+    Get-NewCardLayout, Get-NewCardDisks, Test-BoardFile, Invoke-NzeusSaveBoardFile, Invoke-NzeusNewCard

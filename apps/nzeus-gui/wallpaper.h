@@ -8,9 +8,10 @@
  * 570 KB), which the desktop then shows as an image: nothing is drawn again
  * frame by frame. Free the buffer with free() when another wallpaper is chosen. */
 
-/* "Hills": our own drawing of a sunny scene - a blue sky (deep blue at the top,
- * light at the horizon), a few soft white clouds and one rolling green hill.
- * NULL = not enough memory. */
+/* "Hills": NZEUS's own picture of a sunny scene - one rolling green hill under a
+ * deep blue sky with white clouds (art/hill.jpg, built into the program). If it
+ * can't be used (a desktop of another size), our own drawing of the same kind of
+ * scene instead. NULL = not enough memory. */
 uint16_t *wallpaper_hills(int w, int h);
 
 /* "Picture": the user's own picture file (JPG / PNG / BMP), made to cover

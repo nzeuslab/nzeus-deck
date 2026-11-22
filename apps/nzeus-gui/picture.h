@@ -20,6 +20,8 @@ typedef struct {
 
 /* 0 = ok; otherwise -1 and a short reason in err ("Not a picture", ...) */
 int  picture_load(const char *path, int max_w, int max_h, Picture *out, char *err, size_t errn);
+/* The same for a picture already in memory (e.g. one built into the program). */
+int  picture_load_mem(const unsigned char *data, size_t size, int max_w, int max_h, Picture *out, char *err, size_t errn);
 /* A near-native report page. Exact 1754-edge rendering was slow on the console. */
 #define PICTURE_PDF_EDGE 1750
 /* PDF renderer output only: preserve pixels within this bounded square. */

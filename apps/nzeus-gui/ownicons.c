@@ -25,8 +25,32 @@ int own_icon_load(OwnIcon *ic, const char *base, int max)
     return 0;
 }
 
+/* the built-in pictures, in retroicons_data.c */
+extern const int nz_retro_icon_count;
+extern const char *const nz_retro_icon_names[];
+extern const uint16_t nz_retro_icons32[][32 * 32];
+extern const uint16_t nz_retro_icons20[][20 * 20];
+
+int own_icon_builtin(OwnIcon *ic, const char *name, int size)
+{
+    memset(ic, 0, sizeof *ic);
+    if (!name || (size != 32 && size != 20)) return 0;
+    for (int i = 0; i < nz_retro_icon_count; i++) {
+        if (strcmp(name, nz_retro_icon_names[i])) continue;
+        ic->builtin = 1;                                     /* (static pixels: nothing to free) */
+        ic->dsc.header.cf = LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED;
+        ic->dsc.header.w = (uint32_t)size;
+        ic->dsc.header.h = (uint32_t)size;
+        ic->dsc.data_size = (uint32_t)size * size * sizeof(uint16_t);
+        ic->dsc.data = (const uint8_t *)(size == 32 ? nz_retro_icons32[i] : nz_retro_icons20[i]);
+        return 1;
+    }
+    return 0;
+}
+
 void own_icon_free(OwnIcon *ic)
 {
+    if (ic->builtin) { lv_img_cache_invalidate_src(&ic->dsc); memset(ic, 0, sizeof *ic); return; }
     if (!ic->px) return;
     lv_img_cache_invalidate_src(&ic->dsc);                 /* (LVGL must forget it before it goes) */
     Picture p = { 0 };

@@ -1327,7 +1327,7 @@ static void desktop_icons_look(void)
     for (int i = 0; i < 8; i++) {
         DeskIconObj *d = &dicons[i];
         if (!d->box) continue;
-        int own = own_desk[i].px != NULL;
+        int own = own_icon_shown(&own_desk[i]);             /* (the owner's picture or Retro Blue's own) */
         if (r && !own) lv_obj_clear_flag(d->tile, LV_OBJ_FLAG_HIDDEN);
         else lv_obj_add_flag(d->tile, LV_OBJ_FLAG_HIDDEN);
         if (own) { lv_obj_add_flag(d->glyph, LV_OBJ_FLAG_HIDDEN); lv_obj_clear_flag(d->own, LV_OBJ_FLAG_HIDDEN); }
@@ -1363,7 +1363,8 @@ void desktop_reload_own_icons(void)
         own_icon_free(&own_desk[i]);
         const char *nm = own_icon_name(desk_icon_what(i));
         snprintf(base, sizeof base, "icons/%s", nm ? nm : "-");
-        if (nm && own_icon_load(&own_desk[i], base, 32)) {
+        /* the owner's file first; else, in Retro Blue, the theme's own picture */
+        if (nm && (own_icon_load(&own_desk[i], base, 32) || (theme()->retro && own_icon_builtin(&own_desk[i], nm, 32)))) {
             lv_img_set_src(d->own, &own_desk[i].dsc);
             lv_obj_align(d->own, LV_ALIGN_TOP_MID, 0, 8 + (32 - (int)own_desk[i].dsc.header.h) / 2);
         }
@@ -1384,7 +1385,8 @@ void desktop_reload_own_icons(void)
                 char small[56];
                 snprintf(small, sizeof small, "icons/small/%s", nm ? nm : "-");
                 snprintf(base, sizeof base, "icons/%s", nm ? nm : "-");
-                if (nm && (own_icon_load(oi, small, 20) || own_icon_load(oi, base, 20))) {
+                if (nm && (own_icon_load(oi, small, 20) || own_icon_load(oi, base, 20) ||
+                           (theme()->retro && own_icon_builtin(oi, nm, 20)))) {
                     lv_img_set_src(img, &oi->dsc);
                     lv_obj_set_style_img_recolor_opa(img, LV_OPA_TRANSP, 0);      /* (own: its own colours) */
                 }

@@ -180,20 +180,33 @@ static int load_jpg(const unsigned char *data, size_t size, int max_w, int max_h
     return 0;
 }
 
+/* the picture's bytes (a file's, or ones built into the program) -> out */
+static int decode(const unsigned char *data, size_t size, int max_w, int max_h, unsigned max_pixels, Picture *out, char *err, size_t errn)
+{
+    int rc;
+    if (size > 8 && !memcmp(data, "\x89PNG", 4)) rc = load_png(data, size, max_w, max_h, max_pixels, out, err, errn);
+    else if (size > 3 && data[0] == 0xFF && data[1] == 0xD8) rc = load_jpg(data, size, max_w, max_h, out, err, errn);
+    else if (size > 2 && data[0] == 'B' && data[1] == 'M') rc = load_bmp(data, size, max_w, max_h, out, err, errn);
+    else rc = fail(err, errn, "Not a PNG, JPG or BMP picture");
+    if (rc != 0) picture_free(out);
+    return rc;
+}
+
 static int load(const char *path, int max_w, int max_h, unsigned max_pixels, Picture *out, char *err, size_t errn)
 {
     memset(out, 0, sizeof *out);
     size_t size = 0;
     unsigned char *data = read_file(path, &size);
     if (!data) return fail(err, errn, size > FILE_MAX_BYTES ? "The file is too big" : "Could not read the file");
-    int rc;
-    if (size > 8 && !memcmp(data, "\x89PNG", 4)) rc = load_png(data, size, max_w, max_h, max_pixels, out, err, errn);
-    else if (size > 3 && data[0] == 0xFF && data[1] == 0xD8) rc = load_jpg(data, size, max_w, max_h, out, err, errn);
-    else if (size > 2 && data[0] == 'B' && data[1] == 'M') rc = load_bmp(data, size, max_w, max_h, out, err, errn);
-    else rc = fail(err, errn, "Not a PNG, JPG or BMP picture");
+    int rc = decode(data, size, max_w, max_h, max_pixels, out, err, errn);
     free(data);
-    if (rc != 0) picture_free(out);
     return rc;
+}
+
+int picture_load_mem(const unsigned char *data, size_t size, int max_w, int max_h, Picture *out, char *err, size_t errn)
+{
+    memset(out, 0, sizeof *out);
+    return decode(data, size, max_w, max_h, PNG_MAX_PIXELS, out, err, errn);
 }
 
 int picture_load(const char *path, int max_w, int max_h, Picture *out, char *err, size_t errn)
