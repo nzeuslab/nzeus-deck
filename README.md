@@ -37,6 +37,9 @@ HC16E3100V20), in any colour. Most R36S consoles use a Rockchip chip and aren't
 supported. Not sure? Run `install.bat` anyway: it only offers SD cards it
 recognises as this console's, and changes nothing otherwise.
 
+**Like it?** NZEUS Deck is free and open source. If it helped you, you can
+support the lab on [Ko-fi](https://ko-fi.com/nzeuslab).
+
 Mac and Linux steps, and what to do if the screen stays black:
 [INSTALL.md](INSTALL.md).
 
