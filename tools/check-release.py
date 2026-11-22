@@ -25,9 +25,11 @@ sys.path.insert(0, str(REPO / 'linux-port' / 'boot-analysis'))
 from image_codec import factory_key  # noqa: E402
 
 TOP = None                       # set from the zip: NZEUS-Deck-<version>/
-EXPECTED = ['install.bat', 'uninstall.bat', 'installer/NzeusCard.psm1', 'installer/install.ps1',
-            'installer/uninstall.ps1', 'collect-logs.bat', 'installer/collect-logs.ps1', 'install-new-card.bat', 'installer/new-card.ps1', 'r36s_card.py', 'INSTALL.md', 'README.txt', 'SOURCE.txt', 'LICENSE',
-            'SHA256SUMS', 'card/cubegm/advapi32.dll', 'card/cubegm/ApplicationFrame.dll',
+SUMS = 'more/SHA256SUMS'
+EXPECTED = ['READ ME FIRST.txt', 'install.bat', 'install-new-card.bat', 'uninstall.bat', 'collect-logs.bat',
+            'more/installer/NzeusCard.psm1', 'more/installer/install.ps1', 'more/installer/uninstall.ps1',
+            'more/installer/collect-logs.ps1', 'more/installer/new-card.ps1', 'more/r36s_card.py', 'more/INSTALL.md',
+            'more/SOURCE.txt', 'more/LICENSE', SUMS, 'card/cubegm/advapi32.dll', 'card/cubegm/ApplicationFrame.dll',
             'card/cubegm/xgame-logo.bmp',
             'card/nzeus/nzroot.img', 'card/nzeus/nzdata.img', 'card/nzeus/VERSION']
 MAX_ZIP = 250 * 1024 * 1024
@@ -69,13 +71,13 @@ def check_zip(path, key=None, maker_hashes=(), words_dir=None, quiet=False, allo
           f'extra: {sorted(set(rel) - set(EXPECTED))} missing: {sorted(set(EXPECTED) - set(rel))}')
 
     sums = {}
-    if f'{top}/SHA256SUMS' in names:
-        for line in z.read(f'{top}/SHA256SUMS').decode().splitlines():
+    if f'{top}/{SUMS}' in names:
+        for line in z.read(f'{top}/{SUMS}').decode().splitlines():
             h, n = line.split(None, 1)
             sums[n.lstrip('*')] = h
     hashes = {n: sha_stream(z.open(n)) for n in names}
     bad = [n for n, h in sums.items() if hashes.get(f'{top}/{n}') != h]
-    check('sha256sums_match', sums and not bad and set(sums) == set(EXPECTED) - {'SHA256SUMS'}, ', '.join(bad))
+    check('sha256sums_match', sums and not bad and set(sums) == set(EXPECTED) - {SUMS}, ', '.join(bad))
 
     if words_dir and f'{top}/card/nzeus/nzroot.img' in names:
         with tempfile.TemporaryDirectory(prefix='nzpub-release-') as t:
@@ -127,8 +129,8 @@ def self_test():
         def make(path, extra, after=None):
             files = {n: (b'x' * 10 if not n.endswith('SHA256SUMS') else b'') for n in EXPECTED}
             files.update(extra)
-            files['SHA256SUMS'] = '\n'.join(f'{hashlib.sha256(v).hexdigest()}  {n}' for n, v in files.items()
-                                            if n in EXPECTED and n != 'SHA256SUMS').encode()
+            files[SUMS] = '\n'.join(f'{hashlib.sha256(v).hexdigest()}  {n}' for n, v in files.items()
+                                            if n in EXPECTED and n != SUMS).encode()
             files.update(after or {})                      # changed AFTER the sums were written
             with zipfile.ZipFile(path, 'w') as z:
                 for n, v in files.items():

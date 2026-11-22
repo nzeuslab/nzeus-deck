@@ -62,7 +62,7 @@ an R36S card before it writes anything.
 
 ```bash
 diskutil list                                  # Mac: find the card, e.g. /dev/disk4 (Linux: lsblk -> /dev/sdX)
-sudo python3 r36s_card.py open /dev/disk4      # Mac may need: diskutil unmountDisk /dev/disk4 first
+sudo python3 more/r36s_card.py open /dev/disk4      # Mac may need: diskutil unmountDisk /dev/disk4 first
 # the card now mounts as a normal drive (e.g. /Volumes/NO NAME). Then:
 C="/Volumes/NO NAME"
 # FIRST INSTALL ONLY: save the console's own three files. If nzeus/backup already
@@ -74,7 +74,7 @@ cp card/cubegm/* "$C/cubegm/"
 cp card/nzeus/nzroot.img card/nzeus/VERSION "$C/nzeus/"
 cp -n card/nzeus/nzdata.img "$C/nzeus/"          # -n: an update keeps your files
 diskutil unmountDisk /dev/disk4                    # NOT eject: the card must stay attached. Linux: umount
-sudo python3 r36s_card.py close /dev/disk4
+sudo python3 more/r36s_card.py close /dev/disk4
 ```
 
 Then check before you close (optional): `shasum -a 256 -c SHA256SUMS` in the

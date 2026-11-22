@@ -48,14 +48,15 @@ import hashlib, sys, zipfile
 from pathlib import Path
 repo, work, rootfs, name, ver = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3]), sys.argv[4], sys.argv[5]
 files = {   # in the zip            <- from
-    'install.bat': repo / 'install.bat', 'uninstall.bat': repo / 'uninstall.bat',
-    'installer/NzeusCard.psm1': repo / 'installer/NzeusCard.psm1',
-    'installer/install.ps1': repo / 'installer/install.ps1', 'installer/uninstall.ps1': repo / 'installer/uninstall.ps1',
-    'collect-logs.bat': repo / 'collect-logs.bat', 'installer/collect-logs.ps1': repo / 'installer/collect-logs.ps1',
-    'install-new-card.bat': repo / 'install-new-card.bat', 'installer/new-card.ps1': repo / 'installer/new-card.ps1',
-    'r36s_card.py': repo / 'tools/r36s_card.py', 'INSTALL.md': repo / 'INSTALL.md',
-    'README.txt': repo / 'release-files/README.txt', 'SOURCE.txt': repo / 'release-files/SOURCE.txt',
-    'LICENSE': repo / 'LICENSE',
+    # what people click sits on top; everything else is in more/
+    'READ ME FIRST.txt': repo / 'release-files/README.txt',
+    'install.bat': repo / 'install.bat', 'install-new-card.bat': repo / 'install-new-card.bat',
+    'uninstall.bat': repo / 'uninstall.bat', 'collect-logs.bat': repo / 'collect-logs.bat',
+    'more/installer/NzeusCard.psm1': repo / 'installer/NzeusCard.psm1',
+    'more/installer/install.ps1': repo / 'installer/install.ps1', 'more/installer/uninstall.ps1': repo / 'installer/uninstall.ps1',
+    'more/installer/collect-logs.ps1': repo / 'installer/collect-logs.ps1', 'more/installer/new-card.ps1': repo / 'installer/new-card.ps1',
+    'more/r36s_card.py': repo / 'tools/r36s_card.py', 'more/INSTALL.md': repo / 'INSTALL.md',
+    'more/SOURCE.txt': repo / 'release-files/SOURCE.txt', 'more/LICENSE': repo / 'LICENSE',
     'card/cubegm/advapi32.dll': work / 'package/advapi32.dll',
     'card/cubegm/ApplicationFrame.dll': work / 'package/ApplicationFrame.dll',
     'card/cubegm/xgame-logo.bmp': repo / 'apps/bootlogo/xgame-logo.bmp',    # the NZEUS power-on picture
@@ -74,7 +75,7 @@ out = repo / 'dist' / f'{name}.zip'
 with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
     for arc, src in sorted(files.items()):
         z.write(src, f'{name}/{arc}')
-    z.writestr(f'{name}/SHA256SUMS', sums)
+    z.writestr(f'{name}/more/SHA256SUMS', sums)
 (repo / 'dist' / 'SHA256SUMS').write_text(f'{sha(out)}  {out.name}\n')
 print(f'{out} ({out.stat().st_size / 2**20:.0f} MB)')
 PY

@@ -10,7 +10,9 @@ if (-not $me.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     exit
 }
 Import-Module (Join-Path $here "NzeusCard.psm1") -Force
+# the release folder = the one holding card\ (the scripts sit in more\installer or installer)
 $release = Split-Path -Parent $here
+if (-not (Test-Path (Join-Path $release "card"))) { $release = Split-Path -Parent $release }
 function Finish([string]$text) { Write-Host ""; Write-Host $text; Write-Host ""; Read-Host "Press Enter to close" | Out-Null; exit }
 try {
 
