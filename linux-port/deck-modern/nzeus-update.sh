@@ -160,6 +160,28 @@ get_list() {
     done < "$WORK/manifest.txt"
     VERSION=$(sed -n 's/^version //p' "$WORK/manifest.txt" | head -n 1)
     NOTES=$(sed -n 's/^notes //p' "$WORK/manifest.txt" | head -n 1)
+    older_check
+}
+
+# A timestamp version from publish_update.py, "YYYY-MM-DD HH:MM"?
+is_stamp() {
+    case "$1" in [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\ [0-9][0-9]:[0-9][0-9]) return 0 ;; *) return 1 ;; esac
+}
+
+# Refuse a signed list that is OLDER than the installed one. Without this, anyone
+# on the network who saved an old (correctly signed) update could serve it again
+# and roll the console back to an old version (a "replay" or "downgrade").
+# Same-format timestamps sort correctly as text. NZ_UPD_ALLOW_OLDER=1 = going
+# back on purpose (over SSH).
+older_check() {
+    test "${NZ_UPD_ALLOW_OLDER:-0}" = 1 && return 0
+    have=$(head -n 1 "$U/installed" 2>/dev/null)
+    is_stamp "$have" && is_stamp "$VERSION" || return 0
+    test "$have" = "$VERSION" && return 0
+    first=$(printf '%s\n%s\n' "$have" "$VERSION" | LC_ALL=C sort | head -n 1)
+    test "$first" = "$VERSION" &&
+        fail "this update ($VERSION) is OLDER than the installed one ($have) - nothing installed"
+    return 0
 }
 
 deck_running() { "$DECK" status 2>/dev/null | head -n 1 | grep -q "running (pid"; }

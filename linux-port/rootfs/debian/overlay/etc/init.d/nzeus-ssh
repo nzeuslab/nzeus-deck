@@ -9,7 +9,8 @@
 ### END INIT INFO
 # Started only if /root/.ssh/authorized_keys exists (no keys = no SSH).
 # Logins: keys only (-s = no passwords at all). Listens on port 22 of every
-# address; today the only network is the USB cable (usbnet-up, 192.168.77.1).
+# address: the USB cable (usbnet-up, 192.168.77.1) AND Wi-Fi when it is on, so
+# anyone on the same Wi-Fi can reach the login prompt (but needs your key).
 # Host keys: made on the first start (-R) in /etc/dropbear/; nzeus-status
 # shows the fingerprint over the USB cable (the trusted path).
 # Settings: /etc/default/nzeus-ssh. Log: /run/nzeus-ssh.log (RAM).

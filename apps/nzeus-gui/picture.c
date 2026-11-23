@@ -115,9 +115,19 @@ static int load_bmp(const unsigned char *d, size_t size, int max_w, int max_h, P
     if (w <= 0 || h <= 0 || w > 20000 || h > 20000) return fail(err, n, "The BMP file is damaged");
     if (!(comp == 0 || (comp == 3 && (bpp == 16 || bpp == 32))) || !(bpp == 8 || bpp == 16 || bpp == 24 || bpp == 32))
         return fail(err, n, "This kind of BMP is not supported (compressed)");
+    /* Every number below comes from the file, so check it against the file's
+     * real size before using it (a hostile file could point anywhere). */
+    if (hdr < 40 || hdr > size) return fail(err, n, "The BMP file is damaged");
     size_t row = ((size_t)bpp * w + 31) / 32 * 4;
-    if (off + row * h > size) return fail(err, n, "The BMP file is damaged");
+    /* 64-bit maths: on the 32-bit console "off + row * h" could wrap round to a small number */
+    if ((uint64_t)off + (uint64_t)row * h > size) return fail(err, n, "The BMP file is damaged");
     const unsigned char *pal = d + 14 + hdr;            /* 8-bit: the colour table */
+    unsigned ncol = 0;                                  /* how many colours it holds */
+    if (bpp == 8) {
+        ncol = le32(d + 46);                            /* "colours used"; 0 = all 256 */
+        if (ncol == 0 || ncol > 256) ncol = 256;
+        if (14 + (uint64_t)hdr + (uint64_t)ncol * 4 > size) return fail(err, n, "The BMP file is damaged");
+    }
     Shrink s;
     if (shrink_begin(&s, out, w, h, max_w, max_h) != 0) { shrink_end(&s); return fail(err, n, "Not enough memory for this picture"); }
     for (int y = 0; y < h; y++) {
@@ -131,6 +141,7 @@ static int load_bmp(const unsigned char *d, size_t size, int max_w, int max_h, P
             else if (bpp == 16) { uint16_t v = le16(p + x * 2);    /* 5-6-5 (BITFIELDS) or 5-5-5 */
                                   if (comp == 3) { r = (v >> 11) << 3; g = ((v >> 5) & 63) << 2; b = (v & 31) << 3; }
                                   else           { r = ((v >> 10) & 31) << 3; g = ((v >> 5) & 31) << 3; b = (v & 31) << 3; } }
+            else if (p[x] >= ncol) { r = g = b = 0; }   /* a colour the table doesn't have: black */
             else                { const unsigned char *c = pal + p[x] * 4; b = c[0]; g = c[1]; r = c[2]; }
             put(&s, x, sy, r, g, b);
         }

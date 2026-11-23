@@ -59,8 +59,8 @@ class Helpers(unittest.TestCase):
         return subprocess.run(["dash", str(HELPERS / "nzeus-update.sh"), command],
                               env=self.env, capture_output=True, text=True, timeout=20)
 
-    def manifest(self, files, system="modern"):
-        lines = ["NZEUS-UPDATE 1", f"system {system}", "version test-version", "notes fixture"]
+    def manifest(self, files, system="modern", version="test-version"):
+        lines = ["NZEUS-UPDATE 1", f"system {system}", f"version {version}", "notes fixture"]
         for name, data in files.items():
             sha = hashlib.sha256(data).hexdigest()
             (self.server / "files" / sha).write_bytes(data)
@@ -133,6 +133,31 @@ class Helpers(unittest.TestCase):
                 self.assertEqual(self.binary.read_bytes(), ELF + b"old")
                 self.assertFalse((self.update / "pending").exists())
                 self.assertFalse(self.pyex.exists() or self.emoji.exists())
+
+    def test_older_signed_update_is_refused(self):
+        # A replayed old (but correctly signed) update must not roll the console back.
+        (self.update / "installed").write_text("2026-11-20 10:00\n")
+        self.manifest({"nzeus-modern": ELF + b"older"}, version="2026-11-19 09:00")
+        for command in ("check", "install"):
+            result = self.run_update(command)
+            self.assertNotEqual(result.returncode, 0, command)
+            self.assertIn("OLDER", result.stdout, command)
+        self.assertEqual(self.binary.read_bytes(), ELF + b"old")
+        self.assertFalse((self.update / "pending").exists())
+        # the owner can still go back on purpose (over SSH)
+        self.env.update(NZ_UPD_ALLOW_OLDER="1")
+        result = self.run_update("install")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(self.binary.read_bytes(), ELF + b"older")
+
+    def test_newer_and_same_version_updates_install(self):
+        (self.update / "installed").write_text("2026-11-20 10:00\n")
+        for version in ("2026-11-20 10:00", "2026-11-21 08:30"):
+            with self.subTest(version=version):
+                self.manifest({"nzeus-modern": ELF + version.encode()}, version=version)
+                result = self.run_update("install")
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                (self.update / "pending").unlink()
 
     def test_damaged_download_changes_nothing(self):
         data = ELF + b"new"

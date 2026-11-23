@@ -17,7 +17,9 @@ until res=$($IW dev "$IFACE" scan 2>&1); do
     test "$n" -ge 3 && { res=$($IW dev "$IFACE" scan dump 2>&1) || exit 1; break; }
     sleep 2
 done
-echo "$res" | awk '
+# printf, not echo: Debian's sh (dash) treats backslash codes in echo's text as
+# commands (\c = stop printing), and nearby access points choose some of this text
+printf '%s\n' "$res" | awk '
     function flush() {
         if (bssid == "") return
         if (fl == "") fl = priv ? "[WEP]" : "[ESS]"

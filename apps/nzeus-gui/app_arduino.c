@@ -158,6 +158,9 @@ static void find_firmware(const char *dir, int depth)
         if (e->d_name[0] == '.') continue;
         char p[512];
         if (snprintf(p, sizeof p, "%s/%s", dir, e->d_name) >= (int)sizeof up_files[0]) continue;
+        /* a ' in a name would end the '...' quoting of the upload command (upload_start)
+         * and let the rest of the name run as a command: such names are not offered */
+        if (strchr(p, '\'')) continue;
         struct stat st;
         if (stat(p, &st) != 0) continue;
         if (S_ISDIR(st.st_mode)) { if (depth > 0) find_firmware(p, depth - 1); continue; }
