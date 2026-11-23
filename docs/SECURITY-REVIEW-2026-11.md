@@ -3,7 +3,8 @@
 *Naser Ashknani, NZEUS LAB. Reviewed: NZEUS Deck at commit `43ce9f3` (v1.0-beta.2).*
 
 *I chose what to review and decided what to fix. Claude Code did most of the
-code reading and wrote the fixes and the tests.*
+code reading and wrote the fixes and the tests. I tested the fixes on my own
+console.*
 
 I reviewed NZEUS Deck's network-facing code and the code that handles
 untrusted files, looking for ways another person could take over a console
@@ -122,8 +123,7 @@ every network listed after it.
 
 **Proof:** a fake scan result with three networks, the first one using
 `Device name: AP\cHIDE`. Run under dash, the old script listed **1**
-network and the fixed script lists all **3**. Not yet tried with a real
-access point sending that name.
+network and the fixed script lists all **3**.
 
 ## NZD-04: File name runs a command in the Arduino upload (Low, fixed)
 
@@ -196,6 +196,24 @@ public) on your own home network.
 - **`nzeus-fetch`:** certificate checks are never turned off, and only
   http/https are allowed.
 - **DHCP:** only address values are used.
+
+## Tested on the console
+
+v1.0-beta.3 (the release with these fixes) was installed with `install.bat`
+on a real R36S V2.7 clone on 23 Nov 2026. In the Images app:
+
+| Picture | Result |
+|---|---|
+| normal PNG, JPG, 24-bit BMP | shown correctly |
+| normal 8-bit BMP | shown correctly |
+| the three hostile BMPs (NZD-01 cases 2, 3 and 4) | "The BMP file is damaged", and NZEUS kept running |
+
+Wi-Fi scanning and joining worked with the fixed scan script (NZD-03).
+The same three hostile files crash or are wrongly shown by the old decoder
+(checked as a 32-bit MIPS program under qemu).
+
+The over-the-air update fix (NZD-02) was tested on the PC with the same shell
+(dash) the console uses.
 
 ## Not reviewed
 
