@@ -26,6 +26,7 @@
 #include <linux/mutex.h>
 #include <linux/of.h>
 #include <linux/platform_device.h>
+#include <linux/pm.h>
 #include <linux/workqueue.h>
 
 #define GMA_OUT2 0x080	/* output config; bit 0 set = AVP blank/tint mode */
@@ -62,6 +63,7 @@ struct hc_gma {
 	u32 palette[16];
 	u32 saved_ctl, saved_dmba, saved_alpha, saved_mask;
 	bool active;
+	bool resume_layer;		/* our layer was showing when we suspended */
 	struct delayed_work watch;	/* AVP blank recovery, only while active */
 	unsigned int recoveries, failures;
 	unsigned int bpp;		/* 32 (ARGB8888, default) or 16 (RGB565) */
@@ -404,6 +406,65 @@ fail_info:
 	return ret;
 }
 
+/*
+ * System sleep: hand the layer back to the firmware, as FBIOBLANK does, and
+ * retake it on resume if it was ours. fb_blank() is not called on suspend in
+ * this kernel.
+ */
+static int hc_suspend(struct device *dev)
+{
+	struct fb_info *info = dev_get_drvdata(dev);
+	struct hc_gma *g;
+	bool stop_watch = false;
+
+	if (!info)
+		return 0;
+	g = info->par;
+	mutex_lock(&g->lock);
+	g->resume_layer = g->active;
+	if (g->active) {
+		hc_restore(g);
+		g->active = false;
+		stop_watch = true;
+		dev_info(g->dev, "layer returned to firmware for system sleep\n");
+	}
+	mutex_unlock(&g->lock);
+	if (stop_watch)
+		cancel_delayed_work_sync(&g->watch);
+	return 0;
+}
+
+static int hc_resume(struct device *dev)
+{
+	struct fb_info *info = dev_get_drvdata(dev);
+	struct hc_gma *g;
+	int ret = 0;
+
+	if (!info)
+		return 0;
+	g = info->par;
+	mutex_lock(&g->lock);
+	if (g->resume_layer && !g->active) {
+		ret = hc_enable_ours(g);
+		if (!ret) {
+			g->active = true;
+			g->failures = 0;
+			if (IS_ENABLED(CONFIG_NZEUS_AVP_RPC))
+				schedule_delayed_work(&g->watch, msecs_to_jiffies(WATCH_MS));
+			dev_info(g->dev, "layer retaken after system resume\n");
+		} else {
+			dev_warn(g->dev, "resume: GMA enable failed %d, left to firmware\n", ret);
+		}
+	}
+	g->resume_layer = false;
+	mutex_unlock(&g->lock);
+	return 0;
+}
+
+static const struct dev_pm_ops hc_pm_ops = {
+	SYSTEM_SLEEP_PM_OPS(hc_suspend, hc_resume)
+};
+
 static const struct of_device_id hc_match[] = {
 	{ .compatible = "nzeus,hc16xx-gma-firmware-fb" }, { }
 };
@@ -414,6 +475,7 @@ static struct platform_driver hc_driver = {
 	.driver = {
 		.name = "hc16xx-gma-firmware-fb", .of_match_table = hc_match,
 		.suppress_bind_attrs = true,
+		.pm = pm_sleep_ptr(&hc_pm_ops),
 	},
 };
 builtin_platform_driver(hc_driver);

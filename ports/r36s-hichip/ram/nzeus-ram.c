@@ -85,6 +85,7 @@ static int pwm_bl_update(struct backlight_device *bd)
 }
 
 static const struct backlight_ops pwm_bl_ops = {
+	.options = BL_CORE_SUSPENDRESUME,
 	.update_status = pwm_bl_update,
 };
 

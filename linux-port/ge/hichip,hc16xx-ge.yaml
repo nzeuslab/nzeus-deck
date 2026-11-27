@@ -1,0 +1,63 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/gpu/hichip,hc16xx-ge.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: HiChip HC16XX 2D graphics engine (GE)
+
+maintainers:
+  - hedgeg0d <hedgeg0d@users.noreply.github.com>
+
+description: |
+  The 2D engine of the HiChip HC16XX SoCs. It reads a queue of command
+  words from memory and stretches, blends and copies rectangles from
+  memory to memory.
+
+  The factory device tree also lists the system controller (0x18800000)
+  as a second register range. Only the clock gate and reset bit are used
+  there, and those are reached through the clock and reset controllers.
+
+properties:
+  compatible:
+    const: hichip,hc16xx-ge
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  clocks:
+    maxItems: 1
+
+  clock-names:
+    const: ge
+
+  resets:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - clocks
+  - clock-names
+  - resets
+
+additionalProperties: false
+
+examples:
+  - |
+    #include <dt-bindings/clock/hichip,hc16xx-clock.h>
+    #include <dt-bindings/reset/hichip,hc16xx-reset.h>
+
+    ge@18806000 {
+        compatible = "hichip,hc16xx-ge";
+        reg = <0x18806000 0x2000>;
+        interrupt-parent = <&intc>;
+        interrupts = <4>;
+        clocks = <&clk HC16XX_CLK_GE>;
+        clock-names = "ge";
+        resets = <&reset HC16XX_GE_RESET>;
+    };

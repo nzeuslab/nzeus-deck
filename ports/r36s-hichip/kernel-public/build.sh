@@ -32,7 +32,7 @@ fi
 test "$(git -C "$S" rev-parse HEAD)" = "$PIN"
 echo '2. NZEUS port patches, drivers and the FPU/clock patch (all from this repo)'
 python3 "$P/apply-port-patches.py" "$S"
-for d in display avp-rpc power ram usbhost/kernel audio; do python3 "$P/$d/install-source.py" "$S"; done
+for d in display avp-rpc power ram usbhost/kernel audio ge; do python3 "$P/$d/install-source.py" "$S"; done
 grep -q nzeus_fpudiag_early "$S/arch/mips/generic/init.c" || (cd "$S" && patch -s -p1 < "$H/0001-nzeus-fpudiag.patch")
 cmp "$H/nzeus-fpudiag.c" "$S/arch/mips/generic/nzeus-fpudiag.c"
 

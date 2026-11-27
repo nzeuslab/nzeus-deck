@@ -26,5 +26,14 @@ for relative, addition in changes.items():
     if path.read_bytes() not in (original, patched):
         raise SystemExit('Unrelated edits: ' + str(path))
     path.write_bytes(patched)
+# The parent demultiplexer must remain enabled for the opted-in s2idle board.
+patch = root / '0001-gpio-s2idle-parent.patch'
+check = subprocess.run(['git', '-C', str(tree), 'apply', '--check', str(patch.resolve())],
+                       capture_output=True)
+if check.returncode == 0:
+    subprocess.run(['git', '-C', str(tree), 'apply', str(patch.resolve())], check=True)
+else:
+    subprocess.run(['git', '-C', str(tree), 'apply', '--reverse', '--check',
+                    str(patch.resolve())], check=True, capture_output=True)
 (tree / 'drivers/power/supply/nzeus-r36s-power.c').write_bytes((root / 'nzeus-r36s-power.c').read_bytes())
 print('Installed NZEUS R36S power source; no device or boot image changed')

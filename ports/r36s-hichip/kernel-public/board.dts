@@ -108,6 +108,7 @@
 
 	gpio-controller@18800044 {
 		compatible = "hichip,hc16xx-gpio";
+		nzeus,s2idle-wakeup;
 		reg = <0x18800044 0x1c 0x188000c4 0x1c 0x188000e4 0x1c 0x18800344 0x1c>;
 		reg-names = "left\0bottom\0right\0top";
 		gpio-ranges = <0x05 0x00 0x00 0x80>;
@@ -370,6 +371,17 @@
 		compatible = "nzeus,hc16xx-gma-firmware-fb";
 		reg = <0x1883a000 0x1000>;
 		nzeus,firmware-timing;
+		status = "okay";
+	};
+
+	ge@18806000 {
+		compatible = "hichip,hc16xx-ge";
+		reg = <0x18806000 0x2000>;
+		interrupt-parent = <0x04>;
+		interrupts = <0x04>;
+		clocks = <0x01 0x37>;
+		clock-names = "ge";
+		resets = <0x07 0x04>;
 		status = "okay";
 	};
 
