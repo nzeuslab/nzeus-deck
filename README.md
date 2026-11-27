@@ -118,29 +118,33 @@ bash setup_lvgl.sh               # downloads LVGL 8.3.1
 bash setup_test_tools.sh         # builds a PC copy of Dropbear for the tests
 bash build_nzeus_gui.sh pc       # builds the Deck for the PC and runs its 709 checks
 bash build_nzeus_modern.sh       # cross-builds the console program (mipsel)
-bash linux-port/validate-board.sh
-bash linux-port/build-experimental.sh   # kernel; needs the linux-hichip tree (below)
+bash ports/r36s-hichip/validate-board.sh
+bash ports/r36s-hichip/build-experimental.sh   # kernel; needs the linux-hichip tree (below)
 ```
 
 The kernel is [Siarhei Volkau's linux-hichip](https://github.com/SiarheiVolkau/linux-hichip)
-(branch `hc16xx-7.2`, pinned in `linux-port/upstream-manifest.json`) plus the
-board and driver work in `linux-port/`.
+(branch `hc16xx-7.2`, pinned in `ports/r36s-hichip/upstream-manifest.json`) plus the
+board and driver work in `ports/r36s-hichip/`.
 
 The factory bootloader only starts kernels wrapped with a key from the console's own
 flash. That key **isn't in this repo**: the packaging tools read it from a NOR
-backup of your own console. `linux-port/boot-analysis/` still needs adapting for a
+backup of your own console. `ports/r36s-hichip/boot-analysis/` still needs adapting for a
 backup other than the one it was developed with.
 
 ### Repo layout
 
+The Deck is split into **shared parts** (the same on every console) and **ports**
+(one folder per console's hardware). See [ports/README.md](ports/README.md) for how
+to add a new console.
+
 | Folder | What it is |
 |---|---|
-| `apps/nzeus-gui/` | The Deck's apps (LVGL 8) and their PC tests |
+| `apps/nzeus-gui/` | Shared: the Deck's apps (LVGL 8) and their PC tests |
 | `apps/frontend-modern/` | The console program: screen, buttons, sound, battery |
 | `apps/probe/`, `apps/bootlogo/` | NZEUS Probe board code, the power-on picture |
-| `linux-port/` | The kernel and board port: device tree, drivers, USB networking, rescue shell, SD-card boot |
-| `linux-port/rootfs/debian/` | Builds the Debian 12 (mipsel) system image, with a privacy scan |
-| `linux-port/deck-modern/` | Helper programs the Deck calls (Wi-Fi join, Bluetooth, updates) |
+| `core/deck-modern/` | Shared: helper programs the Deck calls (Wi-Fi join, Bluetooth, updates) |
+| `ports/r36s-hichip/` | The R36S V2.7 (HiChip E3100) port: device tree, drivers, USB networking, rescue shell, SD-card boot ([PORT.md](ports/r36s-hichip/PORT.md)) |
+| `ports/r36s-hichip/rootfs/debian/` | Builds the Debian 12 (mipsel) system image, with a privacy scan |
 | `installer/`, `tools/` | `install.bat` / `uninstall.bat`, signed app updates, release checks |
 
 ## Credits

@@ -3,7 +3,7 @@
 # The Claude-connection tests make the console's SSH key with Dropbear;
 # on the PC this build stands in for the console's own (mipsel) Dropbear.
 # Output: apps/dropbear/x86/dropbearmulti (not in git).
-# Same Dropbear release and sha256 as linux-port/usbnet/dropbear/build-dropbear-modern.sh.
+# Same Dropbear release and sha256 as ports/r36s-hichip/usbnet/dropbear/build-dropbear-modern.sh.
 set -euo pipefail
 VER=2026.94
 SHA=e098034a843699200c8c977a991fff73159735bf795d5f72ef672c41a6b1ae81

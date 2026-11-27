@@ -4,7 +4,7 @@
  * On the PC: python tools/publish_update.py --modern --notes "what is new"
  * Here:      A = check -> it shows the version, what's new and how many files
  *            change -> A = install (asks first) -> restart NZEUS Deck.
- * The work is done by nzeus/bin/nzeus-update.sh (linux-port/deck-modern): it
+ * The work is done by nzeus/bin/nzeus-update.sh (core/deck-modern): it
  * installs nothing that isn't signed, checks every file before changing
  * anything and keeps the old copies (nzeus-modern.prev). "Restart now"
  * restarts the Deck, not the console: if the new Deck does not keep running

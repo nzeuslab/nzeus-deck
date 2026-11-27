@@ -2,7 +2,7 @@
  *
  * A start screen for Python 3 (Debian's python3): start the >>> prompt, run
  * an example, or run one of your own scripts. Everything runs in the Terminal
- * app (the `python` helper in nzeus/bin, linux-port/deck-modern/python).
+ * app (the `python` helper in nzeus/bin, core/deck-modern/python).
  *   A  run            X  open in the Editor            B  back
  * Examples: /usr/local/lib/nzeus/python-examples    Your scripts: nzeus/python/ */
 #include <dirent.h>

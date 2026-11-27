@@ -19,12 +19,12 @@ apps/dropbear/
 reports/gui/
 dist/
 .superpowers/
-linux-port/upstream/*.tar.xz
-linux-port/upstream/*.tar.bz2
-linux-port/upstream/*.tar.gz
+ports/r36s-hichip/upstream/*.tar.xz
+ports/r36s-hichip/upstream/*.tar.bz2
+ports/r36s-hichip/upstream/*.tar.gz
 __pycache__/
 apps/frontend-modern/mips/
-linux-port/deck-modern/dropbearmulti
+core/deck-modern/dropbearmulti
 
 # design-review notes (Impeccable)
 .impeccable/

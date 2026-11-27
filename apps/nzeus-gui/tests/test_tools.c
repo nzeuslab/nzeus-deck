@@ -937,7 +937,7 @@ static void test_btinfo(void)
 {
     printf("--- btinfo ---\n");
     BtSurvey d;
-    /* (the same line linux-port/deck-modern/bt/tests/test_flows.py expects from its fake LE mouse) */
+    /* (the same line core/deck-modern/bt/tests/test_flows.py expects from its fake LE mouse) */
     const char *mouse = "C4:00:00:00:00:05\tle-random\t-55\t-8\t-\t03c2\t1812\t01da:0102\tLE Mouse";
     check(bt_parse_survey(mouse, &d) == 0 && !strcmp(d.addr, "C4:00:00:00:00:05") && !strcmp(d.type, "le-random") &&
           d.rssi == -55 && d.has_tx && d.tx_power == -8 && !d.has_cod && d.has_app && d.appearance == 0x03c2 &&

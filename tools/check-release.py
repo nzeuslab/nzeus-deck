@@ -21,7 +21,7 @@ import zipfile
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(REPO / 'linux-port' / 'boot-analysis'))
+sys.path.insert(0, str(REPO / 'ports' / 'r36s-hichip' / 'boot-analysis'))
 from image_codec import factory_key  # noqa: E402
 
 TOP = None                       # set from the zip: NZEUS-Deck-<version>/
@@ -92,7 +92,7 @@ def check_zip(path, key=None, maker_hashes=(), words_dir=None, quiet=False, allo
             tree = Path(t) / 'root'
             tree.mkdir()
             subprocess.run(['debugfs', '-R', f'rdump / {tree}', str(img)], capture_output=True)
-            r = subprocess.run(['bash', str(REPO / 'linux-port/rootfs/debian/privacy-scan-image.sh'), str(tree)],
+            r = subprocess.run(['bash', str(REPO / 'ports/r36s-hichip/rootfs/debian/privacy-scan-image.sh'), str(tree)],
                                capture_output=True, text=True, env={**os.environ, 'NZ_PRIVATE_WORDS_DIR': words_dir})
             check('images_privacy_scan_clean', r.returncode == 0 and (tree / 'etc').is_dir(),
                   ' '.join(l for l in r.stdout.splitlines() if l.startswith('FAIL')))

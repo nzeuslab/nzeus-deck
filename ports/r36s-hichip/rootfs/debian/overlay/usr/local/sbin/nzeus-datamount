@@ -1,0 +1,44 @@
+#!/bin/sh
+# nzeus-datamount - check and mount the big data area (mmcblk0p4 "nzdata") at /data.
+# Mounted only when its label is right and e2fsck -p (safe automatic fixes
+# only; never forced) answers 0 or 1. Otherwise /data stays unmounted and this
+# says why. /etc/fstab lists /data as "noauto", so this is the only mounter.
+#   nzeus-datamount         check + mount (start-up)
+# Used by /etc/init.d/nzeus-data (Debian) and S03nzdata (Buildroot).
+# NZ_* variables are for the PC test only.
+
+CONF=${NZ_CONF:-/etc/nzeus/sdroot.conf}
+MOUNTS=${NZ_MOUNTS:-/proc/mounts}
+KMSG=${NZ_KMSG:-/dev/kmsg}
+MOUNT=${NZ_MOUNT:-mount}
+
+log() {
+    echo "nzdata: $*"
+    echo "nzdata: $*" > "$KMSG" 2>/dev/null
+}
+test -r "$CONF" || { log "missing $CONF: /data not mounted"; exit 0; }
+. "$CONF"
+dir=${NZ_DATA_MNT:-$NZ_DATA_DIR}
+
+# already mounted (by hand, or earlier)?
+if awk -v d="$dir" -v s="$NZ_DATA_DEV" '$2 == d || $1 == s { f = 1 } END { exit !f }' "$MOUNTS"; then
+    log "$NZ_DATA_DEV or $dir is already mounted"
+    exit 0
+fi
+test -b "$NZ_DATA_DEV" || { log "no $NZ_DATA_DEV: /data stays a plain folder on the root"; exit 0; }
+label=$(e2label "$NZ_DATA_DEV" 2>/dev/null)
+test "$label" = "$NZ_DATA_LABEL" || { log "label is '$label', expected $NZ_DATA_LABEL: NOT mounted"; exit 0; }
+e2fsck -p "$NZ_DATA_DEV"
+rc=$?
+if test "$rc" -gt 1; then
+    log "e2fsck rc=$rc: /data NOT mounted. Repair from the RAM rescue (see ports/r36s-hichip/rootfs/PLAN.md)"
+    exit 0
+fi
+mkdir -p "$dir" 2>/dev/null
+if $MOUNT -t ext4 -o noatime,nodev,nosuid "$NZ_DATA_DEV" "$dir"; then
+    mkdir -p "$dir/nzeus"
+    log "mounted at $dir (e2fsck rc=$rc)"
+else
+    log "mount of $NZ_DATA_DEV at $dir FAILED"
+fi
+exit 0

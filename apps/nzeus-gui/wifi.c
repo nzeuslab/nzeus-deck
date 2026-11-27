@@ -85,7 +85,7 @@ int wifi_turn_on(void)
     return bgjob_start(&on_job, "sh " NZ_DIR "/bin/wifi-on.sh", "/tmp/nzeus-wifi-on.log");
 }
 
-/* --- scanning: nzeus/bin/wifi-scan.sh (linux-port/deck-modern) asks "iw"
+/* --- scanning: nzeus/bin/wifi-scan.sh (core/deck-modern) asks "iw"
  * and writes the networks as Realtek's survey table (below) to this file --- */
 #define SURVEY_FILE "/tmp/nzeus-wifi-survey.txt"
 static int survey_path(char *out, int n) { snprintf(out, n, "%s", SURVEY_FILE); return 0; }

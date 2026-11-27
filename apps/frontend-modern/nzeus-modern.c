@@ -12,7 +12,7 @@
  *
  * Only standard Linux interfaces:
  *   screen   /dev/fb0 ("hc16xx-gma-argb", 640x480, 32-bit ARGB8888), checked
- *            exactly like linux-port/input/box-demo.c. The driver only shows our
+ *            exactly like ports/r36s-hichip/input/box-demo.c. The driver only shows our
  *            picture after FBIOBLANK UNBLANK; at the end FBIOBLANK POWERDOWN
  *            hands the screen back to the firmware (also on Ctrl+C, SIGTERM and
  *            on a crash).

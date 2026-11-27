@@ -49,7 +49,7 @@
 - [ ] Step 5: Commit "r36s_card.py: open/close a stock card's scrambled sector 0".
 
 ### Task 2: `nz-fatroot` C helper
-**Files:** Create `linux-port/fatroot/nz-fatroot.c`, `linux-port/fatroot/test-nz-fatroot.py`
+**Files:** Create `ports/r36s-hichip/fatroot/nz-fatroot.c`, `ports/r36s-hichip/fatroot/test-nz-fatroot.py`
 **Interfaces (Produces):**
 - `nz-fatroot find DEV`: prints `FAT_OFFSET=<bytes>` and `FAT_SIZE=<bytes>` (shell-sourceable), exit 0. Exit 3 = no R36S FAT32 (same rules as Task 1 `inspect`). Opens DEV read-only.
 - `nz-fatroot attach DEV NEWROOT`: (1) loop over the FAT32 (offset + sizelimit, `LOOP_CONFIGURE`) → mount vfat rw `noatime,flush` at `/fat`; (2) check `nzeus/nzroot.img` is 3,758,096,384 B and `nzeus/nzdata.img` exists; (3) run `/bin/e2fsck -p` on each image through its loop; (4) mount root ext4 `ro` at NEWROOT and data ext4 `rw,noatime` at `/data0`. Exit codes: 0 ok, 3 no FAT, 4 image missing/wrong size, 5 fsck failed, 6 mount failed. Each failure prints one plain line starting `fatroot:`. On failure it undoes what it did.
@@ -61,17 +61,17 @@
 - [ ] Step 5: Commit.
 
 ### Task 3: fatroot `/init` and initramfs
-**Files:** Create `linux-port/fatroot/init`, `linux-port/fatroot/build-initramfs.sh`, `linux-port/fatroot/initramfs.list.in`, `linux-port/fatroot/test-fatroot-init.py`. Modify `linux-port/sdroot/busybox.config` + `busybox-applets.txt` only if `e2fsck` must come from outside BusyBox (it does: ship a static `e2fsck` from e2fsprogs built for mipsel).
+**Files:** Create `ports/r36s-hichip/fatroot/init`, `ports/r36s-hichip/fatroot/build-initramfs.sh`, `ports/r36s-hichip/fatroot/initramfs.list.in`, `ports/r36s-hichip/fatroot/test-fatroot-init.py`. Modify `ports/r36s-hichip/sdroot/busybox.config` + `busybox-applets.txt` only if `e2fsck` must come from outside BusyBox (it does: ship a static `e2fsck` from e2fsprogs built for mipsel).
 **Interfaces:** Consumes `nz-fatroot` (Task 2). Produces `fatroot/build-initramfs.sh WORK_DIR`, which writes `WORK_DIR/initramfs.list` for `CONFIG_INITRAMFS_SOURCE`.
 - init flow: mount devtmpfs/proc/sys/tmpfs → wait up to 10 s for `/dev/mmcblk0` → `nz-fatroot attach /dev/mmcblk0 /newroot` → `mount --move /fat /newroot/sdcard`, `mount --move /data0 /newroot/data`, move /dev /proc /sys /run → `exec switch_root /newroot /sbin/init`. On any failure: print the `fatroot:` line to the console **and to `/dev/tty1`** (fbcon), then run the unchanged RAM rescue section copied from `sdroot/init`.
 - [ ] Step 1: Tests in the style of `sdroot/test-sdroot-init.py` (stubs for mount/switch_root): `init_success_moves_mounts` (order: /fat→/newroot/sdcard, /data0→/newroot/data, then dev/proc/sys/run, then switch_root), `init_no_card_rescue`, `init_attach_fails_rescue_and_message` (message on tty1 stub), `init_rescue_section_identical` (the rescue block is byte-identical to sdroot/init's).
 - [ ] Step 2: Run. Expected: fail.
 - [ ] Step 3: Implement init + build script (static e2fsck: e2fsprogs 1.47.x source with sha256 pinned in `upstream/`).
-- [ ] Step 4: Run. Expected: PASS. Also `bash linux-port/sdroot/test-all.sh` still passes (sdroot untouched).
+- [ ] Step 4: Run. Expected: PASS. Also `bash ports/r36s-hichip/sdroot/test-all.sh` still passes (sdroot untouched).
 - [ ] Step 5: Commit.
 
 ### Task 4: Public Debian image variant
-**Files:** Modify `linux-port/rootfs/debian/build-debian.sh`, `make-image.sh`, `test-debian-pc.sh`. Create `linux-port/rootfs/debian/overlay-public/` (files that differ from `overlay/` only).
+**Files:** Modify `ports/r36s-hichip/rootfs/debian/build-debian.sh`, `make-image.sh`, `test-debian-pc.sh`. Create `ports/r36s-hichip/rootfs/debian/overlay-public/` (files that differ from `overlay/` only).
 **Interfaces (Produces):** `build-debian.sh --public-fatroot --reuse` → `out/nzroot.img` (3,758,096,384 B, ext4 label `nzroot`) and `out/nzdata.img` (1,073,741,824 B, ext4 label `nzdata`, empty except `/nzeus/` with the Deck's default layout).
 - overlay-public: `etc/fstab` without the p4 line; `/sdcard` mount point; `nzeus-datamount` and `nzeus-rootcheck` accept `/data` already mounted by the initramfs, and accept a writable FAT32 at `/sdcard` (this overrides `NZ_NEVER_WRITE` for the public build only); no `blkdevparts` or CID anywhere.
 - [ ] Step 1: Add to `test-debian-pc.sh`: `public_image_sizes`, `public_fstab_has_no_p4`, `public_no_cid_no_blkdevparts` (grep the image for `blkdevparts=` and 32-hex CIDs → none), `public_privacy_scan_clean`, `public_no_authorized_keys`, `public_claude_whatsapp_unconfigured` (no PC address, no keys in the Deck settings).
@@ -81,7 +81,7 @@
 - [ ] Step 5: Commit.
 
 ### Task 5: Public kernel + AVP stand-in, packaged
-**Files:** Create `linux-port/kernel-public/build.sh`, `board.dts`, `package.py`, `test-package.py`. Copy (no edits) `R36S/linux-port/diagnostics/apt/fpudiag/{0001-nzeus-fpudiag.patch,package-clk900/entry.S,entry.ld}` and `R36S/linux-port/purelinux/make-avp-stub.py`.
+**Files:** Create `ports/r36s-hichip/kernel-public/build.sh`, `board.dts`, `package.py`, `test-package.py`. Copy (no edits) `R36S/linux-port/diagnostics/apt/fpudiag/{0001-nzeus-fpudiag.patch,package-clk900/entry.S,entry.ld}` and `R36S/linux-port/purelinux/make-avp-stub.py`.
 **Interfaces:**
 - Consumes: `fatroot/build-initramfs.sh` (Task 3); env `NZ_KERNEL_TREE`, `NZ_PORT_WORK`, `NZ_NOR_BACKUP`.
 - Produces: `package.py --nor $NZ_NOR_BACKUP --out DIR` → `DIR/advapi32.dll`, `DIR/ApplicationFrame.dll`, `DIR/verification.json`.

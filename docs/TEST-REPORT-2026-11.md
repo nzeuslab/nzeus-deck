@@ -38,10 +38,10 @@ All run on a PC (WSL Ubuntu + Windows PowerShell 5.1) for this release.
 | Suite | Command | Result |
 |---|---|---|
 | Card open/close tool | `python3 tools/tests/test_r36s_card.py` | 10/10 |
-| Boot helper (MIPS under qemu + real loop devices) | `python3 linux-port/fatroot/test-nz-fatroot.py` | 16/16 |
-| Boot script (MIPS BusyBox under qemu) | `python3 linux-port/fatroot/test-fatroot-init.py --busybox …` | 13/13 |
-| Public Debian images | `sudo bash linux-port/rootfs/debian/test-public-image.sh …` | 9/9 |
-| Public kernel + AVP stand-in | `python3 linux-port/kernel-public/test-package.py …` | 7/7 |
+| Boot helper (MIPS under qemu + real loop devices) | `python3 ports/r36s-hichip/fatroot/test-nz-fatroot.py` | 16/16 |
+| Boot script (MIPS BusyBox under qemu) | `python3 ports/r36s-hichip/fatroot/test-fatroot-init.py --busybox …` | 13/13 |
+| Public Debian images | `sudo bash ports/r36s-hichip/rootfs/debian/test-public-image.sh …` | 9/9 |
+| Public kernel + AVP stand-in | `python3 ports/r36s-hichip/kernel-public/test-package.py …` | 7/7 |
 | Release zip check (self-test + real zip) | `python3 tools/check-release.py …` | RELEASE OK (6/6) |
 | Windows installer (fake card images + folders) | `installer/tests/test-installer.ps1` | 34/34 |
 | Windows installer, full size (real 4.5 GB release files) | `installer/tests/test-installer-fullsize.ps1 ZIP` | 4/4 |
@@ -52,7 +52,7 @@ All run on a PC (WSL Ubuntu + Windows PowerShell 5.1) for this release.
 
 ## Known gaps
 
-- `linux-port/sdroot/test-all.sh` and 44 checks of `test-debian-pc.sh` need
+- `ports/r36s-hichip/sdroot/test-all.sh` and 44 checks of `test-debian-pc.sh` need
   files that are not in this repository (boot BusyBox, rescue tools).
 - No emoji pictures in the release yet.
 - 5 helper programs come pre-built (their sha256 is pinned in the repo).

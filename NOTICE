@@ -10,7 +10,7 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 Exceptions:
-- Linux kernel code in linux-port/ (device trees, drivers, kernel patches and
+- Linux kernel code in ports/r36s-hichip/ (device trees, drivers, kernel patches and
   the files taken from linux-hichip) is under GPL-2.0, like the Linux kernel.
   Text: licenses/GPL-2.0.txt
 - Every outside part keeps its own licence: see THIRD_PARTY.md and licenses/.

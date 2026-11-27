@@ -11,7 +11,7 @@
 # Which emoji: only those that are ONE Unicode code point (file names without
 # "-"). The PC bridge turns every emoji into one code point before it sends.
 #
-# The output (default: linux-port/deck-modern/build/emoji/, not in git):
+# The output (default: core/deck-modern/build/emoji/, not in git):
 #   1f600.bin ...  LVGL 8 binary images (what lv_img loads from a file):
 #                  4-byte header + LV_IMG_CF_TRUE_COLOR_ALPHA pixels, i.e. for
 #                  16-bit colour (lv_conf.h: LV_COLOR_DEPTH 16, LV_COLOR_16_SWAP 0)
@@ -20,7 +20,7 @@
 #   LICENSE.txt    the attribution (CC-BY 4.0)
 #
 # How the pack gets to the console:
-#   - the system image: linux-port/rootfs/debian/apply-overlay.sh copies it to
+#   - the system image: ports/r36s-hichip/rootfs/debian/apply-overlay.sh copies it to
 #     /usr/local/lib/nzeus/emoji, and nzeus-deck links NZ_DIR/emoji there
 #   - an existing console: python tools/publish_update.py --emoji (signed
 #     update; the console puts the pictures in NZ_DIR/emoji)
@@ -49,7 +49,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))      # R36S/tools
 R36S = os.path.dirname(HERE)
 CACHE = os.path.join(HERE, "emoji_cache")
 ARCHIVE = os.path.join(CACHE, "twemoji-%s.tar.gz" % TAG.lstrip("v"))
-DEFAULT_OUT = os.path.join(R36S, "linux-port", "deck-modern", "build", "emoji")
+DEFAULT_OUT = os.path.join(R36S, "core", "deck-modern", "build", "emoji")
 
 LV_IMG_CF_TRUE_COLOR_ALPHA = 5
 

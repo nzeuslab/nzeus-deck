@@ -1,0 +1,35 @@
+REGRESSION keys: PASS
+REGRESSION power: PASS
+REGRESSION pure: PASS
+REGRESSION net: PASS
+REGRESSION sdroot: PASS
+caught: wrong blkdevparts (nzroot at 16389M) (AssertionError: console=ttyS0,19200 earlycon rdinit=/init ro panic=0 clk_ignore_unused ignore_loglevel blkdevp)
+caught: wrong blkdevparts (nzstock 15600M) (AssertionError: console=ttyS0,19200 earlycon rdinit=/init ro panic=0 clk_ignore_unused ignore_loglevel blkdevp)
+caught: nzstock without ro (AssertionError: console=ttyS0,19200 earlycon rdinit=/init ro panic=0 clk_ignore_unused ignore_loglevel blkdevp)
+caught: nzhdr without ro (AssertionError: console=ttyS0,19200 earlycon rdinit=/init ro panic=0 clk_ignore_unused ignore_loglevel blkdevp)
+caught: nzhdr2 without ro (AssertionError: console=ttyS0,19200 earlycon rdinit=/init ro panic=0 clk_ignore_unused ignore_loglevel blkdevp)
+caught: nzroot read-only (extra ro) (AssertionError: console=ttyS0,19200 earlycon rdinit=/init ro panic=0 clk_ignore_unused ignore_loglevel blkdevp)
+caught: no blkdevparts at all (AssertionError)
+caught: other part of bootargs changed (baud) (AssertionError: console=ttyS0,115200 earlycon rdinit=/init ro panic=0 clk_ignore_unused ignore_loglevel blkdev)
+caught: extra kernel argument (AssertionError: console=ttyS0,19200 earlycon rdinit=/init ro panic=0 clk_ignore_unused ignore_loglevel blkdevp)
+caught: extra /chosen property (AssertionError)
+caught: other node changed (SD controller disabled) (AssertionError)
+caught: extra config option POSIX_MQUEUE (AssertionError: {'CONFIG_SYSVIPC': [None, 'y'], 'CONFIG_CMDLINE_PARTITION': [None, 'y'], 'CONFIG_INITRAMFS_SOU)
+caught: extra config option IPC_NS (AssertionError: {'CONFIG_INITRAMFS_SOURCE': ['"/home/nzeus/r36s-linux-port-work-20261007/display-usbfix/initra)
+caught: CMDLINE_PARTITION missing (AssertionError: {'CONFIG_INITRAMFS_SOURCE': ['"/home/nzeus/r36s-linux-port-work-20261007/display-usbfix/initra)
+caught: SYSVIPC missing (AssertionError: {'CONFIG_INITRAMFS_SOURCE': ['"/home/nzeus/r36s-linux-port-work-20261007/display-usbfix/initra)
+caught: old initramfs list in config (AssertionError: {'CONFIG_CMDLINE_PARTITION': [None, 'y'], 'CONFIG_SYSVIPC': [None, 'y'], 'CONFIG_LOCALVERSION')
+caught: version string not sdroot (AssertionError: {'CONFIG_INITRAMFS_SOURCE': ['"/home/nzeus/r36s-linux-port-work-20261007/display-usbfix/initra)
+caught: kernel without blkdevparts parser (net ELF) (AssertionError: cmdline_partition)
+caught: changed /init inside the initramfs (AssertionError: /init is not ports/r36s-hichip/sdroot/init)
+caught: changed /usb-rescue inside the initramfs (AssertionError)
+caught: BusyBox copy differs from the packed one (AssertionError: bin/busybox differs from build-sdroot/busybox)
+caught: applet list differs (AssertionError)
+caught: initramfs without /newroot (AssertionError: ['dir /newroot 0755 0 0'])
+caught: initramfs with an extra file (AssertionError: ['file /bin/extra 0755 0 0'])
+caught: initramfs without switch_root (AssertionError: ['slink /bin/switch_root 0777 0 0 -> busybox'])
+caught: old RAM-only /init (AssertionError)
+caught: dynamic (not static) nz-sdboot (AssertionError: bin/nz-sdboot is not a static MIPS program)
+caught: usb-rescue permissions changed (AssertionError: ['file /usb-rescue 0700 0 0', 'file /usb-rescue 0755 0 0'])
+control: unchanged list re-packed: accepted
+MUTATION_SUMMARY pass=34 fail=0

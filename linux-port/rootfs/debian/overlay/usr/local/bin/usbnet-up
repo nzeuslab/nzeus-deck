@@ -1,4 +1,0 @@
-#!/bin/sh
-# usbnet-up - TCP/IP over the USB cable (see linux-port/usbnet/README.md).
-# Runs the unchanged linux-port/usbnet/usbnet-up.sh, installed by the builder.
-exec /bin/sh /usr/local/lib/nzeus/usbnet/usbnet-up.sh "$@"

@@ -36,7 +36,7 @@ UI_FILES="$UI_FILES health.c app_health.c"
 UI_FILES="$UI_FILES wifiinfo.c"
 # Bluetooth ID cards (the deck): reads `nzeus-bt survey` lines, says what each device is
 UI_FILES="$UI_FILES btinfo.c app_btscan.c"
-# Update NZEUS over Wi-Fi (Tools list): the screen; the work is linux-port/deck-modern/nzeus-update.sh
+# Update NZEUS over Wi-Fi (Tools list): the screen; the work is core/deck-modern/nzeus-update.sh
 UI_FILES="$UI_FILES app_update.c"
 # Files' PDF reader: Poppler renders one bounded page outside the GUI.
 UI_FILES="$UI_FILES pdfreader.c"

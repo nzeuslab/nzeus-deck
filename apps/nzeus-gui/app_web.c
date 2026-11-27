@@ -2,7 +2,7 @@
  * netsurf-fb), full screen.
  *
  * Opening the app shows "Opening the browser..." and then hands the whole
- * screen to nzeus/bin/nzeus-browser (linux-port/deck-modern) through
+ * screen to nzeus/bin/nzeus-browser (core/deck-modern) through
  * hw_fullscreen_run: the Deck stops drawing until NetSurf ends. NetSurf's
  * buttons are explained on its start page (D-pad = pointer, A = click,
  * B = back, Y = type an address, SELECT+START = back to the Deck).

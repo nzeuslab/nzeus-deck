@@ -3,7 +3,7 @@
 
 /* Bluetooth keyboards and mice (the Settings app's Bluetooth section).
  *
- * The real work is done by two programs on the SD card (linux-port/deck-modern/bt/README.md):
+ * The real work is done by two programs on the SD card (core/deck-modern/bt/README.md):
  *   nzeus/bin/nzeus-bt-up.sh   switches Bluetooth on (add-ons, firmware, service)
  *   nzeus/bin/nzeus-bt         status / list / scan / pair / connect / ...
  * Everything here runs them as background programs (bgjob.c), so the screen

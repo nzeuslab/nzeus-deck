@@ -87,7 +87,7 @@ MIPS program under qemu.
 
 ## NZD-02: Old signed update can be replayed (Low, fixed)
 
-**Where:** `linux-port/deck-modern/nzeus-update.sh`.
+**Where:** `core/deck-modern/nzeus-update.sh`.
 
 **What was wrong:** the update system itself is sound. The file list is
 signed (HMAC-SHA256 with a key shared only by the owner's PC and the
@@ -104,13 +104,13 @@ without the NZD-01 fix).
 installed one. The owner can still go back on purpose with
 `NZ_UPD_ALLOW_OLDER=1 nzeus-update.sh install` over SSH.
 
-**Proof:** two new tests in `linux-port/deck-modern/tests/test_helpers.py`.
+**Proof:** two new tests in `core/deck-modern/tests/test_helpers.py`.
 `test_older_signed_update_is_refused` failed on the old script ("check"
 accepted the older list) and passes now. All 20 update tests pass.
 
 ## NZD-03: Nearby access point can hide networks (Low, fixed)
 
-**Where:** `linux-port/deck-modern/wifi-scan.sh`.
+**Where:** `core/deck-modern/wifi-scan.sh`.
 
 **What was wrong:** the scan result went through `echo`. Debian's `/bin/sh`
 (dash) treats backslash codes in `echo`'s text as commands: `\c` means
@@ -224,7 +224,7 @@ shaping code, and the third-party PNG/JPG decoders that come with LVGL.
 
 ```
 wsl -d Ubuntu -- bash build_picture_test.sh                     # NZD-01
-wsl -d Ubuntu -- python3 linux-port/deck-modern/tests/test_helpers.py   # NZD-02 + update tests
+wsl -d Ubuntu -- python3 core/deck-modern/tests/test_helpers.py   # NZD-02 + update tests
 ```
 
 ## Reporting

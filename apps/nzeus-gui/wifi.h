@@ -4,7 +4,7 @@
 /* Wi-Fi on the SD Debian (Linux 7.2):
  *   - the LB-Link dongle (Realtek RTL8821CU, USB 0bda:c820), driver rtw88
  *     built into the kernel; it needs Settings > USB on Devices
- *   - the helpers in nzeus/bin (linux-port/deck-modern): wifi-on.sh switches
+ *   - the helpers in nzeus/bin (core/deck-modern): wifi-on.sh switches
  *     wlan0 on, wifi-scan.sh scans with "iw", wifi-join.sh joins with
  *     wpa_supplicant, nzeus-net-up.sh gets an address (DHCP), nzeus-netctl
  *     says which address wlan0 has

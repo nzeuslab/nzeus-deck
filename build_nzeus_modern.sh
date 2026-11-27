@@ -89,7 +89,7 @@ fi
 echo "static: yes (no shared libraries needed)"
 # memory: code + data + zeroed data (bss) when it runs (the new kernel has ~39 MB in all)
 $SIZE "$OUT" | awk 'NR==2 { printf "memory: code %d KB, data %d KB, bss %d KB, total %d KB\n", $1/1024, $2/1024, $3/1024, $4/1024 }'
-# linux-port/diagnostics/rescue-upload.py takes at most 4 MiB
+# ports/r36s-hichip/diagnostics/rescue-upload.py takes at most 4 MiB
 [ $(stat -c %s "$OUT") -le $((4 * 1024 * 1024)) ] || { echo "BIGGER THAN 4 MiB (the rescue upload limit) - stop"; exit 1; }
 
 # 4) optional: the self-test under qemu (PC side only - it proves nothing about the console)

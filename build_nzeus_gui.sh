@@ -77,7 +77,7 @@ cp $S/tests/sample.py $P/projects/hello.py
 mkdir -p $P/nzeus/python
 cp $S/tests/sample.py $P/nzeus/python/my_robot.py
 rm -rf /tmp/nz_preview_pyex && mkdir -p /tmp/nz_preview_pyex   # (the system's examples on the console)
-PYEX="$WIN/linux-port/deck-modern/python-examples"            # (their home since 2026-10-13;
+PYEX="$WIN/core/deck-modern/python-examples"            # (their home since 2026-10-13;
 [ -d "$PYEX" ] || PYEX="$WIN/apps/python/examples"           #  before that: apps/python/examples)
 cp "$PYEX"/*.py /tmp/nz_preview_pyex/
 mkdir -p $P/web $P/nzeus/notes && cp $S/tests/pics/tb.png $S/tests/pics/big.jpg $P/pictures/

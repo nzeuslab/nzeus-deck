@@ -1,5 +1,0 @@
-#!/bin/sh
-# wifi-up - join the Wi-Fi in /data/nzeus/wifi.conf with the USB dongle, DHCP, SSH.
-# See linux-port/usbhost/README.md. Runs the unchanged linux-port/usbhost/wifi-up.sh,
-# installed by the builder.
-exec /bin/sh /usr/local/lib/nzeus/usbhost/wifi-up.sh "$@"

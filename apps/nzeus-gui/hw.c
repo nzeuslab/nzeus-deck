@@ -46,7 +46,7 @@ static int set_system_time(time_t t) { hw_test_set_now(t); return 0; }   /* only
 void hw_sync(void) { sync(); }
 /* The SD Debian: restart and power off go through Debian's own shutdown.
  * Restart only with a kernel whose power driver has the watchdog restart
- * (nzeus,restart-watchdog, linux-port/power/nzeus-r36s-power.c): without it
+ * (nzeus,restart-watchdog, ports/r36s-hichip/power/nzeus-r36s-power.c): without it
  * "reboot" just stops with the screen on. The Settings app then says
  * "Reboot is not possible here". */
 static int going_down;      /* switching off: no more clock saves */

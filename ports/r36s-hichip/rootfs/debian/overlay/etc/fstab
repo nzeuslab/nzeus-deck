@@ -1,0 +1,19 @@
+# /etc/fstab - NZEUS R36S SD Linux (Debian). Partitions come from the kernel's
+# blkdevparts= line (ports/r36s-hichip/rootfs/PLAN.md): p1 stock FAT32 (read-only in the
+# kernel), p3 nzroot = this system, p4 nzdata = /data.
+#
+# "/" says "ro" and pass 0 ON PURPOSE: the RAM system mounted it read-only, and
+# /usr/local/sbin/nzeus-rootcheck (init script nzeus-rootfs) is the ONE thing that
+# checks it with e2fsck -p and makes it read-write only if the check is happy.
+# (With "rw" or pass 1 here, Debian's checkroot.sh would remount or check it
+# too, and on failure it would force a restart or wait for a password on the
+# UART, which nobody can type.)
+# /data is "noauto" for the same reason: nzeus-datamount checks it, then mounts it.
+#
+# <file system>  <mount point>  <type>  <options>                                       <dump> <pass>
+/dev/mmcblk0p3   /              ext4    ro,noatime,errors=remount-ro                        0      0
+/dev/mmcblk0p4   /data          ext4    noauto,nofail,noatime,nodev,nosuid                  0      0
+# The stock system's FAT32: ALWAYS read-only (never remove "ro").
+/dev/mmcblk0p1   /mnt/stock     vfat    ro,nofail,noatime,nodev,nosuid,umask=022,shortname=mixed  0  0
+# /tmp is RAM: keep it small (lab rule: no big files in /tmp). Big files go to /data.
+tmpfs            /tmp           tmpfs   nosuid,nodev,mode=1777,size=8M                      0      0

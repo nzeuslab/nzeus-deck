@@ -2,7 +2,7 @@
 #define NZEUS_USBMODE_H
 
 /* The USB-C port's mode (Settings > USB). The work is done by
- * nzeus/bin/nzeus-usbmode.sh (linux-port/deck-modern), run in the background:
+ * nzeus/bin/nzeus-usbmode.sh (core/deck-modern), run in the background:
  *   "Devices"        the console is the host (keyboard, mouse, Wi-Fi / Bluetooth dongle)
  *   "PC connection"  the console is a USB device for a PC: a network card (SSH) + a serial port
  * Call usbmode_poll() often (every 250 ms) while the page is open. */

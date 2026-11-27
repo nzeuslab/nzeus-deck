@@ -5,7 +5,7 @@
  * subscription, and this app shows it, full screen, over SSH
  * (R36S/brain/README.md has the whole picture):
  *   console --ssh -t--> brain: runs `claude` in its nzeus-claude folder
- * (nzeus/bin/nzeus-claude-connect.sh, linux-port/deck-modern). There is no
+ * (nzeus/bin/nzeus-claude-connect.sh, core/deck-modern). There is no
  * tunnel back: Claude chats, but does not reach the console this way.
  *
  * Page 1, Connect: which brain, the network state, keys, PIN, Connect.

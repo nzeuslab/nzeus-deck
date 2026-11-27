@@ -2398,7 +2398,7 @@ int main(int argc, char **argv)
             if (system("rm -f /tmp/fake_bt/on") != 0) {}
         }
 
-        /* Update NZEUS (app_update.c) with a pretend nzeus-update.sh (the real one: linux-port/deck-modern/tests) */
+        /* Update NZEUS (app_update.c) with a pretend nzeus-update.sh (the real one: core/deck-modern/tests) */
         {
             int app_update_state(void);
             const char *app_update_text(void), *app_update_title(void);
@@ -2454,7 +2454,7 @@ int main(int argc, char **argv)
     }
 
     /* ---- Settings > USB (a fake nzeus-usbmode.sh; its status text in /tmp/fake_usb/status, as the
-     *      SD Debian's linux-port/deck-modern/nzeus-usbmode.sh prints it) ---- */
+     *      SD Debian's core/deck-modern/nzeus-usbmode.sh prints it) ---- */
     {
         #define WAIT_FOR(cond) for (int w_ = 0; w_ < 400 && !(cond); w_++) frames(1)
         if (system("rm -rf /tmp/fake_usb && mkdir -p /tmp/fake_usb /tmp/fake_sdcard/nzeus/bin && "
@@ -4676,11 +4676,11 @@ int main(int argc, char **argv)
             }
             theme_set(TH_ORIGINAL); frames(2);
 
-            /* the REAL nzeus-wa.sh (linux-port/deck-modern, as installed on the console): photo + sendphoto, with a FAKE dbclient
+            /* the REAL nzeus-wa.sh (core/deck-modern, as installed on the console): photo + sendphoto, with a FAKE dbclient
              * (it logs its arguments and stdin and answers from a file: nothing leaves the PC) */
             {
                 #define RW "/tmp/fake_realwa"
-                #define REAL_WA "\"" NZ_REPO "/linux-port/deck-modern/nzeus-wa.sh\""
+                #define REAL_WA "\"" NZ_REPO "/core/deck-modern/nzeus-wa.sh\""
                 #define RUN_WA "NZ_DBMULTI=" RW "/db NZ_USE_NETD=0 NZ_WA=" RW "/wa NZ_WA_KEY=" RW "/key " \
                                "NZ_WA_HOST=192.168.1.10 NZ_WA_USER=user sh " REAL_WA " "
                 FILE *db = NULL;
@@ -5054,19 +5054,19 @@ int main(int argc, char **argv)
                 if (strstr(parts[k], "/usr/local/lib/nzeus/python-examples")) examples++;
             }
             for (size_t g = 0; g < sizeof gone / sizeof gone[0]; g++) if (strstr(c->cmd, gone[g])) stock++;
-            /* a NZEUS helper (nzeus-..., wifi-....sh): it must be one of linux-port/deck-modern's */
+            /* a NZEUS helper (nzeus-..., wifi-....sh): it must be one of core/deck-modern's */
             char first[64];
             sscanf(c->cmd, "%63s", first);
             if (!strncmp(first, "nzeus-", 6) || !strncmp(first, "wifi-", 5)) {
                 char path[300];
-                snprintf(path, sizeof path, "%s/linux-port/deck-modern/%s", NZ_REPO, first);
+                snprintf(path, sizeof path, "%s/core/deck-modern/%s", NZ_REPO, first);
                 if (access(path, F_OK) != 0) { missing++; snprintf(why, sizeof why, "%s", first); }
             }
         }
         check(!mnt, "Terminal help: no /mnt/sdcard paths (that is the factory system's card)");
         check(!stock, "Terminal help: no factory-system tools (nzinfo, nzshot, nzpress, nzlog, wifi-diag.sh, netctl ping/resolve...)");
-        if (missing) printf("INFO  Terminal help names a helper that linux-port/deck-modern lacks: %s\n", why);
-        check(!missing, "Terminal help: every NZEUS helper it names is one the SD Debian has (linux-port/deck-modern)");
+        if (missing) printf("INFO  Terminal help names a helper that core/deck-modern lacks: %s\n", why);
+        check(!missing, "Terminal help: every NZEUS helper it names is one the SD Debian has (core/deck-modern)");
         check(examples >= 3, "Terminal help: the Python examples are where the Python app finds them (/usr/local/lib/nzeus/python-examples)");
     }
     /* ---- Wi-Fi: no scan while wlan0 is switched off ---- */

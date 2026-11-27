@@ -186,7 +186,7 @@ static void repeat_change(int dir) { settings_set_int("repeat_ms", repeat_ms[cla
 static void repeat_value(char *b, size_t n) { snprintf(b, n, "%s", repeat_names[repeat_index()]); }
 
 /* Pin L12 = the Vol- button OR the debug serial line (one pin, one job). The
- * switch is nzeus-voldown on Debian (linux-port/rootfs/debian/overlay/usr/local/
+ * switch is nzeus-voldown on Debian (ports/r36s-hichip/rootfs/debian/overlay/usr/local/
  * sbin/nzeus-voldown); the kernel shows the state in the power driver's sysfs. */
 const char *voldown_sys_file = "/sys/bus/platform/devices/188184d0.power/voldown";   /* (tests use fakes) */
 const char *voldown_cmd = "/usr/local/sbin/nzeus-voldown";
@@ -410,7 +410,7 @@ static void bt_find_press(void) { bt_open_page(PAGE_FIND); }
  * fits in the console's small RAM. ON unless nzeus/zram-off exists: the SD
  * Debian switches zram on at every power-on (/etc/init.d/nzeus-zram), and
  * nzeus-deck switches it off again when it starts NZEUS while the flag is
- * there (linux-port/rootfs/debian/overlay/usr/local/bin/nzeus-deck). */
+ * there (ports/r36s-hichip/rootfs/debian/overlay/usr/local/bin/nzeus-deck). */
 const char *zram_off_file = NZ_DIR "/zram-off";                    /* (tests use fake paths) */
 const char *zram_swaps_file = "/proc/swaps";
 const char *zram_stat_file = "/sys/block/zram0/mm_stat";

@@ -11,7 +11,7 @@ It only uses standard Linux interfaces:
 
 | What | How |
 |---|---|
-| Screen | `/dev/fb0` "hc16xx-gma-argb", 640x480, same checks as `linux-port/input/box-demo.c`; switched on with FBIOBLANK UNBLANK, handed back to the firmware (POWERDOWN) at the end, on Ctrl+C / SIGTERM and on a crash |
+| Screen | `/dev/fb0` "hc16xx-gma-argb", 640x480, same checks as `ports/r36s-hichip/input/box-demo.c`; switched on with FBIOBLANK UNBLANK, handed back to the firmware (POWERDOWN) at the end, on Ctrl+C / SIGTERM and on a crash |
 | Buttons | `/dev/input/event*` "r36s-keys" + "serializer-keys" (and "r36s-power-button", logged only) |
 | Battery, charger | `/sys/class/power_supply/battery/capacity`, `.../charger/online`, raw levels in `/sys/bus/platform/devices/188184d0.power/stock_levels` |
 | Brightness | `/sys/class/backlight/r36s-avp/brightness` (0..255, NZEUS's own percent curve); without it, any other `/sys/class/backlight/*` device (e.g. r36s-pwm), scaled to its `max_brightness` |
@@ -108,7 +108,7 @@ fb-pattern...). Everything is in RAM: no card, flash or raw-device writes.
 
 1. Upload (once per boot; the upload tool refuses a name that already exists):
    ```
-   python linux-port/diagnostics/rescue-upload.py apps/frontend-modern/mips/nzeus-modern --name nzeus-modern
+   python ports/r36s-hichip/diagnostics/rescue-upload.py apps/frontend-modern/mips/nzeus-modern --name nzeus-modern
    ```
    -> `/tmp/nzeus-tools/nzeus-modern`. `/tmp` is RAM: the file takes about
    3 MB of the ~39 MB, plus what NZEUS uses while running (about 3.5 MB of
@@ -117,7 +117,7 @@ fb-pattern...). Everything is in RAM: no card, flash or raw-device writes.
 2. Start (in the background, 600 s by default - edit `LIMIT` in the script
    for longer, at most 3600):
    ```
-   python linux-port/diagnostics/rescue-command.py apps/frontend-modern/run-modern.sh --seconds 20
+   python ports/r36s-hichip/diagnostics/rescue-command.py apps/frontend-modern/run-modern.sh --seconds 20
    ```
    The log is `/tmp/nzeus-modern.log`: `DATA ...`, `BUTTONS ...` (should list
    r36s-keys and serializer-keys), `NZEUS_MODERN_ACTIVE`, then `KEY ...` for

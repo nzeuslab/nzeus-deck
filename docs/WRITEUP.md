@@ -55,7 +55,7 @@ does mean the encryption only hides the kernel; it doesn't protect it.
 Another trick: the stock SD card's first sector is **XOR-scrambled with
 `DEADBEEF`**, so Windows can't read its partition table. Formatting the card
 from Windows would wipe the console's system. My card tools unscramble that sector to read
-the real partition table (`linux-port/rootfs/region-tool/`).
+the real partition table (`ports/r36s-hichip/rootfs/region-tool/`).
 
 ## 4. Bringing up a modern kernel
 
@@ -72,7 +72,7 @@ HiChip chips. Starting from his `hc16xx-7.2` branch, the work for this board was
   changes the output. Our own display driver fixed it.
 - **Sound.** The speaker belongs to the AVP co-processor. The stock audio
   device turned out to be a dead end. Working sound needed the AVP's own
-  packet format, then a native Linux sound card driver (`linux-port/audio/`).
+  packet format, then a native Linux sound card driver (`ports/r36s-hichip/audio/`).
 - **More memory.** Stopping the AVP's memory reservation and handing it to
   Linux raised usable RAM from about 39 MiB to about 117 MiB, proven at boot
   on the real console.

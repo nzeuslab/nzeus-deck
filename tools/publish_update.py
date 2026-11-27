@@ -1,7 +1,7 @@
 """publish_update.py - offers an NZEUS Deck update to the console over Wi-Fi.
 
 NZEUS Deck on the SD Debian (nzeus-modern; the console side is
-linux-port/deck-modern/nzeus-update.sh, Tools > Update in the Deck):
+core/deck-modern/nzeus-update.sh, Tools > Update in the Deck):
 
     python tools/publish_update.py --notes "what is new"     build + serve (Ctrl+C stops)
     python tools/publish_update.py --setup-modern root@CONSOLE-IP [--ssh-key FILE]
@@ -21,11 +21,11 @@ lives in %USERPROFILE%\\.ssh\\nzeus_update.key and on the console
 (NZ_DIR/update/key). The list holds only these kinds of file (the console
 refuses anything else):
     nzeus-modern             apps/frontend-modern/mips/nzeus-modern (build_nzeus_modern.sh)
-    deck-bin/NAME            linux-port/deck-modern/NAME (required-files.txt) and
-                             deck-bin/nzeus-bt.bin = linux-port/deck-modern/bt/nzeus-bt-mipsel
-    python-examples/NAME.py  linux-port/deck-modern/python-examples/*.py
-    emoji/NAME               linux-port/deck-modern/build/emoji/ (only with --emoji)
-The same files the system image gets (linux-port/rootfs/debian/apply-overlay.sh).
+    deck-bin/NAME            core/deck-modern/NAME (required-files.txt) and
+                             deck-bin/nzeus-bt.bin = core/deck-modern/bt/nzeus-bt-mipsel
+    python-examples/NAME.py  core/deck-modern/python-examples/*.py
+    emoji/NAME               core/deck-modern/build/emoji/ (only with --emoji)
+The same files the system image gets (ports/r36s-hichip/rootfs/debian/apply-overlay.sh).
 """
 import argparse, datetime, functools, hashlib, hmac, http.server, os, secrets, shutil, socket, subprocess, sys
 
@@ -34,9 +34,9 @@ OUT = os.path.join(HERE, "..", "update_out")
 KEYFILE = os.environ.get("NZ_UPD_KEYFILE") or os.path.join(os.environ.get("USERPROFILE", os.path.expanduser("~")), ".ssh", "nzeus_update.key")
 PORT = 8765
 # what NZEUS Deck on the SD Debian is made of (same places as
-# linux-port/rootfs/debian/apply-overlay.sh takes them from)
+# ports/r36s-hichip/rootfs/debian/apply-overlay.sh takes them from)
 MODERN_BIN = os.environ.get("NZ_UPD_MODERN_BIN") or os.path.join(HERE, "..", "apps", "frontend-modern", "mips", "nzeus-modern")
-DECK_MODERN = os.environ.get("NZ_UPD_DECK_MODERN") or os.path.join(HERE, "..", "linux-port", "deck-modern")
+DECK_MODERN = os.environ.get("NZ_UPD_DECK_MODERN") or os.path.join(HERE, "..", "core", "deck-modern")
 EMOJI_DIR = os.environ.get("NZ_UPD_EMOJI_DIR")       # default: DECK_MODERN/build/emoji (make_emoji.py)
 MODERN_DIR = "/data/nzeus/deck/nzeus/update"         # the console's NZ_DIR/update (kept on /data)
 NAME_CHARS = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-")
@@ -96,7 +96,7 @@ def deck_files(emoji=False):
             if len(parts) == 2 and parts[1] == "nzeus-bt-mipsel":
                 want = parts[0]
     if not os.path.isfile(bt) or not want or sha256_file(bt) != want:
-        sys.exit("linux-port/deck-modern/bt/nzeus-bt-mipsel is missing or does not match its SHA256SUMS")
+        sys.exit("core/deck-modern/bt/nzeus-bt-mipsel is missing or does not match its SHA256SUMS")
     files.append(("deck-bin/nzeus-bt.bin", bt))
     # the Python app's examples
     pyex = os.path.join(DECK_MODERN, "python-examples")

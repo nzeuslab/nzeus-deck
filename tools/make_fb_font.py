@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Makes linux-port/fatroot/font8x16.h: the 8x16 letters `nz-fatroot show` draws.
+"""Makes ports/r36s-hichip/fatroot/font8x16.h: the 8x16 letters `nz-fatroot show` draws.
 
 Source: Lat15-Fixed16.psf.gz from Debian/Ubuntu's console-setup-linux package
 ("All console fonts are public domain by nature", its copyright file).
@@ -12,7 +12,7 @@ import struct
 import sys
 from pathlib import Path
 
-OUT = Path(__file__).resolve().parents[1] / 'linux-port' / 'fatroot' / 'font8x16.h'
+OUT = Path(__file__).resolve().parents[1] / 'ports' / 'r36s-hichip' / 'fatroot' / 'font8x16.h'
 
 
 def glyphs(data):

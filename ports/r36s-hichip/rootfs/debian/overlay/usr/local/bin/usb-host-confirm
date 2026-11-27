@@ -1,0 +1,5 @@
+#!/bin/sh
+# usb-host-confirm - keep USB host mode (during a usb-host-trial).
+# See ports/r36s-hichip/usbhost/README.md. Runs the unchanged ports/r36s-hichip/usbhost/usb-host-confirm.sh,
+# installed by the builder.
+exec /bin/sh /usr/local/lib/nzeus/usbhost/usb-host-confirm.sh "$@"

@@ -1,0 +1,54 @@
+#!/bin/sh
+# nzeus-usb-shell - root shell on the USB serial port (/dev/ttyGS0), started
+# and restarted by init (/etc/inittab). No password: the USB cable to your own
+# PC is the way in, exactly like the RAM rescue shell (ports/r36s-hichip/usb-rescue).
+#
+# Same behaviour as /usb-rescue, so ports/r36s-hichip/diagnostics/rescue-command.py and
+# rescue-upload.py work unchanged: an interactive shell whose controlling
+# terminal is ttyGS0, "stty sane" first (echo on, CR/LF output), a short
+# banner, and nothing that reads input before the shell does.
+# The shell is bash (line editing, history) if present, else /bin/sh;
+# /etc/default/nzeus-usb-shell can choose (NZ_USB_SHELL=/bin/sh). Bash's
+# "bracketed paste" is switched off (/etc/nzeus/inputrc) so no escape codes
+# are mixed into what the PC tools read.
+# Works with dash, bash and BusyBox ash. NZ_* variables: PC test only.
+
+TTY=${NZ_USB_TTY:-/dev/ttyGS0}
+test -r /etc/default/nzeus-usb-shell && . /etc/default/nzeus-usb-shell
+SH=${NZ_USB_SHELL:-/bin/bash}
+test -x "$SH" || SH=/bin/sh
+
+# No port (gadget not made yet, or USB network mode): wait a little, then let
+# init start us again. (init stops an entry that restarts >10 times in 2 min.)
+if ! test -c "$TTY"; then
+    sleep 15
+    exit 0
+fi
+
+PATH=${NZ_TEST_PATH:-/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin}
+HOME=${NZ_TEST_HOME:-/root}
+TERM=vt100
+USER=root
+LOGNAME=root
+SHELL=$SH
+LANG=C.UTF-8
+INPUTRC=${NZ_TEST_INPUTRC:-/etc/nzeus/inputrc}
+export PATH HOME TERM USER LOGNAME SHELL LANG INPUTRC
+cd "$HOME" 2>/dev/null || cd /
+
+# init starts us as the leader of a new session with no terminal; opening the
+# port then makes it our controlling terminal (job control, Ctrl+C, and a
+# hang-up when the PC closes the port, after which init starts a new shell).
+# Started by hand instead: make a new session first.
+sid=$(sed 's/^.*) //' "/proc/$$/stat" | cut -d' ' -f4)
+if test "$sid" != "$$"; then
+    exec setsid -c /bin/sh "$0" "$@" < "$TTY" > "$TTY" 2>&1
+fi
+exec 0<> "$TTY" 1>&0 2>&0 || exit 1
+stty sane 2>/dev/null
+echo
+echo "NZEUS SD Linux - root shell on the USB cable."
+uname -a
+nzeus-status --short 2>/dev/null
+echo "'nzeus-status' = details, 'cat /etc/motd' = help, 'poweroff' = switch off."
+exec "$SH" -i

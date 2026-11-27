@@ -36,14 +36,14 @@
 #include "ui.h"
 
 #define CAR_DIR NZ_DIR "/car"
-/* the vehicle-support helper (linux-port/deck-modern/nzeus-car-support);
+/* the vehicle-support helper (core/deck-modern/nzeus-car-support);
  * the PC tests use the project's own copy instead */
 #ifndef NZ_TESTING
 #define SUPPORT_HELPER "/usr/local/lib/nzeus/deck-bin/nzeus-car-support"
 #elif defined(NZ_REPO)
-#define SUPPORT_HELPER NZ_REPO "/linux-port/deck-modern/nzeus-car-support"
+#define SUPPORT_HELPER NZ_REPO "/core/deck-modern/nzeus-car-support"
 #else
-#define SUPPORT_HELPER "./linux-port/deck-modern/nzeus-car-support"
+#define SUPPORT_HELPER "./core/deck-modern/nzeus-car-support"
 #endif
 
 typedef struct { int pid; const char *caption; int lo, hi; const char *fmt; } Gauge;

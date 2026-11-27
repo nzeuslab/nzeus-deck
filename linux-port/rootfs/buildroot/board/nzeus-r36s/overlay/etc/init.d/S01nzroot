@@ -1,7 +1,0 @@
-#!/bin/sh
-# NZEUS: check the SD root file system while it is still READ-ONLY, then make
-# it writable - only if e2fsck -p answers 0 or 1. Never forces a repair.
-# The logic is shared with the Debian root: /usr/local/sbin/nzeus-rootcheck
-# (linux-port/rootfs/debian/overlay, installed by post-build.sh).
-case "$1" in start) ;; *) exit 0 ;; esac
-exec /usr/local/sbin/nzeus-rootcheck

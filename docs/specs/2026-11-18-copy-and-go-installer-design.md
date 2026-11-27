@@ -51,19 +51,19 @@ similar systems.
 - The factory bootloader (in NOR, never touched) loads `cubegm/advapi32.dll`
   from the FAT32 partition: a ChaCha20-wrapped legacy uImage + CRC32, no
   signature. Key = derived from the factory bootloader
-  (`linux-port/boot-analysis/image_codec.py`). The same modern card booted on
+  (`ports/r36s-hichip/boot-analysis/image_codec.py`). The same modern card booted on
   both of my consoles, so the key is very likely shared across units.
 - It also reads `cubegm/Bubbles.scr` (SD device tree, only selected properties)
   and `cubegm/ApplicationFrame.dll` (AVP co-processor firmware). Rule: never
   replace `Bubbles.scr`. `ApplicationFrame.dll` may be swapped for the NZEUS
-  stand-in made by `linux-port/purelinux/prepare_avpstub.py`; that stand-in is
+  stand-in made by `ports/r36s-hichip/purelinux/prepare_avpstub.py`; that stand-in is
   what frees the RAM (about 117 MiB usable instead of about 39).
 - Sector 0 of stock cards is XOR-scrambled with `EF BE AD DE`
   (`nz_region.py unscramble`), so Linux's normal partition parser sees nothing.
 - Kernel has VFAT, FAT, NLS 437/ISO8859-1, loop, ext4, devtmpfs
-  (`linux-port/artifacts/kernel.config`).
+  (`ports/r36s-hichip/artifacts/kernel.config`).
 - FAT32 files are limited to 4 GiB − 1 byte.
-- Boot today: RAM initramfs (`linux-port/sdroot/init` + `nz-sdboot`) checks a
+- Boot today: RAM initramfs (`ports/r36s-hichip/sdroot/init` + `nz-sdboot`) checks a
   header and the card CID, then mounts `mmcblk0p3` read-only and switch_roots;
   on ANY failure it stays in the RAM rescue system with a USB root shell.
 - A generic Debian root already exists: built with `NZ_NO_AUTHORIZED_KEYS=1`,

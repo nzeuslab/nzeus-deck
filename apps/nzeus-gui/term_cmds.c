@@ -20,7 +20,7 @@
  * { command, what it does (one line, plain words), example or NULL }
  * A line with command NULL starts a group (its name is in the 2nd field).
  * Only commands the console really has: Debian's own, and NZEUS Deck's helpers
- * (nzeus/bin, linux-port/deck-modern). CAPITALS = the part you fill in. */
+ * (nzeus/bin, core/deck-modern). CAPITALS = the part you fill in. */
 static const TermCmd table[] = {
     { NULL, "Files and folders", NULL },
     { "ls", "List what is in this folder", NULL },

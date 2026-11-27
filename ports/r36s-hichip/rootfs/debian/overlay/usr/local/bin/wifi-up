@@ -1,0 +1,5 @@
+#!/bin/sh
+# wifi-up - join the Wi-Fi in /data/nzeus/wifi.conf with the USB dongle, DHCP, SSH.
+# See ports/r36s-hichip/usbhost/README.md. Runs the unchanged ports/r36s-hichip/usbhost/wifi-up.sh,
+# installed by the builder.
+exec /bin/sh /usr/local/lib/nzeus/usbhost/wifi-up.sh "$@"

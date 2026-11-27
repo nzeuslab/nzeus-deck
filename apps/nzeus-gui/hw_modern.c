@@ -1,7 +1,7 @@
 /* hw_modern.c - the console's devices on the SD Debian (Linux 7.2): screen
  * brightness, battery, sound, the speaker switch, the network check and the
  * power-off call. Everything is a standard Linux file (see
- * linux-port/power/README.md and linux-port/audio):
+ * ports/r36s-hichip/power/README.md and ports/r36s-hichip/audio):
  *
  *   brightness  /sys/class/backlight/r36s-avp/brightness   0..255, NZEUS's
  *               percent -> level curve (hw_backlight_value); another

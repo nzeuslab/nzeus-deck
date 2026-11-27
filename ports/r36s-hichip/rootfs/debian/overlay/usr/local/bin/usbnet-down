@@ -1,0 +1,4 @@
+#!/bin/sh
+# usbnet-down - TCP/IP over the USB cable (see ports/r36s-hichip/usbnet/README.md).
+# Runs the unchanged ports/r36s-hichip/usbnet/usbnet-down.sh, installed by the builder.
+exec /bin/sh /usr/local/lib/nzeus/usbnet/usbnet-down.sh "$@"

@@ -9,15 +9,15 @@ Everything in this zip is built from public source code:
 
 - Linux kernel: github.com/SiarheiVolkau/linux-hichip, commit
   da5f1a22ef2ff5c46aa3f750fa10825813970b09, plus the patches and drivers in
-  the repository's linux-port/ folder (apply-port-patches.py, install-source.py,
-  kernel-public/0001-nzeus-fpudiag.patch), settings linux-port/kernel-public/kernel.config.
+  the repository's ports/r36s-hichip/ folder (apply-port-patches.py, install-source.py,
+  kernel-public/0001-nzeus-fpudiag.patch), settings ports/r36s-hichip/kernel-public/kernel.config.
 
 - Boot RAM disk: BusyBox 1.37.0 (busybox.net, sha256 in
-  linux-port/upstream/busybox-1.37.0.tar.bz2.sha256) and e2fsprogs 1.47.1
-  (kernel.org, sha256 in linux-port/upstream/e2fsprogs-1.47.1.tar.xz.sha256).
+  ports/r36s-hichip/upstream/busybox-1.37.0.tar.bz2.sha256) and e2fsprogs 1.47.1
+  (kernel.org, sha256 in ports/r36s-hichip/upstream/e2fsprogs-1.47.1.tar.xz.sha256).
 
 - Debian 12 packages inside nzroot.img: source at deb.debian.org / sources.debian.org
-  (the package list is linux-port/rootfs/debian/packages.txt).
+  (the package list is ports/r36s-hichip/rootfs/debian/packages.txt).
 
 If you can't get any of these sources, open an issue at
 https://github.com/nzeuslab/nzeus-deck/issues and

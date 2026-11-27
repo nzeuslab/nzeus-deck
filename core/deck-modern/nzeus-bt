@@ -1,0 +1,9 @@
+#!/bin/sh
+# nzeus-bt - NZEUS Deck's Bluetooth program on the SD Debian: runs the static
+# nzeus-bt (core/deck-modern/bt, installed next to this file as
+# nzeus-bt.bin) with its pairings kept in the Deck's own folder on /data.
+HERE=$(cd "$(dirname "$0")" && pwd)
+NZEUS_BT_DIR=${NZEUS_BT_DIR:-${NZ_DECK_DIR:-/tmp/nzeus-data/nzeus}/bluetooth}
+export NZEUS_BT_DIR
+mkdir -p "$NZEUS_BT_DIR" 2>/dev/null
+exec "$HERE/nzeus-bt.bin" "$@"

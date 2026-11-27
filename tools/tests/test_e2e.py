@@ -74,7 +74,7 @@ check('e2e_install_by_hand', r1.returncode == 0 and r2.returncode == 0 and all(c
 
 # 3. boot: nz-fatroot (PC build) on the closed card, as the console does
 x86 = tmp / 'nz-fatroot'
-run('gcc', '-O2', '-o', x86, REPO / 'linux-port/fatroot/nz-fatroot.c')
+run('gcc', '-O2', '-o', x86, REPO / 'ports/r36s-hichip/fatroot/nz-fatroot.c')
 root = tmp / 'root'
 root.mkdir()
 a = run('sudo', '-n', 'env', f'NZ_ROOT={root}', 'NZ_E2FSCK=/usr/sbin/e2fsck', x86, 'attach', card, '/newroot')

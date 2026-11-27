@@ -26,20 +26,20 @@ mkdir -p "$WORK" "$R/dist"
 echo "== NZEUS Deck release $VER ($(date +%T))"
 
 echo "1/5 kernel"
-bash "$R/linux-port/kernel-public/build.sh" "$WORK/kernel" | tail -2
+bash "$R/ports/r36s-hichip/kernel-public/build.sh" "$WORK/kernel" | tail -2
 echo "2/5 kernel + AVP stand-in packages"
-python3 "$R/linux-port/kernel-public/package.py" --elf "$WORK/kernel/nzeus-kernel.elf" \
+python3 "$R/ports/r36s-hichip/kernel-public/package.py" --elf "$WORK/kernel/nzeus-kernel.elf" \
     --bootloader "$NZ_BOOTLOADER" --out "$WORK/package" > "$WORK/package.log"
 echo "3/5 NZEUS Deck program"
 (cd "$R" && bash build_nzeus_modern.sh > "$WORK/deck.log" 2>&1) || { tail -20 "$WORK/deck.log"; exit 1; }
 echo "4/5 Debian images (public, no owner key)"
 REUSE=$(test -d "$ROOTFS/rootfs" && echo --reuse || true)
 NZ_NO_AUTHORIZED_KEYS=1 NZ_MODERN_BIN="$R/apps/frontend-modern/mips/nzeus-modern" \
-    bash "$R/linux-port/rootfs/debian/build-debian.sh" "$ROOTFS" $REUSE --public-fatroot > "$WORK/debian.log" 2>&1 \
+    bash "$R/ports/r36s-hichip/rootfs/debian/build-debian.sh" "$ROOTFS" $REUSE --public-fatroot > "$WORK/debian.log" 2>&1 \
     || { tail -20 "$WORK/debian.log"; exit 1; }
 : "${NZ_PRIVATE_WORDS_DIR:?set NZ_PRIVATE_WORDS_DIR: a release is never made without the privacy scan}"
 if true; then
-    sudo env NZ_PRIVATE_WORDS_DIR="$NZ_PRIVATE_WORDS_DIR" bash "$R/linux-port/rootfs/debian/test-public-image.sh" "$ROOTFS" | tail -1
+    sudo env NZ_PRIVATE_WORDS_DIR="$NZ_PRIVATE_WORDS_DIR" bash "$R/ports/r36s-hichip/rootfs/debian/test-public-image.sh" "$ROOTFS" | tail -1
 fi
 
 echo "5/5 zip ($(date +%T))"
