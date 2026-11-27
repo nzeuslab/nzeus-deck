@@ -85,3 +85,8 @@ void settings_set_int(const char *key, int value)
     snprintf(v, sizeof v, "%d", value);
     settings_set(key, v);
 }
+
+int settings_accept_is_b(void)
+{
+    return !strcmp(settings_get("accept_button", "a"), "b");
+}

@@ -5,6 +5,7 @@
 #include "home.h"
 #include "icons.h"
 #include "nzlist.h"
+#include "nzui.h"
 #include "theme.h"
 
 #define MAX_ITEMS 256
@@ -157,3 +158,10 @@ int nzlist_key(NzList *l, int key)
 }
 
 void nzlist_free(NzList *l) { free(l); }
+
+int nzlist_add_hint(NzList *l, int icon, const char *title, const char *sub, const char *right)
+{
+    int i = nzlist_add(l, icon, title, sub, right);
+    if (i >= 0 && sub) nz_button_text(nzlist_sub_obj(l, i), sub);
+    return i;
+}

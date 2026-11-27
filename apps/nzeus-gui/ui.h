@@ -19,7 +19,7 @@ void ui_init(void);                      /* builds both screens, starts in handh
 int  ui_mode(void);
 void ui_set_mode(int mode);
 
-void ui_key(int key);                    /* a button was just pressed (NZ_KEY_*) */
+void ui_key(int key);                    /* physical NZ_KEY_* press; mapped to accept/back here */
 void ui_buttons(uint32_t held);          /* every frame: buttons held now (bit per NZ_KEY_*) */
 
 /* every frame while a USB mouse is plugged in: its position, whether the left

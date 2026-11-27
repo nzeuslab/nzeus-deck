@@ -220,17 +220,17 @@ static void show(void)
         lv_label_set_text(P.detail_lbl, "The board runs R36S/apps/probe/firmware.\nIts inputs take 0 to 3.3 V only.");
         return;
     }
-    const char *rd = P.reading[0] ? P.reading : "(press A)";
+    const char *rd = P.reading[0] ? P.reading : "(press {accept})";
     switch (P.tool) {
     case T_VOLT:   snprintf(r, sizeof r, "Channel %d:  %s", P.chan, rd); break;
     case T_SCOPE:  snprintf(r, sizeof r, "Channel %d%s:  %s", P.chan, P.scope_live ? " (live)" : "", rd); break;
     case T_SIGGEN:
-        if (siggen_steps[P.siggen_step]) snprintf(r, sizeof r, "%d Hz, 50%%   (A sets it)", siggen_steps[P.siggen_step]);
-        else snprintf(r, sizeof r, "Off   (A sets it)");
+        if (siggen_steps[P.siggen_step]) snprintf(r, sizeof r, "%d Hz, 50%%   ({accept} sets it)", siggen_steps[P.siggen_step]);
+        else snprintf(r, sizeof r, "Off   ({accept} sets it)");
         break;
     default:       snprintf(r, sizeof r, "%s", rd); break;
     }
-    lv_label_set_text(P.read_lbl, r);
+    nz_button_text(P.read_lbl, r);
     lv_label_set_text(P.detail_lbl, P.detail);
 }
 

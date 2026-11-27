@@ -24,6 +24,16 @@ void nz_confirm(const char *question, nz_confirm_cb cb, void *ctx);
  * count = number of pairs. Returns the row (place it with lv_obj_align). */
 lv_obj_t *nz_hints(lv_obj_t *parent, const char *const pairs[], int count);
 
+/* Button-only labels retain their logical A/B names, and redraw live when
+ * the Controls setting changes. Do not use this for user-provided text. */
+void nz_button_label(lv_obj_t *label, const char *logical_text);
+/* Explicit templates for inline help: {accept} and {back}. Setting the label's
+ * text any other way later (lv_label_set_text) unbinds it at the next refresh. */
+void nz_button_text(lv_obj_t *label, const char *text);
+void nz_button_text_fmt(lv_obj_t *label, const char *fmt, ...);
+lv_obj_t *nz_text_label(lv_obj_t *parent, const char *text, int style);
+void nz_hints_refresh(void);
+
 /* The clipboard shared by all apps (Terminal, Editor): plain text, up to
  * NZ_CLIP_MAX bytes (longer text is cut). nz_clip_get() is "" when empty. */
 #define NZ_CLIP_MAX (16 * 1024)

@@ -70,7 +70,7 @@ static void show_now(void)
     char a[16], b[16], t[48];
     if (M.current < 0 || !audio_loaded()) {
         lv_label_set_text(M.title, "Nothing playing");
-        lv_label_set_text(M.info, M.count ? "Pick a song and press A" : "Put WAV or MP3 files in the  music  folder");
+        nz_button_text(M.info, M.count ? "Pick a song and press {accept}" : "Put WAV or MP3 files in the  music  folder");
         lv_bar_set_value(M.bar, 0, LV_ANIM_OFF);
         lv_label_set_text(M.time, "");
         return;

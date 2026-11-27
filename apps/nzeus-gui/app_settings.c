@@ -176,6 +176,17 @@ static void year_change(int dir) { date_add(dir * 12); }
 static void year_value(char *b, size_t n) { time_text(b, n, "%Y"); }
 
 /* Controls */
+static void accept_change(int dir)
+{
+    if (!dir) return;
+    settings_set("accept_button", settings_accept_is_b() ? "a" : "b");
+    nz_hints_refresh();
+}
+static void accept_value(char *b, size_t n)
+{
+    snprintf(b, n, "%s to accept", settings_accept_is_b() ? "B" : "A");
+}
+
 static int repeat_index(void)
 {
     int ms = settings_get_int("repeat_ms", 120);
@@ -461,6 +472,7 @@ static const Row rows_controls[] = {
     { ROW_TEXT,  "Switch look", NULL, keys_value, NULL },
     { ROW_TEXT,  "Screenshot", NULL, shot_keys_value, NULL },
     { ROW_VALUE, "Vol- / serial pin", voldown_change, voldown_value, NULL },
+    { ROW_VALUE, "Confirm button", accept_change, accept_value, NULL },
 };
 static const Row rows_storage[] = {
     { ROW_TEXT, "SD card (Linux data)", NULL, sd_value, NULL },
@@ -800,7 +812,7 @@ static void bt_fill_mine(void)
         nzlist_add(S.list, kind_icon(d->kind), d->name, sub, strcmp(d->type, "le") ? NULL : "LE");
     }
     if (!bt_device_count())
-        nzlist_add(S.list, ICON_ABOUT, "No devices yet", "Press A to find a keyboard or mouse", NULL);
+        nzlist_add_hint(S.list, ICON_ABOUT, "No devices yet", "Press {accept} to find a keyboard or mouse", NULL);
     if (sel > 0) nzlist_select(S.list, sel);
     S.list_ver = bt_list_version();
 }

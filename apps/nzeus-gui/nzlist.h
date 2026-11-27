@@ -28,4 +28,8 @@ void nzlist_select(NzList *l, int i);
 int  nzlist_key(NzList *l, int key);                     /* 1 = used the button */
 void nzlist_free(NzList *l);                             /* (the objects go with their parent) */
 
+/* nzlist_add with sub as a button hint template ({accept}/{back}, see nzui.h);
+ * title and right stay literal */
+int nzlist_add_hint(NzList *l, int icon, const char *title, const char *sub, const char *right);
+
 #endif

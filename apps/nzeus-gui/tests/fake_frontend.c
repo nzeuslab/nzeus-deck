@@ -31,6 +31,12 @@
 #include "terminal.h"
 #include "editor.h"
 
+static int accept_test_result;
+static void accept_test_click(lv_event_t *e) { (void)e; accept_test_result++; }
+static void accept_test_confirm(int yes, void *ctx) { (void)ctx; accept_test_result = yes; }
+static void accept_test_menu(int choice, void *ctx) { (void)ctx; accept_test_result = choice; }
+static void accept_test_prompt(const char *text, void *ctx) { (void)ctx; accept_test_result = text ? 1 : 0; }
+
 const char *app_terminal_input(void);    /* app_terminal.c: what is typed so far */
 lv_obj_t *app_terminal_textbox(void);    /* app_terminal.c: the typed line's box */
 int app_terminal_cursor(void);           /* ... where the text cursor is */
@@ -1103,6 +1109,66 @@ static void car_recovery_test(void)
     }
 }
 
+static void test_accept_controls(void)
+{
+    /* The new row changes physical buttons, not logical keyboard actions. */
+    tap(3); frames(2);                           /* DOWN: Confirm button */
+    lv_obj_t *hint_test = lv_obj_create(lv_layer_top());
+    const char *const hint_pairs[] = { "D-pad+A", "Type", "B", "Back" };
+    lv_obj_t *hint_row = nz_hints(hint_test, hint_pairs, 2);
+    lv_obj_t *prose = nz_text_label(hint_test, "A module: {accept} opens, {back} cancels. B is a letter.", TS_SMALL);
+    lv_obj_t *changing = nz_text_label(hint_test, "{back}: cancel loading", TS_SMALL);
+    check(!strcmp(lv_label_get_text(prose), "A module: A opens, B cancels. B is a letter."),
+          "Controls: inline templates render concrete buttons without rewriting ordinary A/B");
+
+    check(!settings_accept_is_b() && strstr(app_settings_row_value(4), "A to accept") != NULL,
+          "Controls: A accepts by default");
+    tap(5); frames(2);                           /* RIGHT: B to accept */
+    check(settings_accept_is_b() && strstr(app_settings_row_value(4), "B to accept") != NULL &&
+          !strcmp(lv_label_get_text(lv_obj_get_child(hint_row, 0)), "D-pad+B") &&
+          !strcmp(lv_label_get_text(lv_obj_get_child(hint_row, 2)), "A"),
+          "Controls: switching to B updates existing simple and combined hints live");
+    check(!strcmp(lv_label_get_text(prose), "A module: B opens, A cancels. B is a letter.") &&
+          !strcmp(lv_label_get_text(changing), "A: cancel loading"),
+          "Controls: inline instructions update live alongside button icons");
+    lv_label_set_text(changing, "Loaded: literal A and B");
+    nz_hints_refresh();
+    check(!strcmp(lv_label_get_text(changing), "Loaded: literal A and B"),
+          "Controls: replacing a hint with plain state text retires its old template");
+    settings_reload();
+    check(settings_accept_is_b(), "Controls: choice survives reloading settings");
+    accept_test_result = -1;
+    nz_confirm("Test confirm", accept_test_confirm, NULL); tap(13);
+    check(!nzui_active() && accept_test_result == 0, "Controls: physical A cancels in B-accept mode");
+    nz_confirm("Test confirm", accept_test_confirm, NULL); tap(14);
+    check(!nzui_active() && accept_test_result == 1, "Controls: physical B accepts in B-accept mode");
+    const char *const menu_choices[] = { "First", "Second" };
+    nz_menu("Test menu", menu_choices, 2, accept_test_menu, NULL); tap(14);
+    check(accept_test_result == 0, "Controls: physical B selects a menu item");
+    nz_prompt("Test prompt", "kept", accept_test_prompt, NULL);
+    accept_test_result = -1; tap(13);
+    check(!nzui_active() && accept_test_result == 0, "Controls: physical A cancels text entry");
+    KbEvent enter_test = { KB_ENTER, 0 }, esc_test = { KB_ESC, 0 };
+    nz_confirm("Keyboard Enter", accept_test_confirm, NULL); ui_kbd(&enter_test);
+    check(accept_test_result == 1, "Controls: keyboard Enter still accepts");
+    nz_confirm("Keyboard Esc", accept_test_confirm, NULL); ui_kbd(&esc_test);
+    check(accept_test_result == 0, "Controls: keyboard Esc still cancels");
+    ui_set_mode(UI_DESKTOP);
+    lv_obj_t *click_target = lv_btn_create(lv_layer_top());
+    lv_obj_set_pos(click_target, 300, 200); lv_obj_set_size(click_target, 80, 50);
+    lv_obj_add_event_cb(click_target, accept_test_click, LV_EVENT_CLICKED, NULL);
+    mouse_at(330, 220, 0); frames(2);
+    accept_test_result = 0; tap(13); frames(2);
+    check(accept_test_result == 0, "Controls: A is not a desktop click in B-accept mode");
+    tap(14); frames(2);
+    check(accept_test_result == 1, "Controls: B clicks the desktop pointer in B-accept mode");
+    lv_obj_del(click_target); ui_set_mode(UI_HANDHELD); frames(2);
+    lv_obj_del(hint_test);                        /* refresh must not use deleted labels */
+    tap(14); frames(2);                          /* B accepts the row: back to A */
+    check(!settings_accept_is_b() && strstr(app_settings_row_value(4), "A to accept") != NULL,
+          "Controls: B switches the setting back to A in place");
+}
+
 int main(int argc, char **argv)
 {
     /* glibc keeps a few freed blocks in a per-thread cache that still counts
@@ -1222,6 +1288,16 @@ int main(int argc, char **argv)
     *keys |= 1u << 5; frames(45); *keys &= ~(1u << 5); frames(2);   /* hold RIGHT ~0.7 s */
     check(selected_tile() == 3, "holding RIGHT repeats to the end of the row");
     tap(7); tap(7); tap(7);
+
+    if (getenv("NZ_CONTROLS_ONLY")) {
+        ui_open_app(APP_SETTINGS); frames(2);
+        for (int i = 0; i < 4; i++) tap(3);            /* Controls section */
+        tap(13);                                     /* enter rows */
+        for (int i = 0; i < 3; i++) tap(3);            /* pin row, before Confirm */
+        test_accept_controls();
+        printf("%s\n", failures ? "CONTROLS TESTS FAILED" : "CONTROLS TESTS PASSED");
+        return failures ? 1 : 0;
+    }
 
     tap(3); tap(13);                                 /* Car, then A */
     frames(3);
@@ -2066,6 +2142,7 @@ int main(int argc, char **argv)
             check(file_contains("/tmp/fake_voldown_calls", "key") && !strcmp(ui_toast_text(), "The Vol- button works now"),
                   "Settings > Controls: ...and 'nzeus-voldown key' gives the Vol- button back");
             voldown_sys_file = "/tmp/no_such_voldown";
+            test_accept_controls();
             tap(14); frames(2);                            /* B: the sections */
         }
         tap(14); frames(3);

@@ -26,7 +26,7 @@
 #define UPDATE_SH NZ_DIR "/bin/nzeus-update.sh"
 #define PUBLISH_CMD   "python tools/publish_update.py --modern"
 #define KEPT_TEXT     "The old version is kept. If the new one doesn't keep\nrunning for a minute, the old one comes back by itself."
-#define DONE_TEXT     "Restart NZEUS Deck to start the new version (A).\nIf it keeps running for a minute it is kept;\nif not, the old one comes back by itself."
+#define DONE_TEXT     "Restart NZEUS Deck to start the new version ({accept}).\nIf it keeps running for a minute it is kept;\nif not, the old one comes back by itself."
 #define RESTART_ASK   "Restart NZEUS Deck now?"
 #define LOG_CHECK   "/tmp/nzeus-update-check.log"
 #define LOG_INSTALL NZ_DIR "/update/install.log"      /* (on the card: it tells what happened, even after a restart) */
@@ -139,7 +139,7 @@ static void show(void)
         break;
     case ST_DONE:
         lv_label_set_text_fmt(U.title, "Installed: %s", U.version);
-        lv_label_set_text(U.body, DONE_TEXT);
+        nz_button_text(U.body, DONE_TEXT);
         break;
     case ST_ERROR:
         lv_label_set_text(U.title, "No update");
@@ -149,7 +149,7 @@ static void show(void)
         break;
     default:
         lv_label_set_text(U.title, "Update NZEUS Deck");
-        lv_label_set_text(U.body, "Gets the newest NZEUS Deck from your PC over Wi-Fi.\n\nOn the PC: " PUBLISH_CMD "\nThen press A here.");
+        nz_button_text(U.body, "Gets the newest NZEUS Deck from your PC over Wi-Fi.\n\nOn the PC: " PUBLISH_CMD "\nThen press {accept} here.");
         break;
     }
     set_hint();

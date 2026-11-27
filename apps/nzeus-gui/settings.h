@@ -23,4 +23,7 @@ void settings_set(const char *key, const char *value);            /* saves to th
 void settings_set_int(const char *key, int value);
 void settings_reload(void);                                       /* read the file again */
 
+/* Settings > Controls: B confirms and A goes back (ui_key swaps them) */
+int settings_accept_is_b(void);
+
 #endif

@@ -126,8 +126,15 @@ int ui_open_app(int app)
 }
 
 /* --- buttons --- */
+/* the physical button that confirms (Settings > Controls) */
+static int accept_key(void) { return settings_accept_is_b() ? NZ_KEY_B : NZ_KEY_A; }
+
 void ui_key(int key)
 {
+    /* physical A/B -> logical accept/back; keyboard events already carry
+     * actions and do not come through here */
+    if (settings_accept_is_b() && (key == NZ_KEY_A || key == NZ_KEY_B))
+        key = key == NZ_KEY_A ? NZ_KEY_B : NZ_KEY_A;
     if (nzui_key(key)) return;                        /* an open pop-up gets every button */
     if (key == NZ_KEY_SELECT) {                       /* SELECT: switch look */
         ui_set_mode(mode == UI_DESKTOP ? UI_HANDHELD : UI_DESKTOP);
@@ -202,7 +209,7 @@ void ui_buttons(uint32_t held)
     } else {
         pad_hold_frames = 0;
     }
-    pad_down = (held & (1u << NZ_KEY_A)) != 0;
+    pad_down = (held & (1u << accept_key())) != 0;
     pointer_edge();
 }
 

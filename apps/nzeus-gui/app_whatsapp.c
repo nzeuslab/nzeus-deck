@@ -311,7 +311,7 @@ static void set_state(int st)
         set_status("No PIN yet");
         break;
     case ST_LOCKED:
-        lv_label_set_text(W.info, "Locked.\n\nA: type your PIN (the Claude app's PIN)");
+        nz_button_text(W.info, "Locked.\n\n{accept}: type your PIN (the Claude app's PIN)");
         set_hints(h_pin, 2);
         set_status("Locked");
         break;
@@ -514,7 +514,7 @@ static void show_messages(void)
     if (w <= 0) w = 600;
     int maxw = w * 3 / 4;                                  /* a bubble: at most 3/4 of the width */
     for (int i = 0; i < W.nmsgs; i++) add_bubble(&W.msgs[i], maxw);
-    if (!W.nmsgs) th_label(W.scroller, "No messages yet. A: write one", TS_MUTED);
+    if (!W.nmsgs) nz_text_label(W.scroller, "No messages yet. {accept}: write one", TS_MUTED);
     lv_obj_update_layout(W.scroller);
     if (at_bottom) lv_obj_scroll_by(W.scroller, 0, -lv_obj_get_scroll_bottom(W.scroller), LV_ANIM_OFF);   /* newest at the bottom */
     else lv_obj_scroll_to_y(W.scroller, y, LV_ANIM_OFF);   /* (reading older ones: stay there) */
