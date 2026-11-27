@@ -42,6 +42,7 @@
 #include <linux/mod_devicetable.h>
 #include <linux/mutex.h>
 #include <linux/platform_device.h>
+#include <linux/pm.h>
 #include <sound/control.h>
 #include <sound/core.h>
 #include <sound/initval.h>
@@ -317,6 +318,9 @@ static int r36s_audio_trigger(struct snd_pcm_substream *ss, int cmd)
 	switch (cmd) {
 	case SNDRV_PCM_TRIGGER_START:
 	case SNDRV_PCM_TRIGGER_RESUME:
+		/* Gated by suspend(); the bring-up sleeps, so leave it to prepare(). */
+		if (!a->rate)
+			return -EBUSY;
 		r36s_audio_set_wr(a, ss->runtime);
 		snd_rmw(a, SND_CTRL, 0, BIT(16));		/* GO */
 		amp_set(a, true);				/* amp on (not with headphones in) */
@@ -327,7 +331,9 @@ static int r36s_audio_trigger(struct snd_pcm_substream *ss, int cmd)
 	case SNDRV_PCM_TRIGGER_SUSPEND:
 		a->running = false;
 		amp_set(a, false);				/* amp off first (no pop) */
-		snd_rmw(a, SND_CTRL, BIT(16), 0);
+		/* SND0 must not be touched once suspend() gated the clock. */
+		if (audio_clock_on(a))
+			snd_rmw(a, SND_CTRL, BIT(16), 0);
 		hrtimer_try_to_cancel(&a->timer);
 		return 0;
 	}
@@ -355,7 +361,12 @@ static int r36s_audio_ack(struct snd_pcm_substream *ss)
 static snd_pcm_uframes_t r36s_audio_pointer(struct snd_pcm_substream *ss)
 {
 	struct r36s_audio *a = snd_pcm_substream_chip(ss);
-	unsigned int pos = (readw(a->snd + SND_RD) * 16) % a->ring_bytes;
+	unsigned int pos;
+
+	/* Clock is gated after suspend(); don't read SND0. */
+	if (!a->rate)
+		return bytes_to_frames(ss->runtime, a->last_pos);
+	pos = (readw(a->snd + SND_RD) * 16) % a->ring_bytes;
 
 	return bytes_to_frames(ss->runtime, pos);
 }
@@ -411,6 +422,36 @@ static const struct snd_kcontrol_new r36s_vol_control = {
 	.info = r36s_vol_info,
 	.get = r36s_vol_get,
 	.put = r36s_vol_put,
+};
+
+/*
+ * Nothing gates the audio clocks after playback (the AVP is not running), so
+ * gate them on system sleep. a->rate = 0 makes the next prepare() redo the
+ * bring-up.
+ */
+static int r36s_audio_suspend(struct device *dev)
+{
+	struct r36s_audio *a = dev_get_drvdata(dev);
+
+	hrtimer_cancel(&a->timer);
+	mutex_lock(&a->lock);
+	a->running = false;
+	if (a->rate) {
+		amp_set(a, false);				/* amp off first (no pop) */
+		if (audio_clock_on(a)) {
+			snd_rmw(a, SND_CTRL, BIT(16), 0);	/* GO off */
+			sys_rmw(a, SYS_GATE1, 0, BIT(15) | BIT(20) | BIT(21));
+			sys_rmw(a, SYS_PADCLK, 0, GENMASK(26, 16));
+		}
+		a->rate = 0;					/* next prepare re-inits */
+		dev_info(a->dev, "audio clocks gated for system sleep\n");
+	}
+	mutex_unlock(&a->lock);
+	return 0;
+}
+
+static const struct dev_pm_ops r36s_audio_pm = {
+	SYSTEM_SLEEP_PM_OPS(r36s_audio_suspend, NULL)
 };
 
 static ssize_t regs_show(struct device *dev, struct device_attribute *attr, char *buf)
@@ -547,6 +588,7 @@ static struct platform_driver r36s_audio_driver = {
 		.name = "nzeus-r36s-audio",
 		.of_match_table = r36s_audio_of_match,
 		.dev_groups = r36s_audio_groups,
+		.pm = pm_sleep_ptr(&r36s_audio_pm),
 	},
 };
 module_platform_driver(r36s_audio_driver);

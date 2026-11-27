@@ -108,6 +108,7 @@
 
 	gpio-controller@18800044 {
 		compatible = "hichip,hc16xx-gpio";
+		nzeus,s2idle-wakeup;
 		reg = <0x18800044 0x1c 0x188000c4 0x1c 0x188000e4 0x1c 0x18800344 0x1c>;
 		reg-names = "left\0bottom\0right\0top";
 		gpio-ranges = <0x05 0x00 0x00 0x80>;

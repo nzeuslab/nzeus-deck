@@ -24,6 +24,8 @@
  *     Own delayed work, NOT the input poller: the input poller only runs
  *     while a program has the event device open, and hold-to-off must work
  *     with no program running;
+ *   - released before 3 s: enter suspend-to-idle when sleep_on_short_press
+ *     is enabled. A falling-edge GPIO IRQ wakes it on the next press;
  *   - held for 3 s: orderly power-off (forced if no /sbin/poweroff exists).
  *
  * Optional poweroff-gpios (GPIO L01, active low) = the stock device tree's
@@ -52,10 +54,12 @@
  * it overflows after 6 ticks (~28 us) and resets the chip. Probing only maps
  * the 8 bytes; nothing is written until a restart is asked for.
  */
+#include <linux/atomic.h>
 #include <linux/delay.h>
 #include <linux/devm-helpers.h>
 #include <linux/gpio/consumer.h>
 #include <linux/input.h>
+#include <linux/interrupt.h>
 #include <linux/io.h>
 #include <linux/module.h>
 #include <linux/mutex.h>
@@ -64,6 +68,7 @@
 #include <linux/platform_device.h>
 #include <linux/power_supply.h>
 #include <linux/property.h>
+#include <linux/suspend.h>
 #include <linux/workqueue.h>
 
 #define LEVEL_EMPTY	128	/* measured: the console died at 128-129 */
@@ -74,15 +79,24 @@
 #define HOLD_TO_OFF_MS	3000
 #define POWER_OFF_LOW_MS	2000	/* L01 low switched off at once on hardware */
 
+static bool sleep_on_short_press;
+module_param(sleep_on_short_press, bool, 0644);
+MODULE_PARM_DESC(sleep_on_short_press, "Enter suspend-to-idle on a short power press");
+
 struct r36s_power {
 	void __iomem *samples;		/* 8 bytes at ADC base + 0xd0 */
 	struct power_supply *battery, *charger;
 	struct gpio_desc *power;		/* L14 button, NULL if not described */
 	struct gpio_desc *poweroff;		/* L01 power-pin, NULL if not described */
+	int power_irq;
 	struct input_dev *button;
 	struct delayed_work poll;
+	struct work_struct sleep;
+	struct workqueue_struct *sleep_queue;
+	atomic_t sleep_in_progress;
 	unsigned int held_ms;
 	bool off_requested;
+	bool wake_press;
 	struct gpio_desc *voldown;		/* L12 Vol-, only while taken from uart0 */
 	void __iomem *wdt;			/* watchdog count + conf, NULL = no restart */
 	struct mutex voldown_lock;		/* voldown vs. the poll work */
@@ -191,6 +205,32 @@ static const struct power_supply_desc r36s_charger_desc = {
 	.get_property = r36s_charger_get,
 };
 
+/* Timers stop in s2idle: wake must come from the GPIO interrupt, not polling. */
+static irqreturn_t r36s_power_irq(int irq, void *data)
+{
+	struct r36s_power *p = data;
+
+	if (atomic_read(&p->sleep_in_progress) ||
+	    pm_suspend_target_state == PM_SUSPEND_TO_IDLE) {
+		WRITE_ONCE(p->wake_press, true);
+		pm_system_wakeup();
+	}
+	return IRQ_HANDLED;
+}
+
+static void r36s_sleep(struct work_struct *work)
+{
+	struct r36s_power *p = container_of(work, struct r36s_power, sleep);
+	int ret;
+
+	if (p->power_irq > 0 && !gpiod_get_value(p->power)) {
+		ret = pm_suspend(PM_SUSPEND_TO_IDLE);
+		if (ret && ret != -EBUSY)
+			dev_warn(p->button->dev.parent, "suspend-to-idle failed: %d\n", ret);
+	}
+	atomic_set(&p->sleep_in_progress, 0);
+}
+
 static void r36s_button_poll(struct work_struct *work)
 {
 	struct r36s_power *p = container_of(work, struct r36s_power, poll.work);
@@ -212,7 +252,24 @@ static void r36s_button_poll(struct work_struct *work)
 	}
 	input_report_key(input, KEY_POWER, pressed);
 	input_sync(input);
-	p->held_ms = pressed ? p->held_ms + BUTTON_POLL_MS : 0;
+	if (!pressed) {
+		if (p->held_ms && !p->off_requested && !READ_ONCE(p->wake_press) &&
+		    READ_ONCE(sleep_on_short_press) &&
+		    !atomic_cmpxchg(&p->sleep_in_progress, 0, 1))
+			queue_work(p->sleep_queue, &p->sleep);
+		p->held_ms = 0;
+		WRITE_ONCE(p->wake_press, false);
+		return;
+	}
+
+	/* Suppress another suspend when the wake press is released. */
+	if (atomic_read(&p->sleep_in_progress))
+		WRITE_ONCE(p->wake_press, true);
+	if (pm_suspend_target_state == PM_SUSPEND_TO_IDLE) {
+		WRITE_ONCE(p->wake_press, true);
+		pm_system_wakeup();
+	}
+	p->held_ms += BUTTON_POLL_MS;
 	if (p->held_ms >= HOLD_TO_OFF_MS && !p->off_requested) {
 		p->off_requested = true;
 		dev_emerg(input->dev.parent, "power button held 3 s: powering off\n");
@@ -260,6 +317,11 @@ static int r36s_restart_init(struct device *dev, struct r36s_power *p)
 					     SYS_OFF_PRIO_DEFAULT, r36s_restart, p);
 }
 
+static void r36s_destroy_sleep_queue(void *data)
+{
+	destroy_workqueue(data);
+}
+
 static int r36s_power_button_init(struct device *dev, struct r36s_power *p)
 {
 	int ret;
@@ -288,6 +350,26 @@ static int r36s_power_button_init(struct device *dev, struct r36s_power *p)
 	input_set_capability(p->button, EV_KEY, KEY_POWER);
 	input_set_capability(p->button, EV_KEY, KEY_VOLUMEDOWN);	/* only while "voldown" = key */
 	ret = input_register_device(p->button);
+	if (ret)
+		return ret;
+	p->power_irq = gpiod_to_irq(p->power);
+	if (p->power_irq > 0) {
+		ret = devm_request_irq(dev, p->power_irq, r36s_power_irq,
+				       IRQF_TRIGGER_FALLING | IRQF_NO_SUSPEND,
+				       "r36s-power-wake", p);
+		if (ret) {
+			dev_warn(dev, "no power wake IRQ: %d; sleep disabled\n", ret);
+			p->power_irq = 0;
+		}
+	}
+	/* Suspend callbacks can flush the system workqueue, so use our own. */
+	p->sleep_queue = alloc_ordered_workqueue("r36s-sleep", 0);
+	if (!p->sleep_queue)
+		return -ENOMEM;
+	ret = devm_add_action_or_reset(dev, r36s_destroy_sleep_queue, p->sleep_queue);
+	if (ret)
+		return ret;
+	ret = devm_work_autocancel(dev, &p->sleep, r36s_sleep);
 	if (ret)
 		return ret;
 	/* Cancelled (and waited for) on unbind, before the input device goes. */
@@ -375,6 +457,7 @@ static int r36s_power_probe(struct platform_device *pdev)
 		return -ENOMEM;
 	platform_set_drvdata(pdev, p);
 	mutex_init(&p->voldown_lock);
+	atomic_set(&p->sleep_in_progress, 0);
 
 	level = r36s_level(p, 1);
 	if (level < 0)
