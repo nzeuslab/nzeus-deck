@@ -6,7 +6,20 @@
  * stretched, blended and copied rectangles. This driver owns the block (clock,
  * reset, registers) and one DMA-coherent command queue that a single process
  * maps and fills. The words are not interpreted here - the players document
- * them. Pictures are read from the framebuffer, which userspace already maps.
+ * them. Pictures are read from the framebuffer, which userspace already maps,
+ * or from a picture buffer the driver allocates on request.
+ *
+ * The picture buffer is for emulators that keep their own video memory: they
+ * put it there and the engine stretches the frame straight out of it, where a
+ * copy into the framebuffer would cost the CPU about 2 ms per frame. It is
+ * mapped cached, because the CPU reads it as much as it writes it, and
+ * HC16XX_GE_SYNC writes a range back before a queue reads it. The data cache
+ * of the 74Kc can alias (a 4 KiB page, 8 KiB per way): a line written through
+ * the user mapping is only found by a write-back through the kernel's own
+ * address when both addresses have the same page colour. The buffer starts
+ * on a 64 KiB boundary (checked) and is mapped at a 64 KiB offset, so the
+ * colours match; MIPS mmap() places a shared mapping by its offset's colour
+ * and refuses a MAP_FIXED address of the wrong colour.
  *
  * Register map and set-up sequence come from the factory kernel's driver and
  * its libge, checked on the console (2026-11-27): registers at 0x18806000
@@ -39,10 +52,12 @@
 #include <linux/io.h>
 #include <linux/iopoll.h>
 #include <linux/miscdevice.h>
+#include <linux/mm.h>
 #include <linux/module.h>
 #include <linux/mutex.h>
 #include <linux/platform_device.h>
 #include <linux/reset.h>
+#include <linux/sizes.h>
 #include <linux/uaccess.h>
 #include <linux/wait.h>
 
@@ -75,6 +90,9 @@ struct hc16xx_ge {
 	void *queue;
 	dma_addr_t queue_phys;
 	u32 version;
+
+	struct page *buf;	/* the picture buffer, or NULL */
+	dma_addr_t buf_phys;
 
 	int irq;		/* completion interrupt, or <= 0 to poll */
 	bool irq_on;		/* requested, while the device is open */
@@ -159,6 +177,34 @@ static int hc16xx_ge_wait(struct hc16xx_ge *ge)
 	return 0;
 }
 
+/* Called with the lock held. */
+static int hc16xx_ge_buffer_get(struct hc16xx_ge *ge)
+{
+	if (ge->buf)
+		return 0;
+
+	ge->buf = dma_alloc_pages(ge->dev, HC16XX_GE_BUF_SIZE, &ge->buf_phys, DMA_TO_DEVICE,
+				  GFP_KERNEL | __GFP_NOWARN);
+	if (!ge->buf)
+		return -ENOMEM;
+	if (!IS_ALIGNED(ge->buf_phys, SZ_64K)) {	/* see the page colours above */
+		dev_err(ge->dev, "picture buffer at %pad is not 64 KiB aligned\n", &ge->buf_phys);
+		dma_free_pages(ge->dev, HC16XX_GE_BUF_SIZE, ge->buf, ge->buf_phys, DMA_TO_DEVICE);
+		ge->buf = NULL;
+		return -ENOMEM;
+	}
+
+	return 0;
+}
+
+static void hc16xx_ge_buffer_put(struct hc16xx_ge *ge)
+{
+	if (!ge->buf)
+		return;
+	dma_free_pages(ge->dev, HC16XX_GE_BUF_SIZE, ge->buf, ge->buf_phys, DMA_TO_DEVICE);
+	ge->buf = NULL;
+}
+
 static int hc16xx_ge_open(struct inode *inode, struct file *file)
 {
 	struct hc16xx_ge *ge = to_hc16xx_ge(file);
@@ -195,6 +241,7 @@ static int hc16xx_ge_release(struct inode *inode, struct file *file)
 	if (ge->irq_on)
 		free_irq(ge->irq, ge);
 	ge->irq_on = false;
+	hc16xx_ge_buffer_put(ge);	/* no mapping is left: each one holds the file */
 	ge->opened = false;
 	mutex_unlock(&ge->lock);
 
@@ -205,11 +252,24 @@ static int hc16xx_ge_mmap(struct file *file, struct vm_area_struct *vma)
 {
 	struct hc16xx_ge *ge = to_hc16xx_ge(file);
 	size_t size = vma->vm_end - vma->vm_start;
+	int ret = -EINVAL;
 
-	if (vma->vm_pgoff || size > HC16XX_GE_QUEUE_SIZE)
+	if (!vma->vm_pgoff) {
+		if (size > HC16XX_GE_QUEUE_SIZE)
+			return -EINVAL;
+		return dma_mmap_coherent(ge->dev, vma, ge->queue, ge->queue_phys, size);
+	}
+
+	/* the picture buffer, cached: see the page colours above */
+	if (vma->vm_pgoff != HC16XX_GE_BUF_OFFSET >> PAGE_SHIFT || size > HC16XX_GE_BUF_SIZE)
 		return -EINVAL;
+	mutex_lock(&ge->lock);
+	if (ge->buf)
+		ret = remap_pfn_range(vma, vma->vm_start, page_to_pfn(ge->buf), size,
+				      vma->vm_page_prot);
+	mutex_unlock(&ge->lock);
 
-	return dma_mmap_coherent(ge->dev, vma, ge->queue, ge->queue_phys, size);
+	return ret;
 }
 
 static long hc16xx_ge_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
@@ -217,6 +277,8 @@ static long hc16xx_ge_ioctl(struct file *file, unsigned int cmd, unsigned long a
 	struct hc16xx_ge *ge = to_hc16xx_ge(file);
 	struct hc16xx_ge_info info;
 	struct hc16xx_ge_kick kick;
+	struct hc16xx_ge_buffer buf;
+	struct hc16xx_ge_sync sync;
 	long ret = 0;
 
 	switch (cmd) {
@@ -263,6 +325,33 @@ static long hc16xx_ge_ioctl(struct file *file, unsigned int cmd, unsigned long a
 		hc16xx_ge_setup(ge);
 		mutex_unlock(&ge->lock);
 		return 0;
+
+	case HC16XX_GE_BUFFER:
+		mutex_lock(&ge->lock);
+		ret = hc16xx_ge_buffer_get(ge);
+		buf.phys = (u32)ge->buf_phys;
+		mutex_unlock(&ge->lock);
+		if (ret)
+			return ret;
+		buf.size = HC16XX_GE_BUF_SIZE;
+		if (copy_to_user((void __user *)arg, &buf, sizeof(buf)))
+			return -EFAULT;
+		return 0;
+
+	case HC16XX_GE_SYNC:
+		if (copy_from_user(&sync, (void __user *)arg, sizeof(sync)))
+			return -EFAULT;
+		if (sync.offset > HC16XX_GE_BUF_SIZE ||
+		    sync.size > HC16XX_GE_BUF_SIZE - sync.offset)
+			return -EINVAL;
+		mutex_lock(&ge->lock);
+		if (!ge->buf)
+			ret = -EINVAL;
+		else if (sync.size)
+			dma_sync_single_for_device(ge->dev, ge->buf_phys + sync.offset, sync.size,
+						   DMA_TO_DEVICE);
+		mutex_unlock(&ge->lock);
+		return ret;
 
 	default:
 		return -ENOTTY;
@@ -342,6 +431,7 @@ static void hc16xx_ge_remove(struct platform_device *pdev)
 	mutex_lock(&ge->lock);
 	hc16xx_ge_wait(ge);
 	hc16xx_ge_setup(ge);
+	hc16xx_ge_buffer_put(ge);
 	mutex_unlock(&ge->lock);
 	dma_free_coherent(ge->dev, HC16XX_GE_QUEUE_SIZE, ge->queue, ge->queue_phys);
 }
