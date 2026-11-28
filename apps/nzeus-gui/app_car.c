@@ -807,7 +807,7 @@ static void help_card(lv_obj_t *page, const char *title, const char *text)
     lv_obj_set_style_pad_all(card, 10, 0);
     lv_obj_set_style_pad_row(card, 5, 0);
     wrap_label(card, title, TS_TITLE);
-    wrap_label(card, text, TS_TEXT);
+    nz_button_text(wrap_label(card, "", TS_TEXT), text);
 }
 
 static lv_obj_t *help_page(lv_obj_t *root, const char *title)
@@ -839,7 +839,7 @@ static void support_run(const char *action)
     if (bgjob_running(&C.support_job)) { ui_toast("Vehicle support is still working"); return; }
     char cmd[1200];
     snprintf(cmd, sizeof cmd, "timeout -k 2 45 python3 '%s' --root '%s/support' %s", SUPPORT_HELPER, CAR_DIR, action);
-    support_text("Reading verified support data... B returns to gauges; A opens support actions.");
+    support_text("Reading verified support data... {back} returns to gauges; {accept} opens support actions.");
     if (bgjob_start(&C.support_job, cmd, "/tmp/nzeus-car-support.log")) support_text("Could not start the support manager.");
     show_page(PG_FEATURES);
 }
@@ -900,7 +900,7 @@ static void build_help(lv_obj_t *root)
     C.help = C.pages[PG_HELP] = help_page(root, "Car guide");
     help_card(C.help, "1. Connect", "Plug OBDLink EX into the car's diagnostic socket and the console's USB/OTG port. "
               "Select Settings > USB > Devices, then turn the car's ignition on. Park before using the console.");
-    help_card(C.help, "2. Make a report", "Press A on the live screen. Choose a language to scan and save a PDF. "
+    help_card(C.help, "2. Make a report", "Press {accept} on the live screen. Choose a language to scan and save a PDF. "
               "If a previous scan exists, choose New scan and PDF or Save last scan. Files are saved in nzeus/car on the SD card.");
     help_card(C.help, "3. Understand the results", "A module is a car computer, such as the engine or ABS computer. "
               "A fault code is a clue reported by that computer, not proof that a particular part must be replaced. "

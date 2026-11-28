@@ -171,10 +171,11 @@ static void fill_rows(void)
     char v[96];
     int sel = nzlist_selected(K.list);
     nzlist_clear(K.list);
-    nzlist_add(K.list, ICON_CLAUDE, "Brain", "where Claude Code runs (A changes it)", brain_names[brain()]);
-    if (!host()[0] || !user()[0]) snprintf(v, sizeof v, "not set yet (A sets it)");
+    nzlist_add_hint(K.list, ICON_CLAUDE, "Brain", "where Claude Code runs ({accept} changes it)", brain_names[brain()]);
+    if (!host()[0] || !user()[0]) snprintf(v, sizeof v, "not set yet ({accept} sets it)");
     else snprintf(v, sizeof v, "%s : %s  (user %s)", host(), port(), user());
-    nzlist_add(K.list, ICON_DESKTOP, "Address", "A changes it", v);
+    int address_row = nzlist_add_hint(K.list, ICON_DESKTOP, "Address", "{accept} changes it", v);
+    if (!host()[0] || !user()[0]) nz_button_text(nzlist_right_obj(K.list, address_row), v);   /* (a hint, not an address) */
     nzlist_add(K.list, ICON_WIFI, "Network", have_tcp() ? "Wi-Fi + TCP/IP" : "join Wi-Fi first (Wi-Fi app), then the internet starts",
                have_tcp() ? "ready" : "no internet yet");
     nzlist_add(K.list, ICON_KEYBOARD, "Keys and setup", "what to copy to the brain, once", NULL);
@@ -879,7 +880,7 @@ static int key(NzApp *a, int k)
     case NZ_KEY_DOWN:  send_key(KB_DOWN, 0, 0); return 1;
     case NZ_KEY_LEFT:  send_key(KB_LEFT, 0, 0); return 1;
     case NZ_KEY_RIGHT: send_key(KB_RIGHT, 0, 0); return 1;
-    case NZ_KEY_X:     nz_prompt("Type to Claude (then A = Enter)", "", typed, NULL); return 1;
+    case NZ_KEY_X:     nz_prompt("Type to Claude (then {accept} = Enter)", "", typed, NULL); return 1;
     case NZ_KEY_START: open_menu(); return 1;
     default: return 1;
     }

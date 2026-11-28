@@ -118,7 +118,7 @@ static void pdf_loading(void)
     lv_obj_add_flag(I.img, LV_OBJ_FLAG_HIDDEN);
     picture_free(&I.pic);
     I.pdf_zoom = 0; I.pan_x = I.pan_y = 0;
-    lv_label_set_text(I.msg, "Opening PDF page...\nB: cancel");
+    nz_button_text(I.msg, "Opening PDF page...\n{back}: cancel");
     lv_label_set_text_fmt(I.caption, "Page %d / %d", I.pdf.page, I.pdf.pages);
 }
 

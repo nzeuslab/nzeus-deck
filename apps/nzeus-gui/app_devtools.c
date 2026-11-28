@@ -33,7 +33,7 @@ static const struct { const char *name, *about, *example; int two_way; } tools[T
     { "Unix time",    "Epoch seconds <-> a date (empty = now)",                         "", 0 },
     { "Colour",       "#RRGGBB, R,G,B or 565:XXXX (small LCD screens)",                 "#FF8000", 0 },
     { "JSON",         "Checks JSON and lays it out neatly (L1 pastes from the Editor)", "{\"name\":\"NZEUS\",\"apps\":19,\"ok\":true,\"tags\":[\"deck\",\"lab\"]}", 0 },
-    { "Regex",        "Which parts of a text match a pattern (A: pattern, then text)",  "[0-9]+", 0 },
+    { "Regex",        "Which parts of a text match a pattern ({accept}: pattern, then text)",  "[0-9]+", 0 },
 };
 
 static struct {
@@ -92,7 +92,7 @@ static void show(void)
         snprintf(s, sizeof s, "%s: %s   (%d of %d)", tools[D.tool].name, D.decode[D.tool] ? "decode" : "encode", D.tool + 1, T_COUNT);
     else snprintf(s, sizeof s, "%s   (%d of %d)", tools[D.tool].name, D.tool + 1, T_COUNT);
     lv_label_set_text(D.title, s);
-    lv_label_set_text(D.about, tools[D.tool].about);
+    nz_button_text(D.about, tools[D.tool].about);
     if (D.tool == T_REGEX) snprintf(s, sizeof s, "Pattern:  %s\nText:  %s", D.in[T_REGEX], D.regex_text);
     else if (D.tool == T_TIME && !D.in[T_TIME][0]) snprintf(s, sizeof s, "Input:  (empty = now)");
     else snprintf(s, sizeof s, "Input:  %s", D.in[D.tool]);

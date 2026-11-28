@@ -2,6 +2,8 @@
  * and the shared text clipboard (copy / paste).
  * They live on LVGL's top layer, above every screen, behind a dark backdrop
  * that also stops clicks from reaching what is underneath. */
+#include <ctype.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,6 +12,7 @@
 #include "apps.h"
 #include "home.h"
 #include "theme.h"
+#include "settings.h"
 
 #define MAX_ITEMS  16
 
@@ -43,6 +46,123 @@ void nz_clip_set(const char *text)
 
 const char *nz_clip_get(void) { return clip ? clip : ""; }
 
+/* Labels bound to a template with {accept}/{back}, redrawn when the setting
+ * changes. A label whose text was set some other way since (state or error
+ * text) drops out at the next refresh, so a stale hint never comes back. */
+typedef struct ButtonLabel {
+    struct ButtonLabel *next;
+    lv_obj_t *obj;
+    char *text;                                   /* the template */
+    char *shown;                                  /* what it was drawn as */
+} ButtonLabel;
+static ButtonLabel *button_labels;
+
+static void render_button_label(ButtonLabel *b)
+{
+    /* Each token becomes one button letter; ordinary A/B text is untouched. */
+    char *text = malloc(strlen(b->text) + 1);
+    if (!text) return;
+    const char *src = b->text;
+    char *out = text;
+    while (*src) {
+        if (!strncmp(src, "{accept}", 8)) {
+            *out++ = settings_accept_is_b() ? 'B' : 'A'; src += 8;
+        } else if (!strncmp(src, "{back}", 6)) {
+            *out++ = settings_accept_is_b() ? 'A' : 'B'; src += 6;
+        } else *out++ = *src++;
+    }
+    *out = 0;
+    lv_label_set_text(b->obj, text);
+    free(b->shown);
+    b->shown = text;
+}
+
+static void button_label_free(ButtonLabel *b)
+{
+    ButtonLabel **link = &button_labels;
+    while (*link && *link != b) link = &(*link)->next;
+    if (*link) *link = b->next;
+    free(b->text);
+    free(b->shown);
+    free(b);
+}
+
+static void button_label_deleted(lv_event_t *e) { button_label_free(lv_event_get_user_data(e)); }
+
+void nz_button_text(lv_obj_t *label, const char *text)
+{
+    ButtonLabel *b;
+    for (b = button_labels; b; b = b->next) if (b->obj == label) break;
+    char *copy = strdup(text);
+    if (!copy) return;
+    if (!b) {
+        b = calloc(1, sizeof *b);
+        if (!b) { free(copy); return; }
+        b->obj = label;
+        b->next = button_labels;
+        button_labels = b;
+        lv_obj_add_event_cb(label, button_label_deleted, LV_EVENT_DELETE, b);
+    }
+    free(b->text);
+    b->text = copy;
+    render_button_label(b);
+}
+
+void nz_button_text_fmt(lv_obj_t *label, const char *fmt, ...)
+{
+    va_list ap, count;
+    va_start(ap, fmt); va_copy(count, ap);
+    int n = vsnprintf(NULL, 0, fmt, count);
+    va_end(count);
+    if (n >= 0) {
+        char *text = malloc((size_t)n + 1);
+        if (text) {
+            vsnprintf(text, (size_t)n + 1, fmt, ap);
+            nz_button_text(label, text);
+            free(text);
+        }
+    }
+    va_end(ap);
+}
+
+lv_obj_t *nz_text_label(lv_obj_t *parent, const char *text, int style)
+{
+    lv_obj_t *label = th_label(parent, "", style);
+    nz_button_text(label, text);
+    return label;
+}
+
+void nz_button_label(lv_obj_t *label, const char *logical_text)
+{
+    /* Only keycaps use legacy A/B notation. Inline prose uses explicit tokens. */
+    char *text = malloc(strlen(logical_text) * 8 + 1), *out = text;
+    if (!text) return;
+    for (size_t i = 0; logical_text[i]; i++) {
+        char c = logical_text[i];
+        if ((c == 'A' || c == 'B') &&
+            (!i || !isalnum((unsigned char)logical_text[i - 1])) &&
+            !isalnum((unsigned char)logical_text[i + 1])) {
+            const char *token = c == 'A' ? "{accept}" : "{back}";
+            size_t n = strlen(token); memcpy(out, token, n); out += n;
+        } else *out++ = c;
+    }
+    *out = 0;
+    nz_button_text(label, text);
+    free(text);
+}
+
+void nz_hints_refresh(void)
+{
+    ButtonLabel *b = button_labels, *next;
+    for (; b; b = next) {
+        next = b->next;
+        if (b->shown && strcmp(lv_label_get_text(b->obj), b->shown)) {
+            lv_obj_remove_event_cb_with_user_data(b->obj, button_label_deleted, b);
+            button_label_free(b);
+        } else render_button_label(b);
+    }
+}
+
 /* ---------- button hints: [A] Open  [B] Back ---------- */
 lv_obj_t *nz_hints(lv_obj_t *parent, const char *const pairs[], int count)
 {
@@ -52,7 +172,8 @@ lv_obj_t *nz_hints(lv_obj_t *parent, const char *const pairs[], int count)
     lv_obj_set_flex_align(row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_style_pad_column(row, 6, 0);
     for (int i = 0; i < count; i++) {
-        th_label(row, pairs[2 * i], TS_KEYCAP);                       /* the button's name, in a key cap */
+        lv_obj_t *button = th_label(row, "", TS_KEYCAP);
+        nz_button_label(button, pairs[2 * i]);
         lv_obj_t *what = th_label(row, pairs[2 * i + 1], TS_SMALL); /* what it does */
         if (i < count - 1) lv_obj_set_style_pad_right(what, 12, 0);
     }
@@ -77,7 +198,7 @@ static void open_box(const char *title, int width)
     lv_obj_set_flex_flow(box, LV_FLEX_FLOW_COLUMN);
     lv_obj_clear_flag(box, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_center(box);
-    lv_obj_t *t = th_label(box, title, TS_TITLE);
+    lv_obj_t *t = nz_text_label(box, title, TS_TITLE);
     lv_label_set_long_mode(t, LV_LABEL_LONG_WRAP);
     lv_obj_set_width(t, LV_PCT(100));
     lv_obj_set_style_pad_bottom(t, 6, 0);
@@ -202,11 +323,11 @@ void nz_confirm(const char *question, nz_confirm_cb cb, void *ctx)
     lv_obj_set_style_pad_column(row, 10, 0);
     lv_obj_t *no = lv_btn_create(row);
     lv_obj_t *nl = lv_label_create(no);
-    lv_label_set_text(nl, "B  No");
+    nz_button_label(nl, "B  No");
     lv_obj_t *yes = lv_btn_create(row);
     th_add(yes, TS_BTN_DANGER);
     lv_obj_t *yl = lv_label_create(yes);
-    lv_label_set_text(yl, "A  Yes");
+    nz_button_label(yl, "A  Yes");
     lv_obj_add_event_cb(no, no_clicked, LV_EVENT_CLICKED, NULL);
     lv_obj_add_event_cb(yes, yes_clicked, LV_EVENT_CLICKED, NULL);
 }
