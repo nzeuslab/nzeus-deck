@@ -109,10 +109,10 @@ static bool hp_in(struct r36s_audio *a)
 	return a->hp && a->hp_plugged >= 0 && gpiod_get_raw_value(a->hp) == a->hp_plugged;
 }
 
-/* the speaker amp: on only while playing and no headphones are in */
+/* The poll timer also applies volume changes while a stream is running. */
 static void amp_set(struct r36s_audio *a, bool playing)
 {
-	bool on = playing && !hp_in(a);
+	bool on = playing && READ_ONCE(a->volume) != 0 && !hp_in(a);
 
 	if (on != a->amp_on) {
 		gpiod_set_value(a->mute, on ? 0 : 1);
@@ -408,7 +408,7 @@ static int r36s_vol_put(struct snd_kcontrol *kc, struct snd_ctl_elem_value *uv)
 		return -EINVAL;
 	if (v == a->volume)
 		return 0;
-	a->volume = v;
+	WRITE_ONCE(a->volume, v);
 	mutex_lock(&a->lock);
 	if (a->rate && audio_clock_on(a))
 		writeb(v, a->snd + SND_VOL);
